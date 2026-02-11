@@ -771,7 +771,7 @@ function updateTable() {
             <td title="${a.oneHAnalysis || ''}">${truncate(a.oneHAnalysis)}</td>
             <td>${formatPhoto(a.oneHPhoto)}</td>
             <td>
-                <button onclick="shareToDiscord(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; transition: all 0.3s ease;">
+                <button onclick="shareToDiscord(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; transition: all 0.3s ease;">
                     📋 Share
                 </button>
             </td>
@@ -788,7 +788,7 @@ function updateTable() {
 }
 
 // Share to Discord
-function shareToDiscord(index) {
+function shareToDiscord(index, event) {
     const a = analyses[index];
     
     // Format date
