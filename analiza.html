@@ -293,6 +293,55 @@
             margin-bottom: 30px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         }
+
+        .pair-filter-btn {
+            background: linear-gradient(135deg, rgba(255, 149, 0, 0.2), rgba(255, 123, 0, 0.1));
+            border: 2px solid rgba(255, 149, 0, 0.4);
+            color: #ff9500;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .pair-filter-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 149, 0, 0.3), rgba(255, 123, 0, 0.2));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 149, 0, 0.3);
+        }
+
+        .pair-filter-btn.active {
+            background: linear-gradient(135deg, #ff9500, #ff7b00);
+            border-color: #ff9500;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 149, 0, 0.5);
+        }
+
+        #pairButtonsContainer::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        #pairButtonsContainer::-webkit-scrollbar-track {
+            background: rgba(255, 149, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        #pairButtonsContainer::-webkit-scrollbar-thumb {
+            background: #ff9500;
+            border-radius: 10px;
+        }
+
+        #pairButtonsContainer::-webkit-scrollbar-thumb:hover {
+            background: #ff7b00;
+        }
+
+        #pairButtonsContainer.grabbing {
+            cursor: grabbing;
+        }
     </style>
 </head>
 <body>
@@ -498,6 +547,16 @@
                             <option value="">All pairs</option>
                         </select>
                     </div>
+                </div>
+            </div>
+
+            <!-- Quick Pair Filters -->
+            <div style="background: linear-gradient(135deg, rgba(255, 149, 0, 0.08), rgba(255, 123, 0, 0.03)); backdrop-filter: blur(10px); border: 1px solid rgba(255, 149, 0, 0.25); border-radius: 20px; padding: 25px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);">
+                <h3 style="color: #ff9500; margin: 0 0 15px 0; font-size: 1.2em; display: flex; align-items: center; gap: 10px;">
+                    <span>⚡</span> Quick Pair Filter
+                </h3>
+                <div id="pairButtonsContainer" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; cursor: grab; user-select: none; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #ff9500 rgba(255, 149, 0, 0.1);">
+                    <!-- Buttons will be inserted here -->
                 </div>
             </div>
 
@@ -742,6 +801,98 @@ function populateFilterDropdowns() {
         opt.value = p;
         opt.textContent = p;
         pairSelect.appendChild(opt);
+    });
+    
+    // Populate pair filter buttons
+    populatePairButtons(pairs);
+}
+
+let activePairFilter = '';
+
+function populatePairButtons(pairs) {
+    const container = document.getElementById('pairButtonsContainer');
+    container.innerHTML = '';
+    
+    // Add "All" button
+    const allBtn = document.createElement('button');
+    allBtn.className = 'pair-filter-btn active';
+    allBtn.textContent = '🌐 All Pairs';
+    allBtn.onclick = () => filterByPair('');
+    container.appendChild(allBtn);
+    
+    // Add button for each pair
+    pairs.forEach(pair => {
+        const btn = document.createElement('button');
+        btn.className = 'pair-filter-btn';
+        btn.textContent = pair;
+        btn.onclick = () => filterByPair(pair);
+        container.appendChild(btn);
+    });
+    
+    // Add drag scroll functionality
+    setupDragScroll(container);
+}
+
+function filterByPair(pair) {
+    activePairFilter = pair;
+    
+    // Update button states
+    const buttons = document.querySelectorAll('.pair-filter-btn');
+    buttons.forEach(btn => {
+        if ((pair === '' && btn.textContent === '🌐 All Pairs') || btn.textContent === pair) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Update dropdown to match
+    document.getElementById('filterPair').value = pair;
+    
+    // Apply filters
+    applyFilters();
+}
+
+function setupDragScroll(container) {
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    
+    container.addEventListener('mousedown', (e) => {
+        isDown = true;
+        container.classList.add('grabbing');
+        startX = e.pageX - container.offsetLeft;
+        scrollLeft = container.scrollLeft;
+    });
+    
+    container.addEventListener('mouseleave', () => {
+        isDown = false;
+        container.classList.remove('grabbing');
+    });
+    
+    container.addEventListener('mouseup', () => {
+        isDown = false;
+        container.classList.remove('grabbing');
+    });
+    
+    container.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - container.offsetLeft;
+        const walk = (x - startX) * 2;
+        container.scrollLeft = scrollLeft - walk;
+    });
+    
+    // Touch support for mobile
+    container.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].pageX - container.offsetLeft;
+        scrollLeft = container.scrollLeft;
+    });
+    
+    container.addEventListener('touchmove', (e) => {
+        const x = e.touches[0].pageX - container.offsetLeft;
+        const walk = (x - startX) * 2;
+        container.scrollLeft = scrollLeft - walk;
     });
 }
 
