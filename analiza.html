@@ -834,7 +834,11 @@ function viewAnalysis(index) {
                     <span>📅</span> Weekly Timeframe
                 </h3>
                 ${a.weeklyAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.weeklyAnalysis}</p>` : ''}
-                ${a.weeklyPhoto ? `<a href="${a.weeklyPhoto}" target="_blank" style="color: #4d9fff; text-decoration: none; display: inline-block; background: rgba(77, 159, 255, 0.2); padding: 8px 16px; border-radius: 8px; border: 1px solid #4d9fff;">📸 View Chart</a>` : ''}
+                ${a.weeklyPhoto ? `
+                    <div style="margin-top: 15px;">
+                        <img src="${a.weeklyPhoto}" alt="Weekly Chart" style="width: 100%; max-width: 100%; border-radius: 10px; border: 2px solid #ff9500; cursor: pointer;" onclick="window.open('${a.weeklyPhoto}', '_blank')" title="Click to open in new tab">
+                    </div>
+                ` : ''}
             </div>
         `;
     }
@@ -847,7 +851,11 @@ function viewAnalysis(index) {
                     <span>📊</span> Daily Timeframe
                 </h3>
                 ${a.dailyAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.dailyAnalysis}</p>` : ''}
-                ${a.dailyPhoto ? `<a href="${a.dailyPhoto}" target="_blank" style="color: #4d9fff; text-decoration: none; display: inline-block; background: rgba(77, 159, 255, 0.2); padding: 8px 16px; border-radius: 8px; border: 1px solid #4d9fff;">📸 View Chart</a>` : ''}
+                ${a.dailyPhoto ? `
+                    <div style="margin-top: 15px;">
+                        <img src="${a.dailyPhoto}" alt="Daily Chart" style="width: 100%; max-width: 100%; border-radius: 10px; border: 2px solid #4d9fff; cursor: pointer;" onclick="window.open('${a.dailyPhoto}', '_blank')" title="Click to open in new tab">
+                    </div>
+                ` : ''}
             </div>
         `;
     }
@@ -860,7 +868,11 @@ function viewAnalysis(index) {
                     <span>⏱️</span> 4H Timeframe
                 </h3>
                 ${a.fourHAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.fourHAnalysis}</p>` : ''}
-                ${a.fourHPhoto ? `<a href="${a.fourHPhoto}" target="_blank" style="color: #4d9fff; text-decoration: none; display: inline-block; background: rgba(77, 159, 255, 0.2); padding: 8px 16px; border-radius: 8px; border: 1px solid #4d9fff;">📸 View Chart</a>` : ''}
+                ${a.fourHPhoto ? `
+                    <div style="margin-top: 15px;">
+                        <img src="${a.fourHPhoto}" alt="4H Chart" style="width: 100%; max-width: 100%; border-radius: 10px; border: 2px solid #9c27b0; cursor: pointer;" onclick="window.open('${a.fourHPhoto}', '_blank')" title="Click to open in new tab">
+                    </div>
+                ` : ''}
             </div>
         `;
     }
@@ -873,7 +885,11 @@ function viewAnalysis(index) {
                     <span>⚡</span> 1H Timeframe
                 </h3>
                 ${a.oneHAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.oneHAnalysis}</p>` : ''}
-                ${a.oneHPhoto ? `<a href="${a.oneHPhoto}" target="_blank" style="color: #4d9fff; text-decoration: none; display: inline-block; background: rgba(77, 159, 255, 0.2); padding: 8px 16px; border-radius: 8px; border: 1px solid #4d9fff;">📸 View Chart</a>` : ''}
+                ${a.oneHPhoto ? `
+                    <div style="margin-top: 15px;">
+                        <img src="${a.oneHPhoto}" alt="1H Chart" style="width: 100%; max-width: 100%; border-radius: 10px; border: 2px solid #00cc88; cursor: pointer;" onclick="window.open('${a.oneHPhoto}', '_blank')" title="Click to open in new tab">
+                    </div>
+                ` : ''}
             </div>
         `;
     }
