@@ -944,7 +944,7 @@ function closeViewModal() {
 function shareFromModal() {
     if (currentViewIndex >= 0) {
         const a = analyses[currentViewIndex];
-        const dateStr = `${a.day}, ${a.month} ${a.year}`;
+        const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
         let template = `**📊 ${dateStr} - ${a.pair} Analysis**\n\n`;
         
         if (a.weeklyAnalysis || a.weeklyPhoto) {
@@ -987,7 +987,7 @@ function shareToDiscord(index, event) {
     const a = analyses[index];
     
     // Format date
-    const dateStr = `${a.day}, ${a.month} ${a.year}`;
+    const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
     
     // Build Discord-formatted template
     let template = `**📊 ${dateStr} - ${a.pair} Analysis**\n\n`;
