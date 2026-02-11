@@ -352,6 +352,10 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="date">Date *</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
                         <label for="year">Year *</label>
                         <select id="year" required>
                             <option value="">Select</option>
@@ -497,6 +501,7 @@
                         <tr>
                             <th>Month</th>
                             <th>Day</th>
+                            <th>Date</th>
                             <th>Year</th>
                             <th>Pair</th>
                             <th>Weekly Analysis</th>
@@ -513,7 +518,7 @@
                     </thead>
                     <tbody id="analysisBody">
                         <tr>
-                            <td colspan="14" class="no-data">Loading analyses...</td>
+                            <td colspan="15" class="no-data">Loading analyses...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -761,7 +766,7 @@ function resetFilters() {
 // Table
 function updateTable() {
     if (!filteredAnalyses.length) {
-        analysisBody.innerHTML = '<tr><td colspan="14" class="no-data">No analyses yet</td></tr>';
+        analysisBody.innerHTML = '<tr><td colspan="15" class="no-data">No analyses yet</td></tr>';
         return;
     }
     
@@ -783,6 +788,7 @@ function updateTable() {
         tr.innerHTML = `
             <td>${a.month}</td>
             <td>${a.day}</td>
+            <td>${a.date ? new Date(a.date).toLocaleDateString('ro-RO') : '-'}</td>
             <td>${a.year}</td>
             <td>${a.pair}</td>
             <td title="${a.weeklyAnalysis || ''}">${truncate(a.weeklyAnalysis)}</td>
@@ -820,8 +826,11 @@ function viewAnalysis(index) {
     currentViewIndex = index;
     const a = analyses[index];
     
+    // Format date
+    const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
+    
     // Set title
-    document.getElementById('viewModalTitle').textContent = `📊 ${a.day}, ${a.month} ${a.year} - ${a.pair}`;
+    document.getElementById('viewModalTitle').textContent = `📊 ${dateStr} - ${a.pair}`;
     
     // Build content
     let content = '';
@@ -1037,10 +1046,10 @@ saveBtn.onclick = () => {
 };
 
 function getFormData() {
-    const required = ['month', 'day', 'year', 'pair'];
+    const required = ['month', 'day', 'date', 'year', 'pair'];
     for (const id of required) {
         if (!document.getElementById(id).value) {
-            alert('Please fill Month, Day, Year, and Pair');
+            alert('Please fill Month, Day, Date, Year, and Pair');
             return null;
         }
     }
@@ -1058,6 +1067,7 @@ function getFormData() {
     return {
         month: document.getElementById('month').value,
         day: document.getElementById('day').value,
+        date: document.getElementById('date').value,
         year: document.getElementById('year').value,
         pair: pairValue,
         weeklyAnalysis: document.getElementById('weeklyAnalysis').value,
@@ -1123,6 +1133,7 @@ function editAnalysis(i) {
     
     document.getElementById('month').value = a.month || '';
     document.getElementById('day').value = a.day || '';
+    document.getElementById('date').value = a.date || '';
     document.getElementById('year').value = a.year || '';
     document.getElementById('weeklyAnalysis').value = a.weeklyAnalysis || '';
     document.getElementById('weeklyPhoto').value = a.weeklyPhoto || '';
@@ -1152,7 +1163,7 @@ function deleteAnalysis(i) {
 }
 
 function clearForm() {
-    ['month', 'day', 'year', 'pair', 'weeklyAnalysis', 'weeklyPhoto',
+    ['month', 'day', 'date', 'year', 'pair', 'weeklyAnalysis', 'weeklyPhoto',
      'dailyAnalysis', 'dailyPhoto', 'fourHAnalysis', 'fourHPhoto',
      'oneHAnalysis', 'oneHPhoto'].forEach(id => {
         document.getElementById(id).value = '';
