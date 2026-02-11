@@ -302,7 +302,7 @@
                 <div style="font-size: 4em; line-height: 1;">📊</div>
                 <div style="text-align: center;">
                     <h1>Market Analysis Journal</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 1.2em; color: #ff9500; font-weight: 600;">Market Analyst</p>
+                    <p style="margin: 5px 0 0 0; font-size: 1.2em; color: #ff9500; font-weight: 600;">$225 Personal Account</p>
                     <p style="margin: 3px 0 0 0; font-size: 0.9em;">Track & Review Your Market Analysis</p>
                 </div>
             </div>
@@ -507,7 +507,7 @@
                             <th>4H Photo</th>
                             <th>1H Analysis</th>
                             <th>1H Photo</th>
-                            <th>Share</th>
+                            <th>View/Share</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -537,6 +537,29 @@
             <div style="display: flex; gap: 10px;">
                 <button onclick="attemptLogin()" style="flex: 1; background: linear-gradient(135deg, #00cc88, #00aa72); color: #fff; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 600;">Login</button>
                 <button onclick="closeLoginModal()" style="flex: 1; background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: #fff; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Analysis Modal -->
+    <div class="loading-overlay" id="viewModal" style="display: none;">
+        <div style="background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); padding: 40px; border-radius: 20px; max-width: 900px; width: 90%; max-height: 85vh; overflow-y: auto; border: 2px solid rgba(255, 149, 0, 0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 id="viewModalTitle" style="color: #ff9500; margin: 0; font-size: 2em;">Analysis</h2>
+                <button onclick="closeViewModal()" style="background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border: 2px solid #ff6b6b; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.5em; font-weight: bold; transition: all 0.3s ease;">×</button>
+            </div>
+            
+            <div id="viewModalContent" style="color: #ddd; line-height: 1.8; font-size: 1.05em;">
+                <!-- Content will be inserted here -->
+            </div>
+
+            <div style="margin-top: 30px; text-align: center; display: flex; gap: 15px; justify-content: center;">
+                <button onclick="shareFromModal()" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);">
+                    📋 Copy for Discord
+                </button>
+                <button onclick="closeViewModal()" style="background: linear-gradient(135deg, #ff9500, #ff7b00); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);">
+                    Close
+                </button>
             </div>
         </div>
     </div>
@@ -771,6 +794,9 @@ function updateTable() {
             <td title="${a.oneHAnalysis || ''}">${truncate(a.oneHAnalysis)}</td>
             <td>${formatPhoto(a.oneHPhoto)}</td>
             <td>
+                <button onclick="viewAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; transition: all 0.3s ease; margin-right: 5px;">
+                    👁️ View
+                </button>
                 <button onclick="shareToDiscord(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; transition: all 0.3s ease;">
                     📋 Share
                 </button>
@@ -785,6 +811,125 @@ function updateTable() {
         
         analysisBody.appendChild(tr);
     });
+}
+
+// View Analysis Modal
+let currentViewIndex = -1;
+
+function viewAnalysis(index) {
+    currentViewIndex = index;
+    const a = analyses[index];
+    
+    // Set title
+    document.getElementById('viewModalTitle').textContent = `📊 ${a.day}, ${a.month} ${a.year} - ${a.pair}`;
+    
+    // Build content
+    let content = '';
+    
+    // Weekly
+    if (a.weeklyAnalysis || a.weeklyPhoto) {
+        content += `
+            <div style="background: rgba(255, 149, 0, 0.1); border-left: 4px solid #ff9500; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #ff9500; margin-bottom: 15px; font-size: 1.4em; display: flex; align-items: center; gap: 10px;">
+                    <span>📅</span> Weekly Timeframe
+                </h3>
+                ${a.weeklyAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.weeklyAnalysis}</p>` : ''}
+                ${a.weeklyPhoto ? `<a href="${a.weeklyPhoto}" target="_blank" style="color: #4d9fff; text-decoration: none; display: inline-block; background: rgba(77, 159, 255, 0.2); padding: 8px 16px; border-radius: 8px; border: 1px solid #4d9fff;">📸 View Chart</a>` : ''}
+            </div>
+        `;
+    }
+    
+    // Daily
+    if (a.dailyAnalysis || a.dailyPhoto) {
+        content += `
+            <div style="background: rgba(77, 159, 255, 0.1); border-left: 4px solid #4d9fff; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #4d9fff; margin-bottom: 15px; font-size: 1.4em; display: flex; align-items: center; gap: 10px;">
+                    <span>📊</span> Daily Timeframe
+                </h3>
+                ${a.dailyAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.dailyAnalysis}</p>` : ''}
+                ${a.dailyPhoto ? `<a href="${a.dailyPhoto}" target="_blank" style="color: #4d9fff; text-decoration: none; display: inline-block; background: rgba(77, 159, 255, 0.2); padding: 8px 16px; border-radius: 8px; border: 1px solid #4d9fff;">📸 View Chart</a>` : ''}
+            </div>
+        `;
+    }
+    
+    // 4H
+    if (a.fourHAnalysis || a.fourHPhoto) {
+        content += `
+            <div style="background: rgba(156, 39, 176, 0.1); border-left: 4px solid #9c27b0; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #9c27b0; margin-bottom: 15px; font-size: 1.4em; display: flex; align-items: center; gap: 10px;">
+                    <span>⏱️</span> 4H Timeframe
+                </h3>
+                ${a.fourHAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.fourHAnalysis}</p>` : ''}
+                ${a.fourHPhoto ? `<a href="${a.fourHPhoto}" target="_blank" style="color: #4d9fff; text-decoration: none; display: inline-block; background: rgba(77, 159, 255, 0.2); padding: 8px 16px; border-radius: 8px; border: 1px solid #4d9fff;">📸 View Chart</a>` : ''}
+            </div>
+        `;
+    }
+    
+    // 1H
+    if (a.oneHAnalysis || a.oneHPhoto) {
+        content += `
+            <div style="background: rgba(0, 204, 136, 0.1); border-left: 4px solid #00cc88; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: #00cc88; margin-bottom: 15px; font-size: 1.4em; display: flex; align-items: center; gap: 10px;">
+                    <span>⚡</span> 1H Timeframe
+                </h3>
+                ${a.oneHAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.oneHAnalysis}</p>` : ''}
+                ${a.oneHPhoto ? `<a href="${a.oneHPhoto}" target="_blank" style="color: #4d9fff; text-decoration: none; display: inline-block; background: rgba(77, 159, 255, 0.2); padding: 8px 16px; border-radius: 8px; border: 1px solid #4d9fff;">📸 View Chart</a>` : ''}
+            </div>
+        `;
+    }
+    
+    if (!content) {
+        content = '<p style="text-align: center; color: #888;">No analysis data available</p>';
+    }
+    
+    document.getElementById('viewModalContent').innerHTML = content;
+    document.getElementById('viewModal').style.display = 'flex';
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').style.display = 'none';
+    currentViewIndex = -1;
+}
+
+function shareFromModal() {
+    if (currentViewIndex >= 0) {
+        const a = analyses[currentViewIndex];
+        const dateStr = `${a.day}, ${a.month} ${a.year}`;
+        let template = `**📊 ${dateStr} - ${a.pair} Analysis**\n\n`;
+        
+        if (a.weeklyAnalysis || a.weeklyPhoto) {
+            template += `**📅 WEEKLY TIMEFRAME**\n`;
+            if (a.weeklyAnalysis) template += `${a.weeklyAnalysis}\n`;
+            if (a.weeklyPhoto) template += `📸 Chart: ${a.weeklyPhoto}\n`;
+            template += `\n`;
+        }
+        
+        if (a.dailyAnalysis || a.dailyPhoto) {
+            template += `**📊 DAILY TIMEFRAME**\n`;
+            if (a.dailyAnalysis) template += `${a.dailyAnalysis}\n`;
+            if (a.dailyPhoto) template += `📸 Chart: ${a.dailyPhoto}\n`;
+            template += `\n`;
+        }
+        
+        if (a.fourHAnalysis || a.fourHPhoto) {
+            template += `**⏱️ 4H TIMEFRAME**\n`;
+            if (a.fourHAnalysis) template += `${a.fourHAnalysis}\n`;
+            if (a.fourHPhoto) template += `📸 Chart: ${a.fourHPhoto}\n`;
+            template += `\n`;
+        }
+        
+        if (a.oneHAnalysis || a.oneHPhoto) {
+            template += `**⚡ 1H TIMEFRAME**\n`;
+            if (a.oneHAnalysis) template += `${a.oneHAnalysis}\n`;
+            if (a.oneHPhoto) template += `📸 Chart: ${a.oneHPhoto}\n`;
+        }
+        
+        navigator.clipboard.writeText(template).then(() => {
+            alert('✅ Copied to clipboard! Paste in Discord.');
+        }).catch(err => {
+            alert('Copy failed! Please try again.');
+        });
+    }
 }
 
 // Share to Discord
