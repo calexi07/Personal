@@ -551,15 +551,6 @@
 
     <script>
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby545E0z1U_T4y7Obgp7jbkhjEM-nTQ14zccKu3_WhAWI93028iGy3JHPHk9XJvU1_5/exec';
-const USE_CORS_PROXY = window.location.hostname === 'calexi07.github.io';
-const CORS_PROXY = 'https://corsproxy.io/?';
-
-function getAPIUrl() {
-    if (USE_CORS_PROXY) {
-        return CORS_PROXY + encodeURIComponent(GOOGLE_SCRIPT_URL);
-    }
-    return GOOGLE_SCRIPT_URL;
-}
 
 const CREDENTIALS = {
     username: 'calexi07',
@@ -675,8 +666,7 @@ function checkAuth() {
 // Load Analyses
 function loadAnalyses() {
     showLoading();
-    const apiUrl = getAPIUrl();
-    fetch(apiUrl + (USE_CORS_PROXY ? encodeURIComponent('?action=get&sheet=Sheet1') : '?action=get&sheet=Sheet1'))
+    fetch(GOOGLE_SCRIPT_URL + '?action=get&sheet=Sheet1')
         .then(r => r.json())
         .then(res => {
             hideLoading();
@@ -923,9 +913,7 @@ function getFormData() {
 function addAnalysis(analysis) {
     showLoading();
     const qs = new URLSearchParams({ action: 'add', ...analysis });
-    const apiUrl = getAPIUrl();
-    const url = USE_CORS_PROXY ? apiUrl + encodeURIComponent('?' + qs) : apiUrl + '?' + qs;
-    fetch(url)
+    fetch(GOOGLE_SCRIPT_URL + '?' + qs)
         .then(() => {
             hideLoading();
             clearForm();
@@ -942,9 +930,7 @@ function addAnalysis(analysis) {
 function updateAnalysis(analysis) {
     showLoading();
     const qs = new URLSearchParams({ action: 'update', ...analysis });
-    const apiUrl = getAPIUrl();
-    const url = USE_CORS_PROXY ? apiUrl + encodeURIComponent('?' + qs) : apiUrl + '?' + qs;
-    fetch(url)
+    fetch(GOOGLE_SCRIPT_URL + '?' + qs)
         .then(() => {
             hideLoading();
             editingIndex = -1;
@@ -992,9 +978,7 @@ function editAnalysis(i) {
 function deleteAnalysis(i) {
     if (!confirm('Delete this analysis?')) return;
     showLoading();
-    const apiUrl = getAPIUrl();
-    const url = USE_CORS_PROXY ? apiUrl + encodeURIComponent(`?action=delete&id=${analyses[i].id}`) : `${apiUrl}?action=delete&id=${analyses[i].id}`;
-    fetch(url)
+    fetch(`${GOOGLE_SCRIPT_URL}?action=delete&id=${analyses[i].id}`)
         .then(() => {
             hideLoading();
             loadAnalyses();
