@@ -625,7 +625,10 @@
                 <!-- Content will be inserted here -->
             </div>
 
-            <div style="margin-top: 30px; text-align: center; display: flex; gap: 15px; justify-content: center;">
+            <div style="margin-top: 30px; text-align: center; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="copyForTradingViewFromModal()" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(41, 98, 255, 0.4);">
+                    📈 Copy for TradingView
+                </button>
                 <button onclick="shareFromModal()" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);">
                     📋 Copy for Discord
                 </button>
@@ -979,8 +982,11 @@ function updateTable() {
                 <button onclick="viewAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; transition: all 0.3s ease; margin-right: 5px;">
                     👁️ View
                 </button>
+                <button onclick="shareToTradingView(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; transition: all 0.3s ease; margin-right: 5px;">
+                    📈 TV
+                </button>
                 <button onclick="shareToDiscord(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; transition: all 0.3s ease;">
-                    📋 Share
+                    📋 Discord
                 </button>
             </td>
             <td>
@@ -1133,6 +1139,59 @@ function shareFromModal() {
     }
 }
 
+function copyForTradingViewFromModal() {
+    if (currentViewIndex >= 0) {
+        const a = analyses[currentViewIndex];
+        const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
+        
+        let template = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+        template += `📊 ${a.pair} ANALYSIS - ${dateStr}\n`;
+        template += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+        
+        if (a.weeklyAnalysis || a.weeklyPhoto) {
+            template += `📅 WEEKLY TIMEFRAME\n`;
+            template += `${'─'.repeat(50)}\n`;
+            if (a.weeklyAnalysis) template += `${a.weeklyAnalysis}\n`;
+            if (a.weeklyPhoto) template += `\n📸 Chart: ${a.weeklyPhoto}\n`;
+            template += `\n`;
+        }
+        
+        if (a.dailyAnalysis || a.dailyPhoto) {
+            template += `📊 DAILY TIMEFRAME\n`;
+            template += `${'─'.repeat(50)}\n`;
+            if (a.dailyAnalysis) template += `${a.dailyAnalysis}\n`;
+            if (a.dailyPhoto) template += `\n📸 Chart: ${a.dailyPhoto}\n`;
+            template += `\n`;
+        }
+        
+        if (a.fourHAnalysis || a.fourHPhoto) {
+            template += `⏱️ 4H TIMEFRAME\n`;
+            template += `${'─'.repeat(50)}\n`;
+            if (a.fourHAnalysis) template += `${a.fourHAnalysis}\n`;
+            if (a.fourHPhoto) template += `\n📸 Chart: ${a.fourHPhoto}\n`;
+            template += `\n`;
+        }
+        
+        if (a.oneHAnalysis || a.oneHPhoto) {
+            template += `⚡ 1H TIMEFRAME\n`;
+            template += `${'─'.repeat(50)}\n`;
+            if (a.oneHAnalysis) template += `${a.oneHAnalysis}\n`;
+            if (a.oneHPhoto) template += `\n📸 Chart: ${a.oneHPhoto}\n`;
+            template += `\n`;
+        }
+        
+        template += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+        template += `💡 Analysis by @YourUsername | ${dateStr}\n`;
+        template += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+        
+        navigator.clipboard.writeText(template).then(() => {
+            alert('✅ Copied to clipboard! Paste in TradingView comments.');
+        }).catch(err => {
+            alert('Copy failed! Please try again.');
+        });
+    }
+}
+
 // Share to Discord
 function shareToDiscord(index, event) {
     const a = analyses[index];
@@ -1201,6 +1260,92 @@ function shareToDiscord(index, event) {
         setTimeout(() => {
             btn.textContent = originalText;
             btn.style.background = 'linear-gradient(135deg, #9c27b0, #7b1fa2)';
+        }, 2000);
+    }).catch(err => {
+        alert('Copy failed! Please try again.');
+        console.error(err);
+    });
+}
+
+// Share to TradingView
+function shareToTradingView(index, event) {
+    const a = analyses[index];
+    
+    // Format date
+    const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
+    
+    // Build TradingView-formatted template
+    let template = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    template += `📊 ${a.pair} ANALYSIS - ${dateStr}\n`;
+    template += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    
+    // Weekly
+    if (a.weeklyAnalysis || a.weeklyPhoto) {
+        template += `📅 WEEKLY TIMEFRAME\n`;
+        template += `${'─'.repeat(50)}\n`;
+        if (a.weeklyAnalysis) {
+            template += `${a.weeklyAnalysis}\n`;
+        }
+        if (a.weeklyPhoto) {
+            template += `\n📸 Chart: ${a.weeklyPhoto}\n`;
+        }
+        template += `\n`;
+    }
+    
+    // Daily
+    if (a.dailyAnalysis || a.dailyPhoto) {
+        template += `📊 DAILY TIMEFRAME\n`;
+        template += `${'─'.repeat(50)}\n`;
+        if (a.dailyAnalysis) {
+            template += `${a.dailyAnalysis}\n`;
+        }
+        if (a.dailyPhoto) {
+            template += `\n📸 Chart: ${a.dailyPhoto}\n`;
+        }
+        template += `\n`;
+    }
+    
+    // 4H
+    if (a.fourHAnalysis || a.fourHPhoto) {
+        template += `⏱️ 4H TIMEFRAME\n`;
+        template += `${'─'.repeat(50)}\n`;
+        if (a.fourHAnalysis) {
+            template += `${a.fourHAnalysis}\n`;
+        }
+        if (a.fourHPhoto) {
+            template += `\n📸 Chart: ${a.fourHPhoto}\n`;
+        }
+        template += `\n`;
+    }
+    
+    // 1H
+    if (a.oneHAnalysis || a.oneHPhoto) {
+        template += `⚡ 1H TIMEFRAME\n`;
+        template += `${'─'.repeat(50)}\n`;
+        if (a.oneHAnalysis) {
+            template += `${a.oneHAnalysis}\n`;
+        }
+        if (a.oneHPhoto) {
+            template += `\n📸 Chart: ${a.oneHPhoto}\n`;
+        }
+        template += `\n`;
+    }
+    
+    template += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    template += `💡 Analysis by @YourUsername | ${dateStr}\n`;
+    template += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(template).then(() => {
+        // Show success message
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        btn.style.background = 'linear-gradient(135deg, #00cc88, #00aa72)';
+        
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = 'linear-gradient(135deg, #2962FF, #1E53E5)';
         }, 2000);
     }).catch(err => {
         alert('Copy failed! Please try again.');
