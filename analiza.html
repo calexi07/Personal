@@ -1720,6 +1720,10 @@ function renderCalendar() {
     const year = parseInt(document.getElementById('calendarYear').value);
     const grid = document.getElementById('calendarGrid');
     
+    console.log('Rendering calendar for:', month, year);
+    console.log('Total analyses:', analyses.length);
+    console.log('Sample analysis:', analyses[0]);
+    
     grid.innerHTML = '';
     
     // Add day headers
@@ -1782,7 +1786,14 @@ function createDayCell(day, month, year, isOtherMonth) {
     const dateStr = `${actualYear}-${String(actualMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     
     // Count analyses for this day
-    const analysesForDay = analyses.filter(a => a.date === dateStr);
+    const analysesForDay = analyses.filter(a => {
+        if (!a.date) return false;
+        return a.date === dateStr;
+    });
+    
+    if (day === 11 && !isOtherMonth) {
+        console.log('Day 11 - dateStr:', dateStr, 'analyses:', analysesForDay.length);
+    }
     
     if (analysesForDay.length > 0 && !isOtherMonth) {
         dayDiv.classList.add('has-analysis');
@@ -1814,7 +1825,10 @@ function createDayCell(day, month, year, isOtherMonth) {
     }
     
     if (!isOtherMonth) {
-        dayDiv.onclick = () => showAnalysesForDay(dateStr, day, actualMonth, actualYear);
+        dayDiv.onclick = (e) => {
+            console.log('Clicked day:', day, 'dateStr:', dateStr, 'analyses:', analysesForDay.length);
+            showAnalysesForDay(dateStr, day, actualMonth, actualYear);
+        };
     }
     
     return dayDiv;
