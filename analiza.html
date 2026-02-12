@@ -794,7 +794,14 @@
             <button onclick="closeViewModal()" style="position: absolute; top: 20px; right: 20px; background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border: 2px solid #ff6b6b; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.5em; font-weight: bold; transition: all 0.3s ease; z-index: 10;">×</button>
             
             <div style="margin-bottom: 30px; padding-right: 50px; padding-left: 50px;">
-                <h2 id="viewModalTitle" style="color: #2196F3; margin: 0; font-size: 2em; text-align: center;">Analysis</h2>
+                <h2 id="viewModalTitle" style="color: #2196F3; margin: 0 0 20px 0; font-size: 2em; text-align: center;">Analysis</h2>
+                
+                <!-- Analysis Timeline Navigation -->
+                <div id="analysisTimeline" style="display: none; margin-top: 20px; padding: 15px; background: rgba(33, 150, 243, 0.05); border-radius: 15px; border: 1px solid rgba(33, 150, 243, 0.2);">
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <!-- Timeline buttons will be inserted here -->
+                    </div>
+                </div>
             </div>
             
             <div id="viewModalContent" style="color: #ddd; line-height: 1.8; font-size: 1.05em;">
@@ -1213,6 +1220,10 @@ function viewAnalysis(index) {
     
     // Set title
     document.getElementById('viewModalTitle').textContent = `📊 ${dateStr} - ${a.pair}`;
+    
+    // Build timeline navigation for same pair
+    buildAnalysisTimeline(index);
+    
     
     // Build content
     let content = '';
@@ -1989,6 +2000,72 @@ function showAnalysesForDay(dateStr, day, month, year) {
     
     // Show modal
     document.getElementById('dayModal').style.display = 'flex';
+}
+
+function buildAnalysisTimeline(currentIndex) {
+    const currentAnalysis = analyses[currentIndex];
+    const timeline = document.getElementById('analysisTimeline');
+    
+    // Find all analyses for the same pair, sorted by date
+    const samePairAnalyses = analyses
+        .map((a, idx) => ({ ...a, originalIndex: idx }))
+        .filter(a => a.pair === currentAnalysis.pair && a.date)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    if (samePairAnalyses.length <= 1) {
+        timeline.style.display = 'none';
+        return;
+    }
+    
+    // Find current position in sorted list
+    const currentPos = samePairAnalyses.findIndex(a => a.originalIndex === currentIndex);
+    
+    // Build timeline HTML
+    let timelineHTML = '<div style="color: #90CAF9; font-size: 0.9em; margin-bottom: 10px; text-align: center; font-weight: 600;">📊 ' + currentAnalysis.pair + ' Analysis Timeline</div>';
+    timelineHTML += '<div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">';
+    
+    samePairAnalyses.forEach((a, idx) => {
+        const date = new Date(a.date);
+        const dateLabel = date.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' });
+        const isCurrent = idx === currentPos;
+        const isPast = idx < currentPos;
+        const isFuture = idx > currentPos;
+        
+        let buttonStyle = '';
+        let icon = '';
+        
+        if (isCurrent) {
+            buttonStyle = 'background: linear-gradient(135deg, #2196F3, #1976D2); color: #fff; border: 2px solid #64B5F6; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.5);';
+            icon = '📍';
+        } else if (isPast) {
+            buttonStyle = 'background: rgba(100, 181, 246, 0.15); color: #64B5F6; border: 1px solid rgba(100, 181, 246, 0.3);';
+            icon = '◄';
+        } else {
+            buttonStyle = 'background: rgba(0, 188, 212, 0.15); color: #00BCD4; border: 1px solid rgba(0, 188, 212, 0.3);';
+            icon = '►';
+        }
+        
+        timelineHTML += `
+            <button 
+                onclick="viewAnalysis(${a.originalIndex})" 
+                style="${buttonStyle} padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease; white-space: nowrap;"
+                onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(33, 150, 243, 0.4)';"
+                onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='${isCurrent ? '0 4px 15px rgba(33, 150, 243, 0.5)' : 'none'}';"
+            >
+                ${icon} ${dateLabel}
+            </button>
+        `;
+        
+        // Add arrow between buttons (except after last)
+        if (idx < samePairAnalyses.length - 1) {
+            timelineHTML += '<span style="color: rgba(33, 150, 243, 0.3); font-size: 1.2em;">→</span>';
+        }
+    });
+    
+    timelineHTML += '</div>';
+    
+    timeline.innerHTML = timelineHTML;
+    timeline.style.display = 'block';
 }
 
 function viewAnalysisFromDay(index) {
