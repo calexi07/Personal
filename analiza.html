@@ -342,6 +342,77 @@
         #pairButtonsContainer.grabbing {
             cursor: grabbing;
         }
+
+        .calendar-day {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 149, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .calendar-day:hover {
+            background: rgba(255, 149, 0, 0.1);
+            border-color: #ff9500;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 149, 0, 0.3);
+        }
+
+        .calendar-day.has-analysis {
+            background: linear-gradient(135deg, rgba(255, 149, 0, 0.2), rgba(255, 123, 0, 0.1));
+            border-color: #ff9500;
+        }
+
+        .calendar-day.selected {
+            background: linear-gradient(135deg, #ff9500, #ff7b00);
+            border-color: #ff9500;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 149, 0, 0.5);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .calendar-day-number {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .calendar-day-count {
+            font-size: 0.8em;
+            color: #ff9500;
+            margin-top: 5px;
+        }
+
+        .calendar-day.selected .calendar-day-count {
+            color: #fff;
+        }
+
+        .calendar-header {
+            background: rgba(255, 149, 0, 0.1);
+            border: 1px solid rgba(255, 149, 0, 0.3);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #ff9500;
+            font-size: 0.9em;
+        }
+
+        .view-mode-btn.active {
+            background: linear-gradient(135deg, #ff9500, #ff7b00) !important;
+            color: #fff !important;
+            border-color: #ff9500 !important;
+            box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -560,35 +631,100 @@
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="table-container">
-                <h2 style="margin-bottom: 20px; color: #ff9500;">Analysis History</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Month</th>
-                            <th>Day</th>
-                            <th>Date</th>
-                            <th>Year</th>
-                            <th>Pair</th>
-                            <th>Weekly Analysis</th>
-                            <th>Weekly Photo</th>
-                            <th>Daily Analysis</th>
-                            <th>Daily Photo</th>
-                            <th>4H Analysis</th>
-                            <th>4H Photo</th>
-                            <th>1H Analysis</th>
-                            <th>1H Photo</th>
-                            <th>View/Share</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="analysisBody">
-                        <tr>
-                            <td colspan="15" class="no-data">Loading analyses...</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- View Mode Toggle -->
+            <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 30px;">
+                <button id="btnJournalView" class="view-mode-btn active" onclick="switchView('journal')" style="background: linear-gradient(135deg, #ff9500, #ff7b00); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);">
+                    📋 Journal View
+                </button>
+                <button id="btnCalendarView" class="view-mode-btn" onclick="switchView('calendar')" style="background: rgba(255, 149, 0, 0.2); color: #ff9500; border: 2px solid rgba(255, 149, 0, 0.4); padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease;">
+                    📅 Calendar View
+                </button>
+            </div>
+
+            <!-- Journal View -->
+            <!-- Journal View -->
+            <div id="journalView" style="display: block;">
+                <div class="table-container">
+                    <h2 style="margin-bottom: 20px; color: #ff9500;">Analysis History</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Day</th>
+                                <th>Date</th>
+                                <th>Year</th>
+                                <th>Pair</th>
+                                <th>Weekly Analysis</th>
+                                <th>Weekly Photo</th>
+                                <th>Daily Analysis</th>
+                                <th>Daily Photo</th>
+                                <th>4H Analysis</th>
+                                <th>4H Photo</th>
+                                <th>1H Analysis</th>
+                                <th>1H Photo</th>
+                                <th>View/Share</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analysisBody">
+                            <tr>
+                                <td colspan="15" class="no-data">Loading analyses...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Calendar View -->
+            <div id="calendarView" style="display: none;">
+                <div style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 149, 0, 0.2); border-radius: 15px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+                    
+                    <!-- Calendar Controls -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <button onclick="changeMonth(-1)" style="background: linear-gradient(135deg, #ff9500, #ff7b00); color: #fff; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
+                            ◄ Previous
+                        </button>
+                        
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <select id="calendarMonth" onchange="renderCalendar()" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 149, 0, 0.3); border-radius: 8px; padding: 12px 20px; color: #fff; font-size: 1em; font-weight: 600; cursor: pointer;">
+                                <option value="0">January</option>
+                                <option value="1">February</option>
+                                <option value="2">March</option>
+                                <option value="3">April</option>
+                                <option value="4">May</option>
+                                <option value="5">June</option>
+                                <option value="6">July</option>
+                                <option value="7">August</option>
+                                <option value="8">September</option>
+                                <option value="9">October</option>
+                                <option value="10">November</option>
+                                <option value="11">December</option>
+                            </select>
+                            
+                            <select id="calendarYear" onchange="renderCalendar()" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 149, 0, 0.3); border-radius: 8px; padding: 12px 20px; color: #fff; font-size: 1em; font-weight: 600; cursor: pointer;">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                            </select>
+                        </div>
+                        
+                        <button onclick="changeMonth(1)" style="background: linear-gradient(135deg, #ff9500, #ff7b00); color: #fff; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
+                            Next ►
+                        </button>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 30px;">
+                        <!-- Calendar will be rendered here -->
+                    </div>
+
+                    <!-- Selected Day Analyses -->
+                    <div id="selectedDayAnalyses" style="display: none; background: rgba(255, 149, 0, 0.05); border: 2px solid rgba(255, 149, 0, 0.3); border-radius: 15px; padding: 25px; margin-top: 30px;">
+                        <h3 id="selectedDayTitle" style="color: #ff9500; margin-bottom: 20px; font-size: 1.5em;"></h3>
+                        <div id="selectedDayContent"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1492,10 +1628,204 @@ function clearForm() {
     editingIndex = -1;
 }
 
+// View Mode Switch
+function switchView(mode) {
+    const journalView = document.getElementById('journalView');
+    const calendarView = document.getElementById('calendarView');
+    const btnJournal = document.getElementById('btnJournalView');
+    const btnCalendar = document.getElementById('btnCalendarView');
+    
+    if (mode === 'journal') {
+        journalView.style.display = 'block';
+        calendarView.style.display = 'none';
+        btnJournal.classList.add('active');
+        btnCalendar.classList.remove('active');
+    } else {
+        journalView.style.display = 'none';
+        calendarView.style.display = 'block';
+        btnJournal.classList.remove('active');
+        btnCalendar.classList.add('active');
+        renderCalendar();
+    }
+}
+
+// Calendar Functions
+let currentSelectedDate = null;
+
+function changeMonth(delta) {
+    const monthSelect = document.getElementById('calendarMonth');
+    const yearSelect = document.getElementById('calendarYear');
+    
+    let month = parseInt(monthSelect.value);
+    let year = parseInt(yearSelect.value);
+    
+    month += delta;
+    
+    if (month < 0) {
+        month = 11;
+        year--;
+    } else if (month > 11) {
+        month = 0;
+        year++;
+    }
+    
+    monthSelect.value = month;
+    yearSelect.value = year;
+    renderCalendar();
+}
+
+function renderCalendar() {
+    const month = parseInt(document.getElementById('calendarMonth').value);
+    const year = parseInt(document.getElementById('calendarYear').value);
+    const grid = document.getElementById('calendarGrid');
+    
+    grid.innerHTML = '';
+    
+    // Add day headers
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    days.forEach(day => {
+        const header = document.createElement('div');
+        header.className = 'calendar-header';
+        header.textContent = day;
+        grid.appendChild(header);
+    });
+    
+    // Get first day of month
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    
+    // Adjust first day (make Monday = 0)
+    const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
+    
+    // Add previous month's days
+    for (let i = adjustedFirstDay - 1; i >= 0; i--) {
+        const dayDiv = createDayCell(daysInPrevMonth - i, month - 1, year, true);
+        grid.appendChild(dayDiv);
+    }
+    
+    // Add current month's days
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayDiv = createDayCell(day, month, year, false);
+        grid.appendChild(dayDiv);
+    }
+    
+    // Add next month's days to fill grid
+    const totalCells = grid.children.length - 7;
+    const remainingCells = 42 - totalCells - 7;
+    for (let day = 1; day <= remainingCells; day++) {
+        const dayDiv = createDayCell(day, month + 1, year, true);
+        grid.appendChild(dayDiv);
+    }
+}
+
+function createDayCell(day, month, year, isOtherMonth) {
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'calendar-day';
+    
+    if (isOtherMonth) {
+        dayDiv.classList.add('other-month');
+    }
+    
+    // Adjust month for proper date creation
+    let actualMonth = month;
+    let actualYear = year;
+    if (month < 0) {
+        actualMonth = 11;
+        actualYear = year - 1;
+    } else if (month > 11) {
+        actualMonth = 0;
+        actualYear = year + 1;
+    }
+    
+    const dateStr = `${actualYear}-${String(actualMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    
+    // Count analyses for this day
+    const analysesForDay = analyses.filter(a => a.date === dateStr);
+    
+    if (analysesForDay.length > 0 && !isOtherMonth) {
+        dayDiv.classList.add('has-analysis');
+    }
+    
+    // Check if selected
+    if (currentSelectedDate === dateStr && !isOtherMonth) {
+        dayDiv.classList.add('selected');
+    }
+    
+    const dayNumber = document.createElement('div');
+    dayNumber.className = 'calendar-day-number';
+    dayNumber.textContent = day;
+    dayDiv.appendChild(dayNumber);
+    
+    if (analysesForDay.length > 0 && !isOtherMonth) {
+        const count = document.createElement('div');
+        count.className = 'calendar-day-count';
+        count.textContent = `${analysesForDay.length} ${analysesForDay.length === 1 ? 'analysis' : 'analyses'}`;
+        dayDiv.appendChild(count);
+    }
+    
+    if (!isOtherMonth) {
+        dayDiv.onclick = () => showAnalysesForDay(dateStr, day, actualMonth, actualYear);
+    }
+    
+    return dayDiv;
+}
+
+function showAnalysesForDay(dateStr, day, month, year) {
+    currentSelectedDate = dateStr;
+    renderCalendar();
+    
+    const analysesForDay = analyses.filter(a => a.date === dateStr);
+    const container = document.getElementById('selectedDayAnalyses');
+    const title = document.getElementById('selectedDayTitle');
+    const content = document.getElementById('selectedDayContent');
+    
+    if (analysesForDay.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    title.textContent = `📅 ${day} ${monthNames[month]} ${year} - ${analysesForDay.length} ${analysesForDay.length === 1 ? 'Analysis' : 'Analyses'}`;
+    
+    content.innerHTML = '';
+    
+    analysesForDay.forEach((a, index) => {
+        const card = document.createElement('div');
+        card.style.cssText = 'background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 149, 0, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 15px;';
+        
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4 style="color: #ff9500; margin: 0; font-size: 1.3em;">${a.pair}</h4>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="viewAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9em; font-weight: 600;">
+                        👁️ View Full Analysis
+                    </button>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; color: #ddd; font-size: 0.95em;">
+                ${a.weeklyAnalysis ? `<div><strong style="color: #ff9500;">📅 Weekly:</strong><br>${a.weeklyAnalysis.substring(0, 100)}${a.weeklyAnalysis.length > 100 ? '...' : ''}</div>` : ''}
+                ${a.dailyAnalysis ? `<div><strong style="color: #4d9fff;">📊 Daily:</strong><br>${a.dailyAnalysis.substring(0, 100)}${a.dailyAnalysis.length > 100 ? '...' : ''}</div>` : ''}
+                ${a.fourHAnalysis ? `<div><strong style="color: #9c27b0;">⏱️ 4H:</strong><br>${a.fourHAnalysis.substring(0, 100)}${a.fourHAnalysis.length > 100 ? '...' : ''}</div>` : ''}
+                ${a.oneHAnalysis ? `<div><strong style="color: #00cc88;">⚡ 1H:</strong><br>${a.oneHAnalysis.substring(0, 100)}${a.oneHAnalysis.length > 100 ? '...' : ''}</div>` : ''}
+            </div>
+        `;
+        
+        content.appendChild(card);
+    });
+    
+    container.style.display = 'block';
+}
+
 // Init
 window.onload = () => {
     checkAuth();
     loadAnalyses();
+    
+    // Set calendar to current month/year
+    const now = new Date();
+    document.getElementById('calendarMonth').value = now.getMonth();
+    document.getElementById('calendarYear').value = now.getFullYear();
 };
     </script>
 </body>
