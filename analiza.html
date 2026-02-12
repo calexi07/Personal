@@ -1785,14 +1785,19 @@ function createDayCell(day, month, year, isOtherMonth) {
     
     const dateStr = `${actualYear}-${String(actualMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     
-    // Count analyses for this day
+    // Count analyses for this day - compare only the date part
     const analysesForDay = analyses.filter(a => {
         if (!a.date) return false;
-        return a.date === dateStr;
+        // Extract date part from ISO string (YYYY-MM-DD)
+        const analysisDate = a.date.split('T')[0];
+        return analysisDate === dateStr;
     });
     
     if (day === 11 && !isOtherMonth) {
         console.log('Day 11 - dateStr:', dateStr, 'analyses:', analysesForDay.length);
+        if (analyses.length > 0) {
+            console.log('First analysis date:', analyses[0].date, 'extracted:', analyses[0].date.split('T')[0]);
+        }
     }
     
     if (analysesForDay.length > 0 && !isOtherMonth) {
@@ -1838,7 +1843,14 @@ function showAnalysesForDay(dateStr, day, month, year) {
     currentSelectedDate = dateStr;
     renderCalendar();
     
-    const analysesForDay = analyses.filter(a => a.date === dateStr);
+    // Filter analyses by date - compare only date part
+    const analysesForDay = analyses.filter(a => {
+        if (!a.date) return false;
+        const analysisDate = a.date.split('T')[0];
+        return analysisDate === dateStr;
+    });
+    
+    console.log('showAnalysesForDay - dateStr:', dateStr, 'found:', analysesForDay.length);
     
     if (analysesForDay.length === 0) {
         return;
