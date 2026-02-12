@@ -690,26 +690,18 @@
                     <table>
                         <thead>
                             <tr>
+                                <th>Year</th>
                                 <th>Month</th>
                                 <th>Day</th>
                                 <th>Date</th>
-                                <th>Year</th>
                                 <th>Pair</th>
-                                <th>Weekly Analysis</th>
-                                <th>Weekly Photo</th>
-                                <th>Daily Analysis</th>
-                                <th>Daily Photo</th>
-                                <th>4H Analysis</th>
-                                <th>4H Photo</th>
-                                <th>1H Analysis</th>
-                                <th>1H Photo</th>
-                                <th>View/Share</th>
+                                <th>Analysis</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="analysisBody">
                             <tr>
-                                <td colspan="15" class="no-data">Loading analyses...</td>
+                                <td colspan="7" class="no-data">Loading analyses...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -734,7 +726,7 @@
                                 </button>
                                 
                                 <!-- Month Picker Popup -->
-                                <div id="monthPicker" style="display: none; position: absolute; top: 60px; left: 0; background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); border: 2px solid rgba(33, 150, 243, 0.5); border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); z-index: 1000; backdrop-filter: blur(20px); min-width: 300px;">
+                                <div id="monthPicker" style="display: none; position: absolute; top: 60px; left: 0; background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); border: 2px solid rgba(33, 150, 243, 0.5); border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); z-index: 9999; backdrop-filter: blur(20px); min-width: 300px;">
                                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                                         <!-- Months will be inserted here -->
                                     </div>
@@ -748,7 +740,7 @@
                                 </button>
                                 
                                 <!-- Year Picker Popup -->
-                                <div id="yearPicker" style="display: none; position: absolute; top: 60px; left: 0; background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); border: 2px solid rgba(33, 150, 243, 0.5); border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); z-index: 1000; backdrop-filter: blur(20px); min-width: 280px;">
+                                <div id="yearPicker" style="display: none; position: absolute; top: 60px; left: 0; background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); border: 2px solid rgba(33, 150, 243, 0.5); border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); z-index: 2000; backdrop-filter: blur(20px); min-width: 280px;">
                                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
                                         <!-- Years will be inserted here -->
                                     </div>
@@ -792,7 +784,7 @@
 
     <!-- View Analysis Modal -->
     <div class="loading-overlay" id="viewModal" style="display: none;">
-        <div style="background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); padding: 40px; border-radius: 20px; max-width: 900px; width: 90%; max-height: 85vh; overflow-y: auto; border: 2px solid rgba(33, 150, 243, 0.5); position: relative;">
+        <div style="background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); padding: 50px; border-radius: 25px; max-width: 95vw; width: 95%; max-height: 95vh; overflow-y: auto; border: 2px solid rgba(33, 150, 243, 0.5); position: relative; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
             <!-- Back button (top-left) -->
             <button id="backToDayBtn" onclick="backToDayModal()" style="display: none; position: absolute; top: 20px; left: 20px; background: rgba(33, 150, 243, 0.2); color: #2196F3; border: 2px solid #2196F3; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.3em; font-weight: bold; transition: all 0.3s ease; z-index: 10;">◄</button>
             
@@ -815,6 +807,9 @@
             </div>
 
             <div style="margin-top: 30px; text-align: center; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="printAnalysisFromModal()" style="background: linear-gradient(135deg, #00BCD4, #0097A7); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);">
+                    🖨️ Print to Word
+                </button>
                 <button onclick="copyForTradingViewFromModal()" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(41, 98, 255, 0.4);">
                     📈 Copy for TradingView
                 </button>
@@ -827,7 +822,7 @@
 
     <!-- Day Analyses Modal -->
     <div class="loading-overlay" id="dayModal" style="display: none;">
-        <div style="background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); padding: 40px; border-radius: 20px; max-width: 1000px; width: 90%; max-height: 85vh; overflow-y: auto; border: 2px solid rgba(33, 150, 243, 0.5);">
+        <div style="background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); padding: 50px; border-radius: 25px; max-width: 95vw; width: 95%; max-height: 95vh; overflow-y: auto; border: 2px solid rgba(33, 150, 243, 0.5); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <h2 id="dayModalTitle" style="color: #2196F3; margin: 0; font-size: 2em;">📅 Day Analyses</h2>
                 <button onclick="closeDayModal()" style="background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border: 2px solid #ff6b6b; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.5em; font-weight: bold; transition: all 0.3s ease;">×</button>
@@ -1156,7 +1151,7 @@ function resetFilters() {
 // Table
 function updateTable() {
     if (!filteredAnalyses.length) {
-        analysisBody.innerHTML = '<tr><td colspan="15" class="no-data">No analyses yet</td></tr>';
+        analysisBody.innerHTML = '<tr><td colspan="7" class="no-data">No analyses yet</td></tr>';
         return;
     }
     
@@ -1165,46 +1160,33 @@ function updateTable() {
     filteredAnalyses.forEach((a, i) => {
         const tr = document.createElement('tr');
         
-        const formatPhoto = (url) => {
-            if (!url) return '-';
-            return `<a href="${url}" target="_blank" style="color: #2196F3; text-decoration: none;">📸 View</a>`;
-        };
-        
-        const truncate = (text) => {
-            if (!text) return '-';
-            return text.length > 50 ? text.substring(0, 47) + '...' : text;
-        };
-        
         tr.innerHTML = `
+            <td>${a.year}</td>
             <td>${a.month}</td>
             <td>${a.day}</td>
             <td>${a.date ? new Date(a.date).toLocaleDateString('ro-RO') : '-'}</td>
-            <td>${a.year}</td>
-            <td>${a.pair}</td>
-            <td title="${a.weeklyAnalysis || ''}">${truncate(a.weeklyAnalysis)}</td>
-            <td>${formatPhoto(a.weeklyPhoto)}</td>
-            <td title="${a.dailyAnalysis || ''}">${truncate(a.dailyAnalysis)}</td>
-            <td>${formatPhoto(a.dailyPhoto)}</td>
-            <td title="${a.fourHAnalysis || ''}">${truncate(a.fourHAnalysis)}</td>
-            <td>${formatPhoto(a.fourHPhoto)}</td>
-            <td title="${a.oneHAnalysis || ''}">${truncate(a.oneHAnalysis)}</td>
-            <td>${formatPhoto(a.oneHPhoto)}</td>
+            <td style="font-weight: 600; color: #64B5F6;">${a.pair}</td>
             <td>
-                <button onclick="viewAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; transition: all 0.3s ease; margin-right: 5px;">
-                    👁️ View
-                </button>
-                <button onclick="shareToTradingView(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; transition: all 0.3s ease; margin-right: 5px;">
-                    📈 TV
-                </button>
-                <button onclick="shareToDiscord(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-weight: 600; transition: all 0.3s ease;">
-                    📋 Discord
+                <button onclick="viewAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #2196F3, #1976D2); color: #fff; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 0.9em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(33, 150, 243, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(33, 150, 243, 0.3)';">
+                    👁️ View Analysis
                 </button>
             </td>
             <td>
-                ${isLoggedIn ? `
-                    <button class="delete-btn" onclick="deleteAnalysis(${analyses.indexOf(a)})">Delete</button>
-                    <button class="edit-btn" onclick="editAnalysis(${analyses.indexOf(a)})">Edit</button>
-                ` : '-'}
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="printAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #00BCD4, #0097A7); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        🖨️ Print
+                    </button>
+                    <button onclick="shareToTradingView(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        📈 TV
+                    </button>
+                    <button onclick="shareToDiscord(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        📋 Discord
+                    </button>
+                    ${isLoggedIn ? `
+                        <button class="edit-btn" onclick="editAnalysis(${analyses.indexOf(a)})" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85em;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">✏️ Edit</button>
+                        <button class="delete-btn" onclick="deleteAnalysis(${analyses.indexOf(a)})" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85em;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🗑️ Delete</button>
+                    ` : ''}
+                </div>
             </td>
         `;
         
@@ -1313,6 +1295,85 @@ function viewAnalysis(index) {
 function closeViewModal() {
     document.getElementById('viewModal').style.display = 'none';
     currentViewIndex = -1;
+}
+
+// Print to Word Document
+function printAnalysis(index) {
+    const a = analyses[index];
+    generateWordDocument(a);
+}
+
+function printAnalysisFromModal() {
+    if (currentViewIndex >= 0) {
+        const a = analyses[currentViewIndex];
+        generateWordDocument(a);
+    }
+}
+
+function generateWordDocument(analysis) {
+    const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
+    
+    // Create Word-like formatted content
+    let content = `
+MARKET ANALYSIS REPORT
+═══════════════════════════════════════════════════
+
+Date: ${dateStr}
+Pair: ${analysis.pair}
+Day: ${analysis.day}, ${analysis.month} ${analysis.year}
+
+═══════════════════════════════════════════════════
+
+📅 WEEKLY TIMEFRAME ANALYSIS
+───────────────────────────────────────────────────
+
+${analysis.weeklyAnalysis || 'No analysis provided'}
+
+${analysis.weeklyPhoto ? `Chart Link: ${analysis.weeklyPhoto}` : ''}
+
+
+📊 DAILY TIMEFRAME ANALYSIS
+───────────────────────────────────────────────────
+
+${analysis.dailyAnalysis || 'No analysis provided'}
+
+${analysis.dailyPhoto ? `Chart Link: ${analysis.dailyPhoto}` : ''}
+
+
+⏱️ 4H TIMEFRAME ANALYSIS
+───────────────────────────────────────────────────
+
+${analysis.fourHAnalysis || 'No analysis provided'}
+
+${analysis.fourHPhoto ? `Chart Link: ${analysis.fourHPhoto}` : ''}
+
+
+⚡ 1H TIMEFRAME ANALYSIS
+───────────────────────────────────────────────────
+
+${analysis.oneHAnalysis || 'No analysis provided'}
+
+${analysis.oneHPhoto ? `Chart Link: ${analysis.oneHPhoto}` : ''}
+
+
+═══════════════════════════════════════════════════
+Generated: ${new Date().toLocaleString('ro-RO')}
+═══════════════════════════════════════════════════
+`;
+    
+    // Create blob and download
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Analysis_${analysis.pair}_${dateStr.replace(/\//g, '-')}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Show confirmation
+    alert('✅ Analysis exported as text document!\n\nYou can open it in Word or any text editor.');
 }
 
 function shareFromModal() {
