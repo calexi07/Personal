@@ -1586,12 +1586,10 @@ async function sendToDiscordFromModal() {
 }
 
 async function postToDiscord(analysis) {
-    // Get webhook for this specific pair
     const webhookUrl = DISCORD_WEBHOOKS[analysis.pair] || DEFAULT_DISCORD_WEBHOOK;
     
-    // Check if webhook is configured for this pair
     if (!webhookUrl || webhookUrl === '') {
-        alert(`⚠️ Discord Webhook not configured for ${analysis.pair}!\n\nTo add a webhook:\n1. Create a channel in Discord for ${analysis.pair}\n2. Go to Channel Settings → Integrations → Webhooks\n3. Create a webhook and copy the URL\n4. Add it to DISCORD_WEBHOOKS object in the code:\n   '${analysis.pair}': 'your-webhook-url'`);
+        alert(`⚠️ Discord Webhook not configured for ${analysis.pair}!`);
         return;
     }
     
@@ -1600,193 +1598,133 @@ async function postToDiscord(analysis) {
     try {
         const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
         
-        // Create main overview embed
-        const mainEmbed = {
-            title: `📊 Cristian's Thoughts About ${analysis.pair}`,
-            description: `**${analysis.day}, ${analysis.month} ${analysis.year}** • ${dateStr}\n\n*Multi-timeframe market analysis across Weekly, Daily, 4H, and 1H charts*`,
+        // Helper to create full-width content
+        const makeFullWidth = (text, char = '═') => {
+            return text + '\n' + char.repeat(50);
+        };
+        
+        // ALL EMBEDS in ONE message for maximum width
+        const embeds = [];
+        
+        // Overview Embed
+        embeds.push({
+            author: {
+                name: `Cristian's Thoughts About ${analysis.pair}`,
+                icon_url: CUSTOM_AVATAR_URL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+            },
+            description: `## ${analysis.day}, ${analysis.month} ${analysis.year} • ${dateStr}\n\n> 📊 Multi-timeframe market analysis\n> 📈 Comprehensive insights across all major timeframes\n\n${makeFullWidth('', '─')}`,
             color: 0x2196F3,
             timestamp: new Date().toISOString(),
             footer: {
                 text: 'Market Analysis Journal • Professional Trading Insights',
                 icon_url: 'https://cdn-icons-png.flaticon.com/512/2920/2920349.png'
             }
-        };
-        
-        // Send main message with overview
-        const mainResponse = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: `Cristian's Thoughts About ${analysis.pair}`,
-                avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                content: `🔔 **New Analysis Posted!** 📈\n> Fresh market insights for **${analysis.pair}** are now available.`,
-                embeds: [mainEmbed]
-            })
         });
         
-        if (!mainResponse.ok) {
-            throw new Error('Failed to post main message');
-        }
-        
-        // Small delay between messages
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Post Weekly analysis with clickable image link
+        // Weekly Embed with image URL shown
         if (analysis.weeklyAnalysis || analysis.weeklyPhoto) {
             const weeklyEmbed = {
-                title: '📅 Weekly Timeframe Analysis',
-                description: analysis.weeklyAnalysis || '*No analysis provided*',
+                title: '📅 WEEKLY TIMEFRAME ANALYSIS',
+                description: (analysis.weeklyAnalysis || '*No analysis provided*') + '\n\n' + makeFullWidth('', '─'),
                 color: 0xFF9500,
-                fields: [
-                    {
-                        name: '📊 Chart Type',
-                        value: 'Weekly Timeframe',
-                        inline: true
-                    },
-                    {
-                        name: '⏰ Timeframe',
-                        value: '1W',
-                        inline: true
-                    }
-                ]
+                fields: []
             };
             
-            // Try to add image
             if (analysis.weeklyPhoto) {
-                weeklyEmbed.image = { url: analysis.weeklyPhoto };
+                weeklyEmbed.fields.push({
+                    name: '📊 Chart Image',
+                    value: `\`\`\`\n${analysis.weeklyPhoto}\n\`\`\`\n[🔗 Click to Open Chart](${analysis.weeklyPhoto})`,
+                    inline: false
+                });
             }
             
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: `Cristian's Thoughts About ${analysis.pair}`,
-                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                    embeds: [weeklyEmbed]
-                })
-            });
-            
-            await new Promise(resolve => setTimeout(resolve, 500));
+            embeds.push(weeklyEmbed);
         }
         
-        // Post Daily analysis
+        // Daily Embed with image URL shown
         if (analysis.dailyAnalysis || analysis.dailyPhoto) {
             const dailyEmbed = {
-                title: '📊 Daily Timeframe Analysis',
-                description: analysis.dailyAnalysis || '*No analysis provided*',
+                title: '📊 DAILY TIMEFRAME ANALYSIS',
+                description: (analysis.dailyAnalysis || '*No analysis provided*') + '\n\n' + makeFullWidth('', '─'),
                 color: 0x4CAF50,
-                fields: [
-                    {
-                        name: '📊 Chart Type',
-                        value: 'Daily Timeframe',
-                        inline: true
-                    },
-                    {
-                        name: '⏰ Timeframe',
-                        value: '1D',
-                        inline: true
-                    }
-                ]
+                fields: []
             };
             
             if (analysis.dailyPhoto) {
-                dailyEmbed.image = { url: analysis.dailyPhoto };
+                dailyEmbed.fields.push({
+                    name: '📊 Chart Image',
+                    value: `\`\`\`\n${analysis.dailyPhoto}\n\`\`\`\n[🔗 Click to Open Chart](${analysis.dailyPhoto})`,
+                    inline: false
+                });
             }
             
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: `Cristian's Thoughts About ${analysis.pair}`,
-                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                    embeds: [dailyEmbed]
-                })
-            });
-            
-            await new Promise(resolve => setTimeout(resolve, 500));
+            embeds.push(dailyEmbed);
         }
         
-        // Post 4H analysis
+        // 4H Embed with image URL shown
         if (analysis.fourHAnalysis || analysis.fourHPhoto) {
             const fourHEmbed = {
-                title: '⏱️ 4H Timeframe Analysis',
-                description: analysis.fourHAnalysis || '*No analysis provided*',
+                title: '⏱️ 4H TIMEFRAME ANALYSIS',
+                description: (analysis.fourHAnalysis || '*No analysis provided*') + '\n\n' + makeFullWidth('', '─'),
                 color: 0x9C27B0,
-                fields: [
-                    {
-                        name: '📊 Chart Type',
-                        value: '4-Hour Timeframe',
-                        inline: true
-                    },
-                    {
-                        name: '⏰ Timeframe',
-                        value: '4H',
-                        inline: true
-                    }
-                ]
+                fields: []
             };
             
             if (analysis.fourHPhoto) {
-                fourHEmbed.image = { url: analysis.fourHPhoto };
+                fourHEmbed.fields.push({
+                    name: '📊 Chart Image',
+                    value: `\`\`\`\n${analysis.fourHPhoto}\n\`\`\`\n[🔗 Click to Open Chart](${analysis.fourHPhoto})`,
+                    inline: false
+                });
             }
             
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: `Cristian's Thoughts About ${analysis.pair}`,
-                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                    embeds: [fourHEmbed]
-                })
-            });
-            
-            await new Promise(resolve => setTimeout(resolve, 500));
+            embeds.push(fourHEmbed);
         }
         
-        // Post 1H analysis
+        // 1H Embed with image URL shown
         if (analysis.oneHAnalysis || analysis.oneHPhoto) {
             const oneHEmbed = {
-                title: '⚡ 1H Timeframe Analysis',
-                description: analysis.oneHAnalysis || '*No analysis provided*',
+                title: '⚡ 1H TIMEFRAME ANALYSIS',
+                description: (analysis.oneHAnalysis || '*No analysis provided*') + '\n\n' + makeFullWidth('', '─'),
                 color: 0x00BCD4,
-                fields: [
-                    {
-                        name: '📊 Chart Type',
-                        value: '1-Hour Timeframe',
-                        inline: true
-                    },
-                    {
-                        name: '⏰ Timeframe',
-                        value: '1H',
-                        inline: true
-                    }
-                ]
+                fields: []
             };
             
             if (analysis.oneHPhoto) {
-                oneHEmbed.image = { url: analysis.oneHPhoto };
+                oneHEmbed.fields.push({
+                    name: '📊 Chart Image',
+                    value: `\`\`\`\n${analysis.oneHPhoto}\n\`\`\`\n[🔗 Click to Open Chart](${analysis.oneHPhoto})`,
+                    inline: false
+                });
             }
             
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: `Cristian's Thoughts About ${analysis.pair}`,
-                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                    embeds: [oneHEmbed]
-                })
-            });
+            embeds.push(oneHEmbed);
         }
         
+        // Send ALL in ONE message
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: `${analysis.pair} Analysis`,
+                avatar_url: CUSTOM_AVATAR_URL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                content: `# 🔔 New Analysis Posted!\n## ${analysis.pair} Market Insights\n> Fresh analysis available • ${dateStr}`,
+                embeds: embeds
+            })
+        });
+        
         hideLoading();
-        alert(`✅ ${analysis.pair} analysis posted to Discord successfully! 🚀\n\n📱 Check your Discord channel!\n\n⚠️ Note: If images don't appear, make sure the image URLs are publicly accessible.`);
+        
+        if (response.ok) {
+            alert(`✅ ${analysis.pair} posted to Discord!\n\n💡 Image URLs are displayed as clickable links in code blocks.`);
+        } else {
+            throw new Error('Failed to post');
+        }
         
     } catch (error) {
-        console.error('Error posting to Discord:', error);
+        console.error('Discord error:', error);
         hideLoading();
-        alert(`❌ Error posting ${analysis.pair} to Discord.\n\nPlease check:\n1. Your webhook URL for ${analysis.pair} is correct\n2. You have internet connection\n3. The webhook is still active\n4. Image URLs are publicly accessible`);
+        alert(`❌ Failed to post to Discord.\nCheck: webhook URL, internet, image URLs`);
     }
 }
 
