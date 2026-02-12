@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Market Analysis Journal - $225</title>
     
-    <!-- docx.js library for Word document generation -->
-    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js"></script>
-    
     <style>
         * {
             margin: 0;
@@ -714,15 +711,15 @@
 
             <!-- Calendar View -->
             <div id="calendarView" style="display: none;">
-                <div style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 15px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+                <div style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 15px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); position: relative;">
                     
                     <!-- Calendar Controls -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; gap: 20px; flex-wrap: wrap;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; gap: 20px; flex-wrap: wrap; position: relative; z-index: 100;">
                         <button onclick="changeMonth(-1)" style="background: linear-gradient(135deg, #2196F3, #1976D2); color: #fff; border: none; padding: 12px 24px; border-radius: 15px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); display: flex; align-items: center; gap: 8px;" onmouseover="this.style.transform='translateX(-3px)'; this.style.boxShadow='0 6px 20px rgba(33, 150, 243, 0.5)';" onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='0 4px 15px rgba(33, 150, 243, 0.3)';">
                             <span style="font-size: 1.2em;">◄</span> Previous
                         </button>
                         
-                        <div style="display: flex; gap: 15px; align-items: center; background: rgba(33, 150, 243, 0.1); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(33, 150, 243, 0.3); backdrop-filter: blur(10px); flex-wrap: wrap; justify-content: center;">
+                        <div style="display: flex; gap: 15px; align-items: center; background: rgba(33, 150, 243, 0.1); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(33, 150, 243, 0.3); backdrop-filter: blur(10px); flex-wrap: wrap; justify-content: center; position: relative; z-index: 150;">
                             <!-- Month Selector -->
                             <div style="position: relative;">
                                 <button id="monthSelectorBtn" onclick="toggleMonthPicker()" style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(25, 118, 210, 0.1)); border: 2px solid rgba(33, 150, 243, 0.4); color: #64B5F6; padding: 12px 24px; border-radius: 15px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; min-width: 140px;" onmouseover="this.style.borderColor='#2196F3'; this.style.background='linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(25, 118, 210, 0.2))';" onmouseout="this.style.borderColor='rgba(33, 150, 243, 0.4)'; this.style.background='linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(25, 118, 210, 0.1))';">
@@ -1314,208 +1311,202 @@ function printAnalysisFromModal() {
     }
 }
 
+function generateQRCode(url) {
+    if (!url) return '';
+    // Generate QR code using QR Server API
+    return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+}
+
 async function generateWordDocument(analysis) {
     const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
     
-    // Show loading
     showLoading();
     
     try {
-        // Fetch images as base64
-        const fetchImageAsBase64 = async (url) => {
-            if (!url) return null;
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-            } catch (err) {
-                console.error('Error fetching image:', err);
-                return null;
-            }
-        };
-
-        // Create Word document using docx library
-        const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, BorderStyle } = docx;
+        // Create HTML content for Word
+        let htmlContent = `
+<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+    <meta charset='utf-8'>
+    <title>Market Analysis Report</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+    </xml>
+    <![endif]-->
+    <style>
+        body {
+            font-family: 'Calibri', Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            margin: 40px;
+        }
+        h1 {
+            color: #2196F3;
+            text-align: center;
+            font-size: 24pt;
+            border-bottom: 3px solid #2196F3;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #1976D2;
+            font-size: 16pt;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-left: 4px solid #2196F3;
+            padding-left: 10px;
+        }
+        .metadata {
+            background-color: #E3F2FD;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+        }
+        .metadata p {
+            margin: 5px 0;
+        }
+        .metadata strong {
+            color: #1976D2;
+            min-width: 80px;
+            display: inline-block;
+        }
+        .section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        .chart-section {
+            background-color: #F5F5F5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .qr-container {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        .qr-container img {
+            display: block;
+            margin: 0 auto 5px auto;
+        }
+        .qr-label {
+            font-size: 9pt;
+            color: #666;
+            font-style: italic;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #E0E0E0;
+            text-align: center;
+            font-size: 9pt;
+            color: #666;
+        }
+        p {
+            text-align: justify;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📊 MARKET ANALYSIS REPORT</h1>
+    
+    <div class="metadata">
+        <p><strong>📅 Date:</strong> ${dateStr}</p>
+        <p><strong>💱 Pair:</strong> ${analysis.pair}</p>
+        <p><strong>📆 Day:</strong> ${analysis.day}, ${analysis.month} ${analysis.year}</p>
+    </div>
+    
+    <div class="section">
+        <h2>📅 WEEKLY TIMEFRAME ANALYSIS</h2>
+        <p>${analysis.weeklyAnalysis || 'No analysis provided'}</p>
+        ${analysis.weeklyPhoto ? `
+        <div class="chart-section">
+            <div class="qr-container">
+                <img src="${generateQRCode(analysis.weeklyPhoto)}" alt="Weekly Chart QR Code" width="150" height="150" />
+                <p class="qr-label">Scan QR code to view Weekly chart</p>
+            </div>
+        </div>
+        ` : ''}
+    </div>
+    
+    <div class="section">
+        <h2>📊 DAILY TIMEFRAME ANALYSIS</h2>
+        <p>${analysis.dailyAnalysis || 'No analysis provided'}</p>
+        ${analysis.dailyPhoto ? `
+        <div class="chart-section">
+            <div class="qr-container">
+                <img src="${generateQRCode(analysis.dailyPhoto)}" alt="Daily Chart QR Code" width="150" height="150" />
+                <p class="qr-label">Scan QR code to view Daily chart</p>
+            </div>
+        </div>
+        ` : ''}
+    </div>
+    
+    <div class="section">
+        <h2>⏱️ 4H TIMEFRAME ANALYSIS</h2>
+        <p>${analysis.fourHAnalysis || 'No analysis provided'}</p>
+        ${analysis.fourHPhoto ? `
+        <div class="chart-section">
+            <div class="qr-container">
+                <img src="${generateQRCode(analysis.fourHPhoto)}" alt="4H Chart QR Code" width="150" height="150" />
+                <p class="qr-label">Scan QR code to view 4H chart</p>
+            </div>
+        </div>
+        ` : ''}
+    </div>
+    
+    <div class="section">
+        <h2>⚡ 1H TIMEFRAME ANALYSIS</h2>
+        <p>${analysis.oneHAnalysis || 'No analysis provided'}</p>
+        ${analysis.oneHPhoto ? `
+        <div class="chart-section">
+            <div class="qr-container">
+                <img src="${generateQRCode(analysis.oneHPhoto)}" alt="1H Chart QR Code" width="150" height="150" />
+                <p class="qr-label">Scan QR code to view 1H chart</p>
+            </div>
+        </div>
+        ` : ''}
+    </div>
+    
+    <div class="footer">
+        <p>Generated: ${new Date().toLocaleString('ro-RO')}</p>
+        <p>Market Analysis Journal - Professional Trading Analysis</p>
+    </div>
+</body>
+</html>
+`;
         
-        const doc = new Document({
-            sections: [{
-                properties: {},
-                children: [
-                    // Title
-                    new Paragraph({
-                        text: "MARKET ANALYSIS REPORT",
-                        heading: HeadingLevel.HEADING_1,
-                        alignment: AlignmentType.CENTER,
-                        spacing: { after: 400 }
-                    }),
-                    
-                    // Metadata
-                    new Paragraph({
-                        children: [
-                            new TextRun({ text: "Date: ", bold: true }),
-                            new TextRun(dateStr)
-                        ],
-                        spacing: { after: 200 }
-                    }),
-                    new Paragraph({
-                        children: [
-                            new TextRun({ text: "Pair: ", bold: true }),
-                            new TextRun(analysis.pair)
-                        ],
-                        spacing: { after: 200 }
-                    }),
-                    new Paragraph({
-                        children: [
-                            new TextRun({ text: "Day: ", bold: true }),
-                            new TextRun(`${analysis.day}, ${analysis.month} ${analysis.year}`)
-                        ],
-                        spacing: { after: 400 }
-                    }),
-                    
-                    // Weekly Section
-                    new Paragraph({
-                        text: "📅 WEEKLY TIMEFRAME ANALYSIS",
-                        heading: HeadingLevel.HEADING_2,
-                        spacing: { before: 400, after: 200 }
-                    }),
-                    new Paragraph({
-                        text: analysis.weeklyAnalysis || 'No analysis provided',
-                        spacing: { after: 200 }
-                    }),
-                    
-                    // Daily Section
-                    new Paragraph({
-                        text: "📊 DAILY TIMEFRAME ANALYSIS",
-                        heading: HeadingLevel.HEADING_2,
-                        spacing: { before: 400, after: 200 }
-                    }),
-                    new Paragraph({
-                        text: analysis.dailyAnalysis || 'No analysis provided',
-                        spacing: { after: 200 }
-                    }),
-                    
-                    // 4H Section
-                    new Paragraph({
-                        text: "⏱️ 4H TIMEFRAME ANALYSIS",
-                        heading: HeadingLevel.HEADING_2,
-                        spacing: { before: 400, after: 200 }
-                    }),
-                    new Paragraph({
-                        text: analysis.fourHAnalysis || 'No analysis provided',
-                        spacing: { after: 200 }
-                    }),
-                    
-                    // 1H Section
-                    new Paragraph({
-                        text: "⚡ 1H TIMEFRAME ANALYSIS",
-                        heading: HeadingLevel.HEADING_2,
-                        spacing: { before: 400, after: 200 }
-                    }),
-                    new Paragraph({
-                        text: analysis.oneHAnalysis || 'No analysis provided',
-                        spacing: { after: 400 }
-                    }),
-                    
-                    // Footer
-                    new Paragraph({
-                        children: [
-                            new TextRun({ text: "Generated: ", italics: true }),
-                            new TextRun({ text: new Date().toLocaleString('ro-RO'), italics: true })
-                        ],
-                        alignment: AlignmentType.CENTER,
-                        spacing: { before: 600 }
-                    })
-                ]
-            }]
+        // Create blob with proper Word MIME type
+        const blob = new Blob(['\ufeff', htmlContent], {
+            type: 'application/msword'
         });
         
-        // Generate and download
-        const blob = await Packer.toBlob(doc);
+        // Download
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `Analysis_${analysis.pair.replace('/', '-')}_${dateStr.replace(/\//g, '-')}.docx`;
+        link.download = `Analysis_${analysis.pair.replace('/', '-')}_${dateStr.replace(/\//g, '-')}.doc`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
         hideLoading();
-        alert('✅ Analysis exported as Word document!');
+        alert('✅ Analysis exported as Word document!\n\n📱 QR codes included for chart images - scan with your phone!');
         
     } catch (error) {
         console.error('Error generating Word document:', error);
         hideLoading();
-        
-        // Fallback to simple text export
-        generateSimpleTextExport(analysis, dateStr);
+        alert('❌ Error generating Word document. Please try again.');
     }
-}
-
-function generateSimpleTextExport(analysis, dateStr) {
-    let content = `
-MARKET ANALYSIS REPORT
-═══════════════════════════════════════════════════
-
-Date: ${dateStr}
-Pair: ${analysis.pair}
-Day: ${analysis.day}, ${analysis.month} ${analysis.year}
-
-═══════════════════════════════════════════════════
-
-📅 WEEKLY TIMEFRAME ANALYSIS
-───────────────────────────────────────────────────
-
-${analysis.weeklyAnalysis || 'No analysis provided'}
-
-${analysis.weeklyPhoto ? `Chart: ${analysis.weeklyPhoto}` : ''}
-
-
-📊 DAILY TIMEFRAME ANALYSIS
-───────────────────────────────────────────────────
-
-${analysis.dailyAnalysis || 'No analysis provided'}
-
-${analysis.dailyPhoto ? `Chart: ${analysis.dailyPhoto}` : ''}
-
-
-⏱️ 4H TIMEFRAME ANALYSIS
-───────────────────────────────────────────────────
-
-${analysis.fourHAnalysis || 'No analysis provided'}
-
-${analysis.fourHPhoto ? `Chart: ${analysis.fourHPhoto}` : ''}
-
-
-⚡ 1H TIMEFRAME ANALYSIS
-───────────────────────────────────────────────────
-
-${analysis.oneHAnalysis || 'No analysis provided'}
-
-${analysis.oneHPhoto ? `Chart: ${analysis.oneHPhoto}` : ''}
-
-
-═══════════════════════════════════════════════════
-Generated: ${new Date().toLocaleString('ro-RO')}
-═══════════════════════════════════════════════════
-`;
-    
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Analysis_${analysis.pair.replace('/', '-')}_${dateStr.replace(/\//g, '-')}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    alert('⚠️ Word export not available. Downloaded as text file instead.');
 }
 
 function shareFromModal() {
