@@ -1311,37 +1311,68 @@ function printAnalysisFromModal() {
     }
 }
 
-function generateQRCode(url) {
-    if (!url) return '';
-    // Generate QR code using QR Server API
-    return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
-}
-
 async function generateWordDocument(analysis) {
     const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
     
     showLoading();
     
     try {
-        // Create HTML content for Word
+        // Helper function to convert image URL to base64
+        const getImageAsBase64 = async (url) => {
+            if (!url) return null;
+            try {
+                // Use a CORS proxy for external images
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                const blob = await response.blob();
+                
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (err) {
+                console.error('Error loading image:', err);
+                return null;
+            }
+        };
+        
+        // Generate QR codes as data URLs (inline base64)
+        const generateQRCodeBase64 = async (url) => {
+            if (!url) return null;
+            try {
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+                const response = await fetch(qrUrl);
+                const blob = await response.blob();
+                
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (err) {
+                console.error('Error generating QR code:', err);
+                return null;
+            }
+        };
+        
+        // Fetch all QR codes
+        const weeklyQR = analysis.weeklyPhoto ? await generateQRCodeBase64(analysis.weeklyPhoto) : null;
+        const dailyQR = analysis.dailyPhoto ? await generateQRCodeBase64(analysis.dailyPhoto) : null;
+        const fourHQR = analysis.fourHPhoto ? await generateQRCodeBase64(analysis.fourHPhoto) : null;
+        const oneHQR = analysis.oneHPhoto ? await generateQRCodeBase64(analysis.oneHPhoto) : null;
+        
+        // Create HTML content for Word with embedded base64 images
         let htmlContent = `
-<!DOCTYPE html>
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
-    <meta charset='utf-8'>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Market Analysis Report</title>
-    <!--[if gte mso 9]>
-    <xml>
-        <w:WordDocument>
-            <w:View>Print</w:View>
-            <w:Zoom>100</w:Zoom>
-            <w:DoNotOptimizeForBrowser/>
-        </w:WordDocument>
-    </xml>
-    <![endif]-->
     <style>
         body {
-            font-family: 'Calibri', Arial, sans-serif;
+            font-family: Calibri, Arial, sans-serif;
             font-size: 11pt;
             line-height: 1.6;
             margin: 40px;
@@ -1373,33 +1404,33 @@ async function generateWordDocument(analysis) {
         }
         .metadata strong {
             color: #1976D2;
-            min-width: 80px;
-            display: inline-block;
         }
         .section {
             margin-bottom: 30px;
-            page-break-inside: avoid;
         }
         .chart-section {
             background-color: #F5F5F5;
-            padding: 15px;
+            padding: 20px;
             border-radius: 5px;
-            margin-top: 10px;
+            margin-top: 15px;
             text-align: center;
         }
         .qr-container {
-            display: inline-block;
-            margin: 10px;
+            margin: 15px auto;
             text-align: center;
         }
         .qr-container img {
-            display: block;
-            margin: 0 auto 5px auto;
+            width: 200px;
+            height: 200px;
+            border: 2px solid #2196F3;
+            padding: 5px;
+            background: white;
         }
         .qr-label {
-            font-size: 9pt;
+            font-size: 10pt;
             color: #666;
             font-style: italic;
+            margin-top: 10px;
         }
         .footer {
             margin-top: 40px;
@@ -1427,11 +1458,11 @@ async function generateWordDocument(analysis) {
     <div class="section">
         <h2>📅 WEEKLY TIMEFRAME ANALYSIS</h2>
         <p>${analysis.weeklyAnalysis || 'No analysis provided'}</p>
-        ${analysis.weeklyPhoto ? `
+        ${weeklyQR ? `
         <div class="chart-section">
             <div class="qr-container">
-                <img src="${generateQRCode(analysis.weeklyPhoto)}" alt="Weekly Chart QR Code" width="150" height="150" />
-                <p class="qr-label">Scan QR code to view Weekly chart</p>
+                <img src="${weeklyQR}" alt="Weekly Chart QR Code" />
+                <p class="qr-label">📱 Scan QR code to view Weekly chart</p>
             </div>
         </div>
         ` : ''}
@@ -1440,11 +1471,11 @@ async function generateWordDocument(analysis) {
     <div class="section">
         <h2>📊 DAILY TIMEFRAME ANALYSIS</h2>
         <p>${analysis.dailyAnalysis || 'No analysis provided'}</p>
-        ${analysis.dailyPhoto ? `
+        ${dailyQR ? `
         <div class="chart-section">
             <div class="qr-container">
-                <img src="${generateQRCode(analysis.dailyPhoto)}" alt="Daily Chart QR Code" width="150" height="150" />
-                <p class="qr-label">Scan QR code to view Daily chart</p>
+                <img src="${dailyQR}" alt="Daily Chart QR Code" />
+                <p class="qr-label">📱 Scan QR code to view Daily chart</p>
             </div>
         </div>
         ` : ''}
@@ -1453,11 +1484,11 @@ async function generateWordDocument(analysis) {
     <div class="section">
         <h2>⏱️ 4H TIMEFRAME ANALYSIS</h2>
         <p>${analysis.fourHAnalysis || 'No analysis provided'}</p>
-        ${analysis.fourHPhoto ? `
+        ${fourHQR ? `
         <div class="chart-section">
             <div class="qr-container">
-                <img src="${generateQRCode(analysis.fourHPhoto)}" alt="4H Chart QR Code" width="150" height="150" />
-                <p class="qr-label">Scan QR code to view 4H chart</p>
+                <img src="${fourHQR}" alt="4H Chart QR Code" />
+                <p class="qr-label">📱 Scan QR code to view 4H chart</p>
             </div>
         </div>
         ` : ''}
@@ -1466,41 +1497,48 @@ async function generateWordDocument(analysis) {
     <div class="section">
         <h2>⚡ 1H TIMEFRAME ANALYSIS</h2>
         <p>${analysis.oneHAnalysis || 'No analysis provided'}</p>
-        ${analysis.oneHPhoto ? `
+        ${oneHQR ? `
         <div class="chart-section">
             <div class="qr-container">
-                <img src="${generateQRCode(analysis.oneHPhoto)}" alt="1H Chart QR Code" width="150" height="150" />
-                <p class="qr-label">Scan QR code to view 1H chart</p>
+                <img src="${oneHQR}" alt="1H Chart QR Code" />
+                <p class="qr-label">📱 Scan QR code to view 1H chart</p>
             </div>
         </div>
         ` : ''}
     </div>
     
     <div class="footer">
-        <p>Generated: ${new Date().toLocaleString('ro-RO')}</p>
+        <p><strong>Generated:</strong> ${new Date().toLocaleString('ro-RO')}</p>
         <p>Market Analysis Journal - Professional Trading Analysis</p>
     </div>
 </body>
 </html>
 `;
         
-        // Create blob with proper Word MIME type
-        const blob = new Blob(['\ufeff', htmlContent], {
-            type: 'application/msword'
+        // Create blob with Word-specific settings
+        const blob = new Blob([htmlContent], {
+            type: 'application/msword;charset=utf-8'
         });
         
-        // Download
+        // Create download link with proper filename
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = url;
-        link.download = `Analysis_${analysis.pair.replace('/', '-')}_${dateStr.replace(/\//g, '-')}.doc`;
+        const filename = `Analysis_${analysis.pair.replace('/', '-')}_${dateStr.replace(/\//g, '-')}.doc`;
+        
+        // Set download attribute to force .doc extension
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.display = 'none';
+        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        
+        // Clean up
+        setTimeout(() => URL.revokeObjectURL(url), 100);
         
         hideLoading();
-        alert('✅ Analysis exported as Word document!\n\n📱 QR codes included for chart images - scan with your phone!');
+        alert('✅ Analysis exported as Word document!\n\n📱 QR codes included - scan with your phone to view charts!');
         
     } catch (error) {
         console.error('Error generating Word document:', error);
