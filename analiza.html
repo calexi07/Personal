@@ -13,8 +13,8 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2a 50%, #0f1e3a 100%);
-            color: #fff;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f1729 100%);
+            color: #f1f5f9;
             min-height: 100vh;
             padding: 20px;
         }
@@ -772,10 +772,15 @@
 
     <!-- View Analysis Modal -->
     <div class="loading-overlay" id="viewModal" style="display: none;">
-        <div style="background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); padding: 40px; border-radius: 20px; max-width: 900px; width: 90%; max-height: 85vh; overflow-y: auto; border: 2px solid rgba(255, 149, 0, 0.5);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h2 id="viewModalTitle" style="color: #ff9500; margin: 0; font-size: 2em;">Analysis</h2>
-                <button onclick="closeViewModal()" style="background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border: 2px solid #ff6b6b; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.5em; font-weight: bold; transition: all 0.3s ease;">×</button>
+        <div style="background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); padding: 40px; border-radius: 20px; max-width: 900px; width: 90%; max-height: 85vh; overflow-y: auto; border: 2px solid rgba(33, 150, 243, 0.5); position: relative;">
+            <!-- Back button (top-left) -->
+            <button id="backToDayBtn" onclick="backToDayModal()" style="display: none; position: absolute; top: 20px; left: 20px; background: rgba(33, 150, 243, 0.2); color: #2196F3; border: 2px solid #2196F3; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.3em; font-weight: bold; transition: all 0.3s ease; z-index: 10;">◄</button>
+            
+            <!-- Close button (top-right) -->
+            <button onclick="closeViewModal()" style="position: absolute; top: 20px; right: 20px; background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border: 2px solid #ff6b6b; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.5em; font-weight: bold; transition: all 0.3s ease; z-index: 10;">×</button>
+            
+            <div style="margin-bottom: 30px; padding-right: 50px; padding-left: 50px;">
+                <h2 id="viewModalTitle" style="color: #2196F3; margin: 0; font-size: 2em; text-align: center;">Analysis</h2>
             </div>
             
             <div id="viewModalContent" style="color: #ddd; line-height: 1.8; font-size: 1.05em;">
@@ -783,17 +788,11 @@
             </div>
 
             <div style="margin-top: 30px; text-align: center; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <button id="backToDayBtn" onclick="backToDayModal()" style="display: none; background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(77, 159, 255, 0.4);">
-                    ◄ Back to Day
-                </button>
                 <button onclick="copyForTradingViewFromModal()" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(41, 98, 255, 0.4);">
                     📈 Copy for TradingView
                 </button>
                 <button onclick="shareFromModal()" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);">
                     📋 Copy for Discord
-                </button>
-                <button onclick="closeViewModal()" style="background: linear-gradient(135deg, #ff9500, #ff7b00); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);">
-                    Close
                 </button>
             </div>
         </div>
@@ -1567,10 +1566,13 @@ function getFormData() {
         }
     }
     
+    // Get date value WITHOUT timezone conversion
+    const dateInput = document.getElementById('date').value; // Already in YYYY-MM-DD format
+    
     return {
         month: document.getElementById('month').value,
         day: document.getElementById('day').value,
-        date: document.getElementById('date').value,
+        date: dateInput, // Save as YYYY-MM-DD without time
         year: document.getElementById('year').value,
         pair: pairValue,
         weeklyAnalysis: document.getElementById('weeklyAnalysis').value,
@@ -1806,18 +1808,22 @@ function createDayCell(day, month, year, isOtherMonth) {
     
     const dateStr = `${actualYear}-${String(actualMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     
-    // Count analyses for this day - compare only the date part
+    // Count analyses for this day - parse date in local timezone
     const analysesForDay = analyses.filter(a => {
         if (!a.date) return false;
-        // Extract date part from ISO string (YYYY-MM-DD)
-        const analysisDate = a.date.split('T')[0];
-        return analysisDate === dateStr;
+        
+        // Parse the ISO date string and format it in local timezone (not UTC)
+        const date = new Date(a.date);
+        const localDateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        
+        return localDateStr === dateStr;
     });
     
     if (day === 11 && !isOtherMonth) {
         console.log('Day 11 - dateStr:', dateStr, 'analyses:', analysesForDay.length);
-        if (analyses.length > 0) {
-            console.log('First analysis date:', analyses[0].date, 'extracted:', analyses[0].date.split('T')[0]);
+        if (analyses.length > 0 && analyses[0].date) {
+            const testDate = new Date(analyses[0].date);
+            console.log('Test analysis date:', analyses[0].date, '-> local:', testDate.getDate(), testDate.getMonth() + 1, testDate.getFullYear());
         }
     }
     
@@ -1864,11 +1870,12 @@ function showAnalysesForDay(dateStr, day, month, year) {
     currentSelectedDate = dateStr;
     renderCalendar();
     
-    // Filter analyses by date - compare only date part
+    // Filter analyses by date - parse in local timezone
     const analysesForDay = analyses.filter(a => {
         if (!a.date) return false;
-        const analysisDate = a.date.split('T')[0];
-        return analysisDate === dateStr;
+        const date = new Date(a.date);
+        const localDateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        return localDateStr === dateStr;
     });
     
     console.log('showAnalysesForDay - dateStr:', dateStr, 'found:', analysesForDay.length);
@@ -2003,6 +2010,9 @@ window.onload = () => {
     const now = new Date();
     document.getElementById('calendarMonth').value = now.getMonth();
     document.getElementById('calendarYear').value = now.getFullYear();
+    
+    // Set Calendar View as default
+    switchView('calendar');
 };
     </script>
 </body>
