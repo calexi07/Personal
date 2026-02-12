@@ -1598,117 +1598,190 @@ async function postToDiscord(analysis) {
     try {
         const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
         
-        // Helper to create full-width content
-        const makeFullWidth = (text, char = '═') => {
-            return text + '\n' + char.repeat(50);
-        };
-        
-        // ALL EMBEDS in ONE message for maximum width
+        // Create MAXIMUM WIDTH embeds with visible images
         const embeds = [];
         
-        // Overview Embed
+        // Main Overview - ULTRA WIDE with long description
+        const overviewText = `${'═'.repeat(60)}\n\n` +
+            `**📊 COMPREHENSIVE MARKET ANALYSIS**\n\n` +
+            `**Pair:** ${analysis.pair}\n` +
+            `**Date:** ${analysis.day}, ${analysis.month} ${analysis.year} (${dateStr})\n` +
+            `**Timeframes Analyzed:** Weekly • Daily • 4H • 1H\n\n` +
+            `${'═'.repeat(60)}\n\n` +
+            `> This analysis covers multiple timeframes to provide a comprehensive view of market structure, key levels, and potential trading opportunities.\n\n` +
+            `${'─'.repeat(60)}`;
+        
         embeds.push({
             author: {
                 name: `Cristian's Thoughts About ${analysis.pair}`,
-                icon_url: CUSTOM_AVATAR_URL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+                icon_url: CUSTOM_AVATAR_URL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                url: 'https://tradingview.com'
             },
-            description: `## ${analysis.day}, ${analysis.month} ${analysis.year} • ${dateStr}\n\n> 📊 Multi-timeframe market analysis\n> 📈 Comprehensive insights across all major timeframes\n\n${makeFullWidth('', '─')}`,
+            description: overviewText,
             color: 0x2196F3,
             timestamp: new Date().toISOString(),
             footer: {
-                text: 'Market Analysis Journal • Professional Trading Insights',
+                text: 'Market Analysis Journal • Professional Trading Insights • Click image to view full size',
                 icon_url: 'https://cdn-icons-png.flaticon.com/512/2920/2920349.png'
             }
         });
         
-        // Weekly Embed with image URL shown
+        // Weekly Analysis with VISIBLE IMAGE
         if (analysis.weeklyAnalysis || analysis.weeklyPhoto) {
             const weeklyEmbed = {
                 title: '📅 WEEKLY TIMEFRAME ANALYSIS',
-                description: (analysis.weeklyAnalysis || '*No analysis provided*') + '\n\n' + makeFullWidth('', '─'),
+                description: `${analysis.weeklyAnalysis || '*No analysis provided*'}\n\n${'─'.repeat(60)}`,
                 color: 0xFF9500,
-                fields: []
+                fields: [
+                    {
+                        name: '⏰ Timeframe',
+                        value: '`1 Week`',
+                        inline: true
+                    },
+                    {
+                        name: '📊 Chart Type',
+                        value: '`Weekly Candlesticks`',
+                        inline: true
+                    },
+                    {
+                        name: '🔍 Analysis Level',
+                        value: '`Macro Trend`',
+                        inline: true
+                    }
+                ]
             };
             
+            // Add VISIBLE image
             if (analysis.weeklyPhoto) {
-                weeklyEmbed.fields.push({
-                    name: '📊 Chart Image',
-                    value: `\`\`\`\n${analysis.weeklyPhoto}\n\`\`\`\n[🔗 Click to Open Chart](${analysis.weeklyPhoto})`,
-                    inline: false
-                });
+                weeklyEmbed.image = {
+                    url: analysis.weeklyPhoto
+                };
+                weeklyEmbed.url = analysis.weeklyPhoto; // Makes whole embed clickable
             }
             
             embeds.push(weeklyEmbed);
         }
         
-        // Daily Embed with image URL shown
+        // Daily Analysis with VISIBLE IMAGE
         if (analysis.dailyAnalysis || analysis.dailyPhoto) {
             const dailyEmbed = {
                 title: '📊 DAILY TIMEFRAME ANALYSIS',
-                description: (analysis.dailyAnalysis || '*No analysis provided*') + '\n\n' + makeFullWidth('', '─'),
+                description: `${analysis.dailyAnalysis || '*No analysis provided*'}\n\n${'─'.repeat(60)}`,
                 color: 0x4CAF50,
-                fields: []
+                fields: [
+                    {
+                        name: '⏰ Timeframe',
+                        value: '`1 Day`',
+                        inline: true
+                    },
+                    {
+                        name: '📊 Chart Type',
+                        value: '`Daily Candlesticks`',
+                        inline: true
+                    },
+                    {
+                        name: '🔍 Analysis Level',
+                        value: '`Swing Trading`',
+                        inline: true
+                    }
+                ]
             };
             
             if (analysis.dailyPhoto) {
-                dailyEmbed.fields.push({
-                    name: '📊 Chart Image',
-                    value: `\`\`\`\n${analysis.dailyPhoto}\n\`\`\`\n[🔗 Click to Open Chart](${analysis.dailyPhoto})`,
-                    inline: false
-                });
+                dailyEmbed.image = {
+                    url: analysis.dailyPhoto
+                };
+                dailyEmbed.url = analysis.dailyPhoto;
             }
             
             embeds.push(dailyEmbed);
         }
         
-        // 4H Embed with image URL shown
+        // 4H Analysis with VISIBLE IMAGE
         if (analysis.fourHAnalysis || analysis.fourHPhoto) {
             const fourHEmbed = {
                 title: '⏱️ 4H TIMEFRAME ANALYSIS',
-                description: (analysis.fourHAnalysis || '*No analysis provided*') + '\n\n' + makeFullWidth('', '─'),
+                description: `${analysis.fourHAnalysis || '*No analysis provided*'}\n\n${'─'.repeat(60)}`,
                 color: 0x9C27B0,
-                fields: []
+                fields: [
+                    {
+                        name: '⏰ Timeframe',
+                        value: '`4 Hours`',
+                        inline: true
+                    },
+                    {
+                        name: '📊 Chart Type',
+                        value: '`4H Candlesticks`',
+                        inline: true
+                    },
+                    {
+                        name: '🔍 Analysis Level',
+                        value: '`Intraday Setup`',
+                        inline: true
+                    }
+                ]
             };
             
             if (analysis.fourHPhoto) {
-                fourHEmbed.fields.push({
-                    name: '📊 Chart Image',
-                    value: `\`\`\`\n${analysis.fourHPhoto}\n\`\`\`\n[🔗 Click to Open Chart](${analysis.fourHPhoto})`,
-                    inline: false
-                });
+                fourHEmbed.image = {
+                    url: analysis.fourHPhoto
+                };
+                fourHEmbed.url = analysis.fourHPhoto;
             }
             
             embeds.push(fourHEmbed);
         }
         
-        // 1H Embed with image URL shown
+        // 1H Analysis with VISIBLE IMAGE
         if (analysis.oneHAnalysis || analysis.oneHPhoto) {
             const oneHEmbed = {
                 title: '⚡ 1H TIMEFRAME ANALYSIS',
-                description: (analysis.oneHAnalysis || '*No analysis provided*') + '\n\n' + makeFullWidth('', '─'),
+                description: `${analysis.oneHAnalysis || '*No analysis provided*'}\n\n${'─'.repeat(60)}`,
                 color: 0x00BCD4,
-                fields: []
+                fields: [
+                    {
+                        name: '⏰ Timeframe',
+                        value: '`1 Hour`',
+                        inline: true
+                    },
+                    {
+                        name: '📊 Chart Type',
+                        value: '`1H Candlesticks`',
+                        inline: true
+                    },
+                    {
+                        name: '🔍 Analysis Level',
+                        value: '`Entry Timing`',
+                        inline: true
+                    }
+                ]
             };
             
             if (analysis.oneHPhoto) {
-                oneHEmbed.fields.push({
-                    name: '📊 Chart Image',
-                    value: `\`\`\`\n${analysis.oneHPhoto}\n\`\`\`\n[🔗 Click to Open Chart](${analysis.oneHPhoto})`,
-                    inline: false
-                });
+                oneHEmbed.image = {
+                    url: analysis.oneHPhoto
+                };
+                oneHEmbed.url = analysis.oneHPhoto;
             }
             
             embeds.push(oneHEmbed);
         }
         
-        // Send ALL in ONE message
+        // Send with MAXIMUM WIDTH content
+        const wideContent = `${'═'.repeat(60)}\n` +
+            `# 🔔 NEW MARKET ANALYSIS POSTED\n` +
+            `## ${analysis.pair} • ${dateStr}\n` +
+            `> 📈 Multi-timeframe comprehensive analysis now available\n` +
+            `> 🎯 Professional trading insights and market structure breakdown\n` +
+            `${'═'.repeat(60)}`;
+        
         const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                username: `${analysis.pair} Analysis`,
+                username: `${analysis.pair} Trading Analysis`,
                 avatar_url: CUSTOM_AVATAR_URL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                content: `# 🔔 New Analysis Posted!\n## ${analysis.pair} Market Insights\n> Fresh analysis available • ${dateStr}`,
+                content: wideContent,
                 embeds: embeds
             })
         });
@@ -1716,15 +1789,17 @@ async function postToDiscord(analysis) {
         hideLoading();
         
         if (response.ok) {
-            alert(`✅ ${analysis.pair} posted to Discord!\n\n💡 Image URLs are displayed as clickable links in code blocks.`);
+            alert(`✅ ${analysis.pair} posted to Discord!\n\n📸 Chart images should now be visible.\n💡 Click on images to view full size.`);
         } else {
-            throw new Error('Failed to post');
+            const error = await response.text();
+            console.error('Discord error:', error);
+            throw new Error('Post failed');
         }
         
     } catch (error) {
         console.error('Discord error:', error);
         hideLoading();
-        alert(`❌ Failed to post to Discord.\nCheck: webhook URL, internet, image URLs`);
+        alert(`❌ Failed to post to Discord.\n\nPossible issues:\n• Webhook URL invalid\n• Image URLs not accessible\n• Network error\n\nCheck console for details.`);
     }
 }
 
