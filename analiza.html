@@ -817,6 +817,9 @@
                 <button onclick="shareFromModal()" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);">
                     📋 Copy for Discord
                 </button>
+                <button onclick="sendToDiscordFromModal()" style="background: linear-gradient(135deg, #5865F2, #4752C4); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);">
+                    🚀 Send to Discord
+                </button>
             </div>
         </div>
     </div>
@@ -851,6 +854,21 @@
 
     <script>
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby545E0z1U_T4y7Obgp7jbkhjEM-nTQ14zccKu3_WhAWI93028iGy3JHPHk9XJvU1_5/exec';
+
+// Discord Webhooks per Trading Pair
+// Add webhooks for each pair you want to post to Discord
+const DISCORD_WEBHOOKS = {
+    'EUR/USD': 'https://discord.com/api/webhooks/1471496358472056842/3IOH_SQw6fNtSV3if_-soi2GrPiycjTUq7-Uk8oT91CSXv_uuRgfHlKwvep_iGwPF9Ej',
+    'GBP/USD': '', // Add your GBP/USD webhook here
+    'XAU/USD': '', // Add your XAU/USD webhook here
+    'USD/JPY': '', // Add your USD/JPY webhook here
+    'US100': '',   // Add your US100 webhook here
+    'GER40': '',   // Add your GER40 webhook here
+    // Add more pairs as needed
+};
+
+// Default webhook for pairs without dedicated channel
+const DEFAULT_DISCORD_WEBHOOK = ''; // Optional: fallback webhook for unconfigured pairs
 
 const CREDENTIALS = {
     username: 'calexi07',
@@ -1181,7 +1199,10 @@ function updateTable() {
                         📈 TV
                     </button>
                     <button onclick="shareToDiscord(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        📋 Discord
+                        📋 Copy
+                    </button>
+                    <button onclick="sendToDiscordChannel(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #5865F2, #4752C4); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        🚀 Send to Discord
                     </button>
                     ${isLoggedIn ? `
                         <button class="edit-btn" onclick="editAnalysis(${analyses.indexOf(a)})" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85em;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">✏️ Edit</button>
@@ -1544,6 +1565,156 @@ async function generateWordDocument(analysis) {
         console.error('Error generating Word document:', error);
         hideLoading();
         alert('❌ Error generating Word document. Please try again.');
+    }
+}
+
+// Send to Discord Channel
+async function sendToDiscordChannel(index) {
+    const a = analyses[index];
+    await postToDiscord(a);
+}
+
+async function sendToDiscordFromModal() {
+    if (currentViewIndex >= 0) {
+        const a = analyses[currentViewIndex];
+        await postToDiscord(a);
+    }
+}
+
+async function postToDiscord(analysis) {
+    // Get webhook for this specific pair
+    const webhookUrl = DISCORD_WEBHOOKS[analysis.pair] || DEFAULT_DISCORD_WEBHOOK;
+    
+    // Check if webhook is configured for this pair
+    if (!webhookUrl || webhookUrl === '') {
+        alert(`⚠️ Discord Webhook not configured for ${analysis.pair}!\n\nTo add a webhook:\n1. Create a channel in Discord for ${analysis.pair}\n2. Go to Channel Settings → Integrations → Webhooks\n3. Create a webhook and copy the URL\n4. Add it to DISCORD_WEBHOOKS object in the code:\n   '${analysis.pair}': 'your-webhook-url'`);
+        return;
+    }
+    
+    showLoading();
+    
+    try {
+        const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
+        
+        // Build Discord embed message
+        const embed = {
+            title: `📊 ${analysis.pair} Analysis - ${dateStr}`,
+            description: `Market analysis for ${analysis.day}, ${analysis.month} ${analysis.year}`,
+            color: 0x2196F3, // Blue color
+            fields: [],
+            timestamp: new Date().toISOString(),
+            footer: {
+                text: 'Market Analysis Journal'
+            }
+        };
+        
+        // Add Weekly analysis
+        if (analysis.weeklyAnalysis) {
+            embed.fields.push({
+                name: '📅 Weekly Timeframe',
+                value: analysis.weeklyAnalysis.length > 1024 ? analysis.weeklyAnalysis.substring(0, 1021) + '...' : analysis.weeklyAnalysis,
+                inline: false
+            });
+        }
+        
+        // Add Weekly chart
+        if (analysis.weeklyPhoto) {
+            embed.fields.push({
+                name: '📸 Weekly Chart',
+                value: `[View Chart](${analysis.weeklyPhoto})`,
+                inline: true
+            });
+        }
+        
+        // Add Daily analysis
+        if (analysis.dailyAnalysis) {
+            embed.fields.push({
+                name: '📊 Daily Timeframe',
+                value: analysis.dailyAnalysis.length > 1024 ? analysis.dailyAnalysis.substring(0, 1021) + '...' : analysis.dailyAnalysis,
+                inline: false
+            });
+        }
+        
+        // Add Daily chart
+        if (analysis.dailyPhoto) {
+            embed.fields.push({
+                name: '📸 Daily Chart',
+                value: `[View Chart](${analysis.dailyPhoto})`,
+                inline: true
+            });
+        }
+        
+        // Add 4H analysis
+        if (analysis.fourHAnalysis) {
+            embed.fields.push({
+                name: '⏱️ 4H Timeframe',
+                value: analysis.fourHAnalysis.length > 1024 ? analysis.fourHAnalysis.substring(0, 1021) + '...' : analysis.fourHAnalysis,
+                inline: false
+            });
+        }
+        
+        // Add 4H chart
+        if (analysis.fourHPhoto) {
+            embed.fields.push({
+                name: '📸 4H Chart',
+                value: `[View Chart](${analysis.fourHPhoto})`,
+                inline: true
+            });
+        }
+        
+        // Add 1H analysis
+        if (analysis.oneHAnalysis) {
+            embed.fields.push({
+                name: '⚡ 1H Timeframe',
+                value: analysis.oneHAnalysis.length > 1024 ? analysis.oneHAnalysis.substring(0, 1021) + '...' : analysis.oneHAnalysis,
+                inline: false
+            });
+        }
+        
+        // Add 1H chart
+        if (analysis.oneHPhoto) {
+            embed.fields.push({
+                name: '📸 1H Chart',
+                value: `[View Chart](${analysis.oneHPhoto})`,
+                inline: true
+            });
+        }
+        
+        // Set thumbnail (first available chart image)
+        const thumbnailUrl = analysis.weeklyPhoto || analysis.dailyPhoto || analysis.fourHPhoto || analysis.oneHPhoto;
+        if (thumbnailUrl) {
+            embed.thumbnail = {
+                url: thumbnailUrl
+            };
+        }
+        
+        // Send to Discord
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: `${analysis.pair} Analysis Bot`,
+                avatar_url: 'https://cdn-icons-png.flaticon.com/512/2920/2920349.png', // Trading chart icon
+                embeds: [embed]
+            })
+        });
+        
+        hideLoading();
+        
+        if (response.ok) {
+            alert(`✅ ${analysis.pair} analysis posted to Discord successfully! 🚀\n\nCheck your #${analysis.pair.toLowerCase().replace('/', '-')} channel!`);
+        } else {
+            const errorText = await response.text();
+            console.error('Discord API Error:', errorText);
+            alert(`❌ Failed to post to Discord.\n\nError: ${response.status === 404 ? 'Invalid webhook URL for ' + analysis.pair : 'Please check your webhook URL and try again.'}`);
+        }
+        
+    } catch (error) {
+        console.error('Error posting to Discord:', error);
+        hideLoading();
+        alert(`❌ Error posting ${analysis.pair} to Discord.\n\nPlease check:\n1. Your webhook URL for ${analysis.pair} is correct\n2. You have internet connection\n3. The webhook is still active`);
     }
 }
 
