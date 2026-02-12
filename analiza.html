@@ -870,6 +870,10 @@ const DISCORD_WEBHOOKS = {
 // Default webhook for pairs without dedicated channel
 const DEFAULT_DISCORD_WEBHOOK = ''; // Optional: fallback webhook for unconfigured pairs
 
+// Custom Avatar URL - Replace with your image URL
+// Upload your image to: https://imgur.com/ or https://imgbb.com/ and paste the DIRECT image link here
+const CUSTOM_AVATAR_URL = 'https://i.imgur.com/YOUR_IMAGE_ID.png'; // Replace with your uploaded image URL
+
 const CREDENTIALS = {
     username: 'calexi07',
     password: '101994acs!'
@@ -1596,10 +1600,7 @@ async function postToDiscord(analysis) {
     try {
         const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
         
-        // Create fancy embeds - one for each timeframe with images
-        const embeds = [];
-        
-        // Main overview embed with thumbnail
+        // Create main overview embed
         const mainEmbed = {
             title: `📊 Cristian's Thoughts About ${analysis.pair}`,
             description: `**${analysis.day}, ${analysis.month} ${analysis.year}** • ${dateStr}\n\n*Multi-timeframe market analysis across Weekly, Daily, 4H, and 1H charts*`,
@@ -1611,160 +1612,181 @@ async function postToDiscord(analysis) {
             }
         };
         
-        // Add thumbnail (first available chart)
-        const firstChart = analysis.weeklyPhoto || analysis.dailyPhoto || analysis.fourHPhoto || analysis.oneHPhoto;
-        if (firstChart) {
-            mainEmbed.thumbnail = {
-                url: firstChart
-            };
-        }
-        
-        embeds.push(mainEmbed);
-        
-        // Weekly Timeframe Embed
-        if (analysis.weeklyAnalysis || analysis.weeklyPhoto) {
-            const weeklyEmbed = {
-                title: '📅 Weekly Timeframe Analysis',
-                description: analysis.weeklyAnalysis || '*No analysis provided*',
-                color: 0xFF9500, // Orange for weekly
-                fields: []
-            };
-            
-            // Add image directly in embed
-            if (analysis.weeklyPhoto) {
-                weeklyEmbed.image = {
-                    url: analysis.weeklyPhoto
-                };
-                weeklyEmbed.fields.push({
-                    name: '📊 Chart Type',
-                    value: 'Weekly Timeframe',
-                    inline: true
-                });
-                weeklyEmbed.fields.push({
-                    name: '⏰ Timeframe',
-                    value: '1W',
-                    inline: true
-                });
-            }
-            
-            embeds.push(weeklyEmbed);
-        }
-        
-        // Daily Timeframe Embed
-        if (analysis.dailyAnalysis || analysis.dailyPhoto) {
-            const dailyEmbed = {
-                title: '📊 Daily Timeframe Analysis',
-                description: analysis.dailyAnalysis || '*No analysis provided*',
-                color: 0x4CAF50, // Green for daily
-                fields: []
-            };
-            
-            // Add image directly in embed
-            if (analysis.dailyPhoto) {
-                dailyEmbed.image = {
-                    url: analysis.dailyPhoto
-                };
-                dailyEmbed.fields.push({
-                    name: '📊 Chart Type',
-                    value: 'Daily Timeframe',
-                    inline: true
-                });
-                dailyEmbed.fields.push({
-                    name: '⏰ Timeframe',
-                    value: '1D',
-                    inline: true
-                });
-            }
-            
-            embeds.push(dailyEmbed);
-        }
-        
-        // 4H Timeframe Embed
-        if (analysis.fourHAnalysis || analysis.fourHPhoto) {
-            const fourHEmbed = {
-                title: '⏱️ 4H Timeframe Analysis',
-                description: analysis.fourHAnalysis || '*No analysis provided*',
-                color: 0x9C27B0, // Purple for 4H
-                fields: []
-            };
-            
-            // Add image directly in embed
-            if (analysis.fourHPhoto) {
-                fourHEmbed.image = {
-                    url: analysis.fourHPhoto
-                };
-                fourHEmbed.fields.push({
-                    name: '📊 Chart Type',
-                    value: '4-Hour Timeframe',
-                    inline: true
-                });
-                fourHEmbed.fields.push({
-                    name: '⏰ Timeframe',
-                    value: '4H',
-                    inline: true
-                });
-            }
-            
-            embeds.push(fourHEmbed);
-        }
-        
-        // 1H Timeframe Embed
-        if (analysis.oneHAnalysis || analysis.oneHPhoto) {
-            const oneHEmbed = {
-                title: '⚡ 1H Timeframe Analysis',
-                description: analysis.oneHAnalysis || '*No analysis provided*',
-                color: 0x00BCD4, // Cyan for 1H
-                fields: []
-            };
-            
-            // Add image directly in embed
-            if (analysis.oneHPhoto) {
-                oneHEmbed.image = {
-                    url: analysis.oneHPhoto
-                };
-                oneHEmbed.fields.push({
-                    name: '📊 Chart Type',
-                    value: '1-Hour Timeframe',
-                    inline: true
-                });
-                oneHEmbed.fields.push({
-                    name: '⏰ Timeframe',
-                    value: '1H',
-                    inline: true
-                });
-            }
-            
-            embeds.push(oneHEmbed);
-        }
-        
-        // Send to Discord with fancy formatting
-        const response = await fetch(webhookUrl, {
+        // Send main message with overview
+        const mainResponse = await fetch(webhookUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 username: `Cristian's Thoughts About ${analysis.pair}`,
-                avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png', // Professional analyst icon
+                avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
                 content: `🔔 **New Analysis Posted!** 📈\n> Fresh market insights for **${analysis.pair}** are now available.`,
-                embeds: embeds
+                embeds: [mainEmbed]
             })
         });
         
-        hideLoading();
-        
-        if (response.ok) {
-            alert(`✅ ${analysis.pair} analysis posted to Discord successfully! 🚀\n\n📱 Check your Discord channel for fancy embeds with images!`);
-        } else {
-            const errorText = await response.text();
-            console.error('Discord API Error:', errorText);
-            alert(`❌ Failed to post to Discord.\n\nError: ${response.status === 404 ? 'Invalid webhook URL for ' + analysis.pair : 'Please check your webhook URL and try again.'}`);
+        if (!mainResponse.ok) {
+            throw new Error('Failed to post main message');
         }
+        
+        // Small delay between messages
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Post Weekly analysis with clickable image link
+        if (analysis.weeklyAnalysis || analysis.weeklyPhoto) {
+            const weeklyEmbed = {
+                title: '📅 Weekly Timeframe Analysis',
+                description: analysis.weeklyAnalysis || '*No analysis provided*',
+                color: 0xFF9500,
+                fields: [
+                    {
+                        name: '📊 Chart Type',
+                        value: 'Weekly Timeframe',
+                        inline: true
+                    },
+                    {
+                        name: '⏰ Timeframe',
+                        value: '1W',
+                        inline: true
+                    }
+                ]
+            };
+            
+            // Try to add image
+            if (analysis.weeklyPhoto) {
+                weeklyEmbed.image = { url: analysis.weeklyPhoto };
+            }
+            
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: `Cristian's Thoughts About ${analysis.pair}`,
+                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                    embeds: [weeklyEmbed]
+                })
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        // Post Daily analysis
+        if (analysis.dailyAnalysis || analysis.dailyPhoto) {
+            const dailyEmbed = {
+                title: '📊 Daily Timeframe Analysis',
+                description: analysis.dailyAnalysis || '*No analysis provided*',
+                color: 0x4CAF50,
+                fields: [
+                    {
+                        name: '📊 Chart Type',
+                        value: 'Daily Timeframe',
+                        inline: true
+                    },
+                    {
+                        name: '⏰ Timeframe',
+                        value: '1D',
+                        inline: true
+                    }
+                ]
+            };
+            
+            if (analysis.dailyPhoto) {
+                dailyEmbed.image = { url: analysis.dailyPhoto };
+            }
+            
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: `Cristian's Thoughts About ${analysis.pair}`,
+                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                    embeds: [dailyEmbed]
+                })
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        // Post 4H analysis
+        if (analysis.fourHAnalysis || analysis.fourHPhoto) {
+            const fourHEmbed = {
+                title: '⏱️ 4H Timeframe Analysis',
+                description: analysis.fourHAnalysis || '*No analysis provided*',
+                color: 0x9C27B0,
+                fields: [
+                    {
+                        name: '📊 Chart Type',
+                        value: '4-Hour Timeframe',
+                        inline: true
+                    },
+                    {
+                        name: '⏰ Timeframe',
+                        value: '4H',
+                        inline: true
+                    }
+                ]
+            };
+            
+            if (analysis.fourHPhoto) {
+                fourHEmbed.image = { url: analysis.fourHPhoto };
+            }
+            
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: `Cristian's Thoughts About ${analysis.pair}`,
+                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                    embeds: [fourHEmbed]
+                })
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        // Post 1H analysis
+        if (analysis.oneHAnalysis || analysis.oneHPhoto) {
+            const oneHEmbed = {
+                title: '⚡ 1H Timeframe Analysis',
+                description: analysis.oneHAnalysis || '*No analysis provided*',
+                color: 0x00BCD4,
+                fields: [
+                    {
+                        name: '📊 Chart Type',
+                        value: '1-Hour Timeframe',
+                        inline: true
+                    },
+                    {
+                        name: '⏰ Timeframe',
+                        value: '1H',
+                        inline: true
+                    }
+                ]
+            };
+            
+            if (analysis.oneHPhoto) {
+                oneHEmbed.image = { url: analysis.oneHPhoto };
+            }
+            
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: `Cristian's Thoughts About ${analysis.pair}`,
+                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                    embeds: [oneHEmbed]
+                })
+            });
+        }
+        
+        hideLoading();
+        alert(`✅ ${analysis.pair} analysis posted to Discord successfully! 🚀\n\n📱 Check your Discord channel!\n\n⚠️ Note: If images don't appear, make sure the image URLs are publicly accessible.`);
         
     } catch (error) {
         console.error('Error posting to Discord:', error);
         hideLoading();
-        alert(`❌ Error posting ${analysis.pair} to Discord.\n\nPlease check:\n1. Your webhook URL for ${analysis.pair} is correct\n2. You have internet connection\n3. The webhook is still active`);
+        alert(`❌ Error posting ${analysis.pair} to Discord.\n\nPlease check:\n1. Your webhook URL for ${analysis.pair} is correct\n2. You have internet connection\n3. The webhook is still active\n4. Image URLs are publicly accessible`);
     }
 }
 
@@ -2531,15 +2553,21 @@ function showAnalysesForDay(dateStr, day, month, year) {
                     <h3 style="color: #2196F3; margin: 0 0 8px 0; font-size: 1.8em;">${a.pair}</h3>
                     <p style="color: #aaa; margin: 0; font-size: 0.9em;">${a.day}, ${a.month} ${a.year}</p>
                 </div>
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button onclick="event.stopPropagation(); viewAnalysisFromDay(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
                         👁️ View Full
+                    </button>
+                    <button onclick="event.stopPropagation(); printAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #00BCD4, #0097A7); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
+                        🖨️ Print
                     </button>
                     <button onclick="event.stopPropagation(); shareToTradingView(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
                         📈 TV
                     </button>
                     <button onclick="event.stopPropagation(); shareToDiscord(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
-                        📋 Discord
+                        📋 Copy
+                    </button>
+                    <button onclick="event.stopPropagation(); sendToDiscordChannel(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #5865F2, #4752C4); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
+                        🚀 Send to Discord
                     </button>
                 </div>
             </div>
