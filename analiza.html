@@ -721,37 +721,43 @@
                 <div style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(33, 150, 243, 0.2); border-radius: 15px; padding: 30px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
                     
                     <!-- Calendar Controls -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                        <button onclick="changeMonth(-1)" style="background: linear-gradient(135deg, #2196F3, #1976D2); color: #fff; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
-                            ◄ Previous
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; gap: 20px; flex-wrap: wrap;">
+                        <button onclick="changeMonth(-1)" style="background: linear-gradient(135deg, #2196F3, #1976D2); color: #fff; border: none; padding: 12px 24px; border-radius: 15px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); display: flex; align-items: center; gap: 8px;" onmouseover="this.style.transform='translateX(-3px)'; this.style.boxShadow='0 6px 20px rgba(33, 150, 243, 0.5)';" onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='0 4px 15px rgba(33, 150, 243, 0.3)';">
+                            <span style="font-size: 1.2em;">◄</span> Previous
                         </button>
                         
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <select id="calendarMonth" onchange="renderCalendar()" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 8px; padding: 12px 20px; color: #fff; font-size: 1em; font-weight: 600; cursor: pointer;">
-                                <option value="0">January</option>
-                                <option value="1">February</option>
-                                <option value="2">March</option>
-                                <option value="3">April</option>
-                                <option value="4">May</option>
-                                <option value="5">June</option>
-                                <option value="6">July</option>
-                                <option value="7">August</option>
-                                <option value="8">September</option>
-                                <option value="9">October</option>
-                                <option value="10">November</option>
-                                <option value="11">December</option>
-                            </select>
+                        <div style="display: flex; gap: 15px; align-items: center; background: rgba(33, 150, 243, 0.1); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(33, 150, 243, 0.3); backdrop-filter: blur(10px); flex-wrap: wrap; justify-content: center;">
+                            <!-- Month Selector -->
+                            <div style="position: relative;">
+                                <button id="monthSelectorBtn" onclick="toggleMonthPicker()" style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(25, 118, 210, 0.1)); border: 2px solid rgba(33, 150, 243, 0.4); color: #64B5F6; padding: 12px 24px; border-radius: 15px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; min-width: 140px;" onmouseover="this.style.borderColor='#2196F3'; this.style.background='linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(25, 118, 210, 0.2))';" onmouseout="this.style.borderColor='rgba(33, 150, 243, 0.4)'; this.style.background='linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(25, 118, 210, 0.1))';">
+                                    <span id="selectedMonth">February</span> 📅
+                                </button>
+                                
+                                <!-- Month Picker Popup -->
+                                <div id="monthPicker" style="display: none; position: absolute; top: 60px; left: 0; background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); border: 2px solid rgba(33, 150, 243, 0.5); border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); z-index: 1000; backdrop-filter: blur(20px); min-width: 300px;">
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                                        <!-- Months will be inserted here -->
+                                    </div>
+                                </div>
+                            </div>
                             
-                            <select id="calendarYear" onchange="renderCalendar()" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 8px; padding: 12px 20px; color: #fff; font-size: 1em; font-weight: 600; cursor: pointer;">
-                                <option value="2024">2024</option>
-                                <option value="2025">2025</option>
-                                <option value="2026">2026</option>
-                                <option value="2027">2027</option>
-                            </select>
+                            <!-- Year Selector -->
+                            <div style="position: relative;">
+                                <button id="yearSelectorBtn" onclick="toggleYearPicker()" style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(25, 118, 210, 0.1)); border: 2px solid rgba(33, 150, 243, 0.4); color: #64B5F6; padding: 12px 24px; border-radius: 15px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; min-width: 120px;" onmouseover="this.style.borderColor='#2196F3'; this.style.background='linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(25, 118, 210, 0.2))';" onmouseout="this.style.borderColor='rgba(33, 150, 243, 0.4)'; this.style.background='linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(25, 118, 210, 0.1))';">
+                                    <span id="selectedYear">2026</span> 📆
+                                </button>
+                                
+                                <!-- Year Picker Popup -->
+                                <div id="yearPicker" style="display: none; position: absolute; top: 60px; left: 0; background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); border: 2px solid rgba(33, 150, 243, 0.5); border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); z-index: 1000; backdrop-filter: blur(20px); min-width: 280px;">
+                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                                        <!-- Years will be inserted here -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
-                        <button onclick="changeMonth(1)" style="background: linear-gradient(135deg, #2196F3, #1976D2); color: #fff; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
-                            Next ►
+                        <button onclick="changeMonth(1)" style="background: linear-gradient(135deg, #2196F3, #1976D2); color: #fff; border: none; padding: 12px 24px; border-radius: 15px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); display: flex; align-items: center; gap: 8px;" onmouseover="this.style.transform='translateX(3px)'; this.style.boxShadow='0 6px 20px rgba(33, 150, 243, 0.5)';" onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='0 4px 15px rgba(33, 150, 243, 0.3)';">
+                            Next <span style="font-size: 1.2em;">►</span>
                         </button>
                     </div>
 
@@ -1745,32 +1751,159 @@ function switchView(mode) {
 
 // Calendar Functions
 let currentSelectedDate = null;
+let currentCalendarMonth = new Date().getMonth();
+let currentCalendarYear = new Date().getFullYear();
+
+// Initialize month and year pickers
+function initializeMonthYearPickers() {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    // Build month picker
+    const monthPicker = document.getElementById('monthPicker').querySelector('div');
+    monthPicker.innerHTML = '';
+    monthNames.forEach((month, index) => {
+        const btn = document.createElement('button');
+        btn.textContent = month.substring(0, 3);
+        btn.onclick = () => selectMonth(index);
+        btn.style.cssText = `
+            background: ${index === currentCalendarMonth ? 'linear-gradient(135deg, #2196F3, #1976D2)' : 'rgba(33, 150, 243, 0.1)'};
+            color: ${index === currentCalendarMonth ? '#fff' : '#64B5F6'};
+            border: 1px solid ${index === currentCalendarMonth ? '#2196F3' : 'rgba(33, 150, 243, 0.3)'};
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        `;
+        btn.onmouseover = () => {
+            if (index !== currentCalendarMonth) {
+                btn.style.background = 'rgba(33, 150, 243, 0.3)';
+                btn.style.transform = 'scale(1.05)';
+            }
+        };
+        btn.onmouseout = () => {
+            if (index !== currentCalendarMonth) {
+                btn.style.background = 'rgba(33, 150, 243, 0.1)';
+                btn.style.transform = 'scale(1)';
+            }
+        };
+        monthPicker.appendChild(btn);
+    });
+    
+    // Build year picker (current year ± 5 years)
+    const yearPicker = document.getElementById('yearPicker').querySelector('div');
+    yearPicker.innerHTML = '';
+    const startYear = currentCalendarYear - 5;
+    for (let i = 0; i < 12; i++) {
+        const year = startYear + i;
+        const btn = document.createElement('button');
+        btn.textContent = year;
+        btn.onclick = () => selectYear(year);
+        btn.style.cssText = `
+            background: ${year === currentCalendarYear ? 'linear-gradient(135deg, #2196F3, #1976D2)' : 'rgba(33, 150, 243, 0.1)'};
+            color: ${year === currentCalendarYear ? '#fff' : '#64B5F6'};
+            border: 1px solid ${year === currentCalendarYear ? '#2196F3' : 'rgba(33, 150, 243, 0.3)'};
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        `;
+        btn.onmouseover = () => {
+            if (year !== currentCalendarYear) {
+                btn.style.background = 'rgba(33, 150, 243, 0.3)';
+                btn.style.transform = 'scale(1.05)';
+            }
+        };
+        btn.onmouseout = () => {
+            if (year !== currentCalendarYear) {
+                btn.style.background = 'rgba(33, 150, 243, 0.1)';
+                btn.style.transform = 'scale(1)';
+            }
+        };
+        yearPicker.appendChild(btn);
+    }
+}
+
+function toggleMonthPicker() {
+    const picker = document.getElementById('monthPicker');
+    const yearPicker = document.getElementById('yearPicker');
+    yearPicker.style.display = 'none';
+    
+    if (picker.style.display === 'none') {
+        initializeMonthYearPickers();
+        picker.style.display = 'block';
+    } else {
+        picker.style.display = 'none';
+    }
+}
+
+function toggleYearPicker() {
+    const picker = document.getElementById('yearPicker');
+    const monthPicker = document.getElementById('monthPicker');
+    monthPicker.style.display = 'none';
+    
+    if (picker.style.display === 'none') {
+        initializeMonthYearPickers();
+        picker.style.display = 'block';
+    } else {
+        picker.style.display = 'none';
+    }
+}
+
+function selectMonth(month) {
+    currentCalendarMonth = month;
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    document.getElementById('selectedMonth').textContent = monthNames[month];
+    document.getElementById('monthPicker').style.display = 'none';
+    renderCalendar();
+}
+
+function selectYear(year) {
+    currentCalendarYear = year;
+    document.getElementById('selectedYear').textContent = year;
+    document.getElementById('yearPicker').style.display = 'none';
+    renderCalendar();
+}
+
+// Close pickers when clicking outside
+document.addEventListener('click', function(event) {
+    const monthBtn = document.getElementById('monthSelectorBtn');
+    const yearBtn = document.getElementById('yearSelectorBtn');
+    const monthPicker = document.getElementById('monthPicker');
+    const yearPicker = document.getElementById('yearPicker');
+    
+    if (monthPicker && !monthBtn?.contains(event.target) && !monthPicker.contains(event.target)) {
+        monthPicker.style.display = 'none';
+    }
+    if (yearPicker && !yearBtn?.contains(event.target) && !yearPicker.contains(event.target)) {
+        yearPicker.style.display = 'none';
+    }
+});
 
 function changeMonth(delta) {
-    const monthSelect = document.getElementById('calendarMonth');
-    const yearSelect = document.getElementById('calendarYear');
+    currentCalendarMonth += delta;
     
-    let month = parseInt(monthSelect.value);
-    let year = parseInt(yearSelect.value);
-    
-    month += delta;
-    
-    if (month < 0) {
-        month = 11;
-        year--;
-    } else if (month > 11) {
-        month = 0;
-        year++;
+    if (currentCalendarMonth < 0) {
+        currentCalendarMonth = 11;
+        currentCalendarYear--;
+    } else if (currentCalendarMonth > 11) {
+        currentCalendarMonth = 0;
+        currentCalendarYear++;
     }
     
-    monthSelect.value = month;
-    yearSelect.value = year;
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    document.getElementById('selectedMonth').textContent = monthNames[currentCalendarMonth];
+    document.getElementById('selectedYear').textContent = currentCalendarYear;
+    
     renderCalendar();
 }
 
 function renderCalendar() {
-    const month = parseInt(document.getElementById('calendarMonth').value);
-    const year = parseInt(document.getElementById('calendarYear').value);
+    const month = currentCalendarMonth;
+    const year = currentCalendarYear;
     const grid = document.getElementById('calendarGrid');
     
     console.log('Rendering calendar for:', month, year);
@@ -2104,8 +2237,12 @@ window.onload = () => {
     
     // Set calendar to current month/year
     const now = new Date();
-    document.getElementById('calendarMonth').value = now.getMonth();
-    document.getElementById('calendarYear').value = now.getFullYear();
+    currentCalendarMonth = now.getMonth();
+    currentCalendarYear = now.getFullYear();
+    
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    document.getElementById('selectedMonth').textContent = monthNames[currentCalendarMonth];
+    document.getElementById('selectedYear').textContent = currentCalendarYear;
     
     // Set Calendar View as default
     switchView('calendar');
