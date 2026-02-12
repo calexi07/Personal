@@ -783,6 +783,9 @@
             </div>
 
             <div style="margin-top: 30px; text-align: center; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button id="backToDayBtn" onclick="backToDayModal()" style="display: none; background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(77, 159, 255, 0.4);">
+                    ◄ Back to Day
+                </button>
                 <button onclick="copyForTradingViewFromModal()" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(41, 98, 255, 0.4);">
                     📈 Copy for TradingView
                 </button>
@@ -1180,6 +1183,8 @@ function updateTable() {
 
 // View Analysis Modal
 let currentViewIndex = -1;
+let returnToDayModal = false;
+let lastDayModalData = null;
 
 function viewAnalysis(index) {
     currentViewIndex = index;
@@ -1676,16 +1681,32 @@ function switchView(mode) {
     const btnJournal = document.getElementById('btnJournalView');
     const btnCalendar = document.getElementById('btnCalendarView');
     
+    // Get filter sections
+    const filterSections = document.querySelectorAll('.filter-section, #pairButtonsContainer').length > 0 
+        ? Array.from(document.querySelectorAll('.filter-section')).concat([document.getElementById('pairButtonsContainer').parentElement])
+        : [];
+    
     if (mode === 'journal') {
         journalView.style.display = 'block';
         calendarView.style.display = 'none';
         btnJournal.classList.add('active');
         btnCalendar.classList.remove('active');
+        
+        // Show filters
+        filterSections.forEach(section => {
+            if (section) section.style.display = 'block';
+        });
     } else {
         journalView.style.display = 'none';
         calendarView.style.display = 'block';
         btnJournal.classList.remove('active');
         btnCalendar.classList.add('active');
+        
+        // Hide filters
+        filterSections.forEach(section => {
+            if (section) section.style.display = 'none';
+        });
+        
         renderCalendar();
     }
 }
@@ -1856,6 +1877,9 @@ function showAnalysesForDay(dateStr, day, month, year) {
         return;
     }
     
+    // Store modal data for back button
+    lastDayModalData = { dateStr, day, month, year };
+    
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     
     // Set modal title
@@ -1885,7 +1909,7 @@ function showAnalysesForDay(dateStr, day, month, year) {
                     <p style="color: #aaa; margin: 0; font-size: 0.9em;">${a.day}, ${a.month} ${a.year}</p>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button onclick="event.stopPropagation(); viewAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
+                    <button onclick="event.stopPropagation(); viewAnalysisFromDay(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
                         👁️ View Full
                     </button>
                     <button onclick="event.stopPropagation(); shareToTradingView(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
@@ -1931,8 +1955,7 @@ function showAnalysesForDay(dateStr, day, month, year) {
         
         // Make card clickable to view full analysis
         card.onclick = () => {
-            closeDayModal();
-            viewAnalysis(analyses.indexOf(a));
+            viewAnalysisFromDay(analyses.indexOf(a));
         };
         
         content.appendChild(card);
@@ -1942,8 +1965,33 @@ function showAnalysesForDay(dateStr, day, month, year) {
     document.getElementById('dayModal').style.display = 'flex';
 }
 
+function viewAnalysisFromDay(index) {
+    returnToDayModal = true;
+    closeDayModal();
+    viewAnalysis(index);
+    // Show back button
+    document.getElementById('backToDayBtn').style.display = 'inline-block';
+}
+
+function backToDayModal() {
+    closeViewModal();
+    if (lastDayModalData) {
+        showAnalysesForDay(lastDayModalData.dateStr, lastDayModalData.day, lastDayModalData.month, lastDayModalData.year);
+    }
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').style.display = 'none';
+    document.getElementById('backToDayBtn').style.display = 'none';
+    returnToDayModal = false;
+    currentViewIndex = -1;
+}
+
 function closeDayModal() {
     document.getElementById('dayModal').style.display = 'none';
+    if (!returnToDayModal) {
+        lastDayModalData = null;
+    }
 }
 
 // Init
