@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Market Analysis Journal - $225</title>
+    
+    <!-- docx.js library for Word document generation -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -754,7 +758,7 @@
                     </div>
 
                     <!-- Calendar Grid -->
-                    <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
+                    <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; position: relative; z-index: 1;">
                         <!-- Calendar will be rendered here -->
                     </div>
                 </div>
@@ -1310,10 +1314,150 @@ function printAnalysisFromModal() {
     }
 }
 
-function generateWordDocument(analysis) {
+async function generateWordDocument(analysis) {
     const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
     
-    // Create Word-like formatted content
+    // Show loading
+    showLoading();
+    
+    try {
+        // Fetch images as base64
+        const fetchImageAsBase64 = async (url) => {
+            if (!url) return null;
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (err) {
+                console.error('Error fetching image:', err);
+                return null;
+            }
+        };
+
+        // Create Word document using docx library
+        const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, BorderStyle } = docx;
+        
+        const doc = new Document({
+            sections: [{
+                properties: {},
+                children: [
+                    // Title
+                    new Paragraph({
+                        text: "MARKET ANALYSIS REPORT",
+                        heading: HeadingLevel.HEADING_1,
+                        alignment: AlignmentType.CENTER,
+                        spacing: { after: 400 }
+                    }),
+                    
+                    // Metadata
+                    new Paragraph({
+                        children: [
+                            new TextRun({ text: "Date: ", bold: true }),
+                            new TextRun(dateStr)
+                        ],
+                        spacing: { after: 200 }
+                    }),
+                    new Paragraph({
+                        children: [
+                            new TextRun({ text: "Pair: ", bold: true }),
+                            new TextRun(analysis.pair)
+                        ],
+                        spacing: { after: 200 }
+                    }),
+                    new Paragraph({
+                        children: [
+                            new TextRun({ text: "Day: ", bold: true }),
+                            new TextRun(`${analysis.day}, ${analysis.month} ${analysis.year}`)
+                        ],
+                        spacing: { after: 400 }
+                    }),
+                    
+                    // Weekly Section
+                    new Paragraph({
+                        text: "📅 WEEKLY TIMEFRAME ANALYSIS",
+                        heading: HeadingLevel.HEADING_2,
+                        spacing: { before: 400, after: 200 }
+                    }),
+                    new Paragraph({
+                        text: analysis.weeklyAnalysis || 'No analysis provided',
+                        spacing: { after: 200 }
+                    }),
+                    
+                    // Daily Section
+                    new Paragraph({
+                        text: "📊 DAILY TIMEFRAME ANALYSIS",
+                        heading: HeadingLevel.HEADING_2,
+                        spacing: { before: 400, after: 200 }
+                    }),
+                    new Paragraph({
+                        text: analysis.dailyAnalysis || 'No analysis provided',
+                        spacing: { after: 200 }
+                    }),
+                    
+                    // 4H Section
+                    new Paragraph({
+                        text: "⏱️ 4H TIMEFRAME ANALYSIS",
+                        heading: HeadingLevel.HEADING_2,
+                        spacing: { before: 400, after: 200 }
+                    }),
+                    new Paragraph({
+                        text: analysis.fourHAnalysis || 'No analysis provided',
+                        spacing: { after: 200 }
+                    }),
+                    
+                    // 1H Section
+                    new Paragraph({
+                        text: "⚡ 1H TIMEFRAME ANALYSIS",
+                        heading: HeadingLevel.HEADING_2,
+                        spacing: { before: 400, after: 200 }
+                    }),
+                    new Paragraph({
+                        text: analysis.oneHAnalysis || 'No analysis provided',
+                        spacing: { after: 400 }
+                    }),
+                    
+                    // Footer
+                    new Paragraph({
+                        children: [
+                            new TextRun({ text: "Generated: ", italics: true }),
+                            new TextRun({ text: new Date().toLocaleString('ro-RO'), italics: true })
+                        ],
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 600 }
+                    })
+                ]
+            }]
+        });
+        
+        // Generate and download
+        const blob = await Packer.toBlob(doc);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Analysis_${analysis.pair.replace('/', '-')}_${dateStr.replace(/\//g, '-')}.docx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        hideLoading();
+        alert('✅ Analysis exported as Word document!');
+        
+    } catch (error) {
+        console.error('Error generating Word document:', error);
+        hideLoading();
+        
+        // Fallback to simple text export
+        generateSimpleTextExport(analysis, dateStr);
+    }
+}
+
+function generateSimpleTextExport(analysis, dateStr) {
     let content = `
 MARKET ANALYSIS REPORT
 ═══════════════════════════════════════════════════
@@ -1329,7 +1473,7 @@ Day: ${analysis.day}, ${analysis.month} ${analysis.year}
 
 ${analysis.weeklyAnalysis || 'No analysis provided'}
 
-${analysis.weeklyPhoto ? `Chart Link: ${analysis.weeklyPhoto}` : ''}
+${analysis.weeklyPhoto ? `Chart: ${analysis.weeklyPhoto}` : ''}
 
 
 📊 DAILY TIMEFRAME ANALYSIS
@@ -1337,7 +1481,7 @@ ${analysis.weeklyPhoto ? `Chart Link: ${analysis.weeklyPhoto}` : ''}
 
 ${analysis.dailyAnalysis || 'No analysis provided'}
 
-${analysis.dailyPhoto ? `Chart Link: ${analysis.dailyPhoto}` : ''}
+${analysis.dailyPhoto ? `Chart: ${analysis.dailyPhoto}` : ''}
 
 
 ⏱️ 4H TIMEFRAME ANALYSIS
@@ -1345,7 +1489,7 @@ ${analysis.dailyPhoto ? `Chart Link: ${analysis.dailyPhoto}` : ''}
 
 ${analysis.fourHAnalysis || 'No analysis provided'}
 
-${analysis.fourHPhoto ? `Chart Link: ${analysis.fourHPhoto}` : ''}
+${analysis.fourHPhoto ? `Chart: ${analysis.fourHPhoto}` : ''}
 
 
 ⚡ 1H TIMEFRAME ANALYSIS
@@ -1353,7 +1497,7 @@ ${analysis.fourHPhoto ? `Chart Link: ${analysis.fourHPhoto}` : ''}
 
 ${analysis.oneHAnalysis || 'No analysis provided'}
 
-${analysis.oneHPhoto ? `Chart Link: ${analysis.oneHPhoto}` : ''}
+${analysis.oneHPhoto ? `Chart: ${analysis.oneHPhoto}` : ''}
 
 
 ═══════════════════════════════════════════════════
@@ -1361,19 +1505,17 @@ Generated: ${new Date().toLocaleString('ro-RO')}
 ═══════════════════════════════════════════════════
 `;
     
-    // Create blob and download
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Analysis_${analysis.pair}_${dateStr.replace(/\//g, '-')}.txt`;
+    link.download = `Analysis_${analysis.pair.replace('/', '-')}_${dateStr.replace(/\//g, '-')}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    // Show confirmation
-    alert('✅ Analysis exported as text document!\n\nYou can open it in Word or any text editor.');
+    alert('⚠️ Word export not available. Downloaded as text file instead.');
 }
 
 function shareFromModal() {
