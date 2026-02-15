@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Version: 2026-02-15-HISTORY-COMPACT -->
+    <!-- Version: V3-AERISIT-STALE-DETECTION -->
     <title>A random trader</title>
     
     <style>
@@ -2351,7 +2351,7 @@ function addAnalysis(analysis) {
         .then(r => r.json())
         .then(() => {
             hideLoading();
-            alert('✅ Analysis added successfully!');
+            customAlert('Analysis added successfully!', 'Success', '✅');
             clearForm();
             showPage('list');
             loadAnalyses();
@@ -2402,12 +2402,13 @@ function editAnalysisFromDayModal(index) {
     editAnalysis(index);
 }
 
-function deleteAnalysis(i) {
-    if (!confirm('Delete this analysis?')) return;
+async function deleteAnalysis(i) {
+    const confirmed = await customConfirm('Delete this analysis?', 'Confirm Delete');
+    if (!confirmed) return;
     
     const a = analyses[i];
     if (!a) {
-        alert('Analysis not found');
+        customAlert('Analysis not found', 'Error', '❌');
         return;
     }
     
@@ -2436,7 +2437,7 @@ function deleteAnalysis(i) {
             console.log('Delete response:', response);
             
             if (response.success) {
-                alert('✅ Analysis deleted successfully!');
+                customAlert('Analysis deleted successfully!', 'Deleted', '✅');
                 loadAnalyses();
             } else {
                 alert(`❌ Delete failed: ${response.message || 'Row not found in sheet'}\n\nPlease refresh and try again.`);
@@ -3667,12 +3668,30 @@ function renderActiveDashboard() {
             dateStr = analysis.day + ', ' + analysis.month + ' ' + analysis.year;
         }
         
-        // Status badge
-        const status = analysis.analysisStatus || 'Active';
-        const statusColor = status === 'Closed' ? 
-            'linear-gradient(135deg, #FF5252, #E53935)' : 
-            'linear-gradient(135deg, #00E676, #00C853)';
-        const statusTextColor = status === 'Closed' ? '#fff' : '#000';
+        // Check if analysis needs update (2+ days old)
+        const now = new Date();
+        const analysisDate = new Date(analysis.date);
+        const daysSinceUpdate = Math.floor((now - analysisDate) / (1000 * 60 * 60 * 24));
+        
+        // Status badge with stale detection
+        let status = analysis.analysisStatus || 'Active';
+        let statusColor, statusTextColor, statusText;
+        
+        if (status === 'Closed') {
+            statusColor = 'linear-gradient(135deg, #FF5252, #E53935)';
+            statusTextColor = '#fff';
+            statusText = 'CLOSED';
+        } else if (daysSinceUpdate >= 2) {
+            // Stale analysis - needs update!
+            statusColor = 'linear-gradient(135deg, #FFB300, #FF8F00)';
+            statusTextColor = '#000';
+            statusText = '⚠️ NOT UPDATED';
+        } else {
+            // Active and fresh
+            statusColor = 'linear-gradient(135deg, #00E676, #00C853)';
+            statusTextColor = '#000';
+            statusText = 'ACTIVE';
+        }
         
         return `
             <div style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 12px; padding: 15px; transition: all 0.3s ease; cursor: pointer;"
@@ -3681,7 +3700,7 @@ function renderActiveDashboard() {
                  onmouseout="this.style.borderColor='rgba(33, 150, 243, 0.3)'; this.style.transform='translateY(0)'">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
                     <h4 style="color: #2196F3; margin: 0; font-size: 1.2em; font-weight: 700;">${pair}</h4>
-                    <span style="background: ${statusColor}; color: ${statusTextColor}; padding: 3px 10px; border-radius: 10px; font-size: 0.7em; font-weight: 700;">${status.toUpperCase()}</span>
+                    <span style="background: ${statusColor}; color: ${statusTextColor}; padding: 3px 10px; border-radius: 10px; font-size: 0.7em; font-weight: 700;">${statusText}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="font-size: 1.2em;">${biasIcon}</span>
@@ -3958,30 +3977,28 @@ function showPairHistory(pair) {
         };
         
         card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-                <div style="flex: 1;">
-                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
-                        <span style="color: #2196F3; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
-                        <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusText}</span>
-                        <span style="background: ${biasColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${a.marketBias || 'N/A'}</span>
-                    </div>
-                    <p style="color: #90CAF9; margin: 0; font-size: 0.9em;">${dateStr}</p>
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
+                    <span style="color: #2196F3; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
+                    <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusText}</span>
+                    <span style="background: ${biasColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${a.marketBias || 'N/A'}</span>
                 </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-start;">
                     <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600;">
+                            style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">
                         👁️ View
                     </button>
                     <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600;">
+                            style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">
                         ✏️ Edit
                     </button>
                     <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700;">
+                            style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">
                         🔄 Update
                     </button>
-                    <button onclick="event.stopPropagation(); if(confirm('Delete this version?')) { closeHistoryModal(); deleteAnalysis(${mainIndex >= 0 ? mainIndex : 0}); }" 
-                            style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600;">
+                    <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
+                            style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">
                         🗑️ Delete
                     </button>
                 </div>
@@ -4004,6 +4021,55 @@ function showPairHistory(pair) {
 
 function closeHistoryModal() {
     document.getElementById('historyModal').style.display = 'none';
+}
+
+
+// Custom Alert (replaces alert())
+function customAlert(message, title = 'Notice', icon = '✅') {
+    const modal = document.getElementById('customAlertModal');
+    const iconEl = document.getElementById('customAlertIcon');
+    const titleEl = document.getElementById('customAlertTitle');
+    const messageEl = document.getElementById('customAlertMessage');
+    
+    if (!modal) return alert(message); // Fallback
+    
+    iconEl.textContent = icon;
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    modal.style.display = 'flex';
+}
+
+function closeCustomAlert() {
+    document.getElementById('customAlertModal').style.display = 'none';
+}
+
+// Custom Confirm (replaces confirm())
+let confirmCallback = null;
+
+function customConfirm(message, title = 'Confirm Action') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customConfirmModal');
+        const titleEl = document.getElementById('customConfirmTitle');
+        const messageEl = document.getElementById('customConfirmMessage');
+        
+        if (!modal) {
+            resolve(confirm(message)); // Fallback
+            return;
+        }
+        
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        modal.style.display = 'flex';
+        confirmCallback = resolve;
+    });
+}
+
+function closeCustomConfirm(result) {
+    document.getElementById('customConfirmModal').style.display = 'none';
+    if (confirmCallback) {
+        confirmCallback(result);
+        confirmCallback = null;
+    }
 }
 
     </script>
