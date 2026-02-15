@@ -1985,10 +1985,27 @@ function editAnalysis(i) {
         document.getElementById('customPairGroup').style.display = 'block';
     }
     
+    // Populate all fields
     document.getElementById('month').value = a.month || '';
     document.getElementById('day').value = a.day || '';
-    document.getElementById('date').value = a.date || '';
     document.getElementById('year').value = a.year || '';
+    
+    // Format date properly for input type="date" (needs YYYY-MM-DD)
+    if (a.date) {
+        let dateValue = a.date;
+        // If it's a timestamp or Date object, convert to YYYY-MM-DD
+        if (typeof dateValue === 'object' || typeof dateValue === 'number') {
+            const d = new Date(dateValue);
+            dateValue = d.toISOString().split('T')[0];
+        } else if (typeof dateValue === 'string' && dateValue.includes('T')) {
+            // If it's ISO string with time, extract just the date part
+            dateValue = dateValue.split('T')[0];
+        }
+        document.getElementById('date').value = dateValue;
+    } else {
+        document.getElementById('date').value = '';
+    }
+    
     document.getElementById('tradeStatus').value = a.tradeStatus || 'Analysis Only';
     document.getElementById('marketBias').value = a.marketBias || 'Neutral';
     document.getElementById('weeklyAnalysis').value = a.weeklyAnalysis || '';
