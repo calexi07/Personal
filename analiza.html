@@ -1102,7 +1102,8 @@ const formPage = document.getElementById('formPage');
 const listPage = document.getElementById('listPage');
 const btnForm = document.getElementById('btnForm');
 const btnList = document.getElementById('btnList');
-const saveBtn = document.getElementById('saveBtn');
+// OLD SAVE BUTTON - Now handled by wizard
+// const saveBtn = document.getElementById('saveBtn');
 const analysisBody = document.getElementById('analysisBody');
 const loadingOverlay = document.getElementById('loadingOverlay');
 
@@ -2077,7 +2078,8 @@ function shareToTradingView(index, event) {
     });
 }
 
-// Save
+// OLD SAVE HANDLER - Now handled by wizardSave()
+/*
 saveBtn.onclick = () => {
     const analysis = getFormData();
     if (!analysis) return;
@@ -2089,6 +2091,7 @@ saveBtn.onclick = () => {
         addAnalysis(analysis);
     }
 };
+*/
 
 function getFormData() {
     const required = ['month', 'day', 'date', 'year', 'pair'];
@@ -2249,34 +2252,62 @@ function editAnalysisFromDayModal(index) {
 
 function deleteAnalysis(i) {
     if (!confirm('Delete this analysis?')) return;
+    
+    const a = analyses[i];
+    if (!a) {
+        alert('Analysis not found');
+        return;
+    }
+    
     showLoading();
-    fetch(`${GOOGLE_SCRIPT_URL}?action=delete&id=${analyses[i].id}`)
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'delete',
+            month: a.month,
+            day: a.day,
+            date: a.date,
+            year: a.year,
+            pair: a.pair
+        })
+    })
+        .then(r => r.json())
         .then(() => {
             hideLoading();
+            alert('✅ Analysis deleted successfully!');
             loadAnalyses();
         })
         .catch(err => {
-            console.error(err);
+            console.error('Delete error:', err);
             hideLoading();
-            alert('Delete error');
+            alert('❌ Delete error. Please try again.');
         });
 }
 
 function clearForm() {
+    // Clear old form fields if they exist
     ['month', 'day', 'date', 'year', 'pair', 'weeklyAnalysis', 'weeklyPhoto',
      'dailyAnalysis', 'dailyPhoto', 'fourHAnalysis', 'fourHPhoto',
      'oneHAnalysis', 'oneHPhoto'].forEach(id => {
-        document.getElementById(id).value = '';
+        const el = document.getElementById(id);
+        if (el) el.value = '';
     });
     
-    // Reset selects to defaults
-    document.getElementById('tradeStatus').value = 'Analysis Only';
-    document.getElementById('marketBias').value = 'Bullish';
-    document.getElementById('analysisStatus').value = 'Active';
+    // Reset selects to defaults (if they exist)
+    const tradeStatus = document.getElementById('tradeStatus');
+    const marketBias = document.getElementById('marketBias');
+    const analysisStatus = document.getElementById('analysisStatus');
     
-    // Hide custom pair input
-    document.getElementById('customPairGroup').style.display = 'none';
-    document.getElementById('customPair').value = '';
+    if (tradeStatus) tradeStatus.value = 'Analysis Only';
+    if (marketBias) marketBias.value = 'Bullish';
+    if (analysisStatus) analysisStatus.value = 'Active';
+    
+    // Hide custom pair input (if exists)
+    const customPairGroup = document.getElementById('customPairGroup');
+    const customPair = document.getElementById('customPair');
+    
+    if (customPairGroup) customPairGroup.style.display = 'none';
+    if (customPair) customPair.value = '';
     
     editingIndex = -1;
 }
