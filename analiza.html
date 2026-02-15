@@ -470,8 +470,8 @@
         </div>
 
         <div class="nav-buttons">
-            <button class="nav-btn" id="btnDashboard">🎯 Active Analyses</button>
             <button class="nav-btn active" id="btnList">📊 Journal View</button>
+            <!-- Active Analyses button removed - dashboard now shown in calendar view -->
             <button class="nav-btn" id="btnForm">➕ Add Analysis</button>
         </div>
 
@@ -1060,7 +1060,7 @@
                 <div style="background: rgba(33, 150, 243, 0.05); border: 2px solid rgba(33, 150, 243, 0.2); border-radius: 20px; padding: 25px;">
                     <h3 style="color: #2196F3; margin: 0 0 20px 0; font-size: 1.3em; display: flex; align-items: center; gap: 10px;">
                         <span>📊</span>
-                        <span>Active Analyses Dashboard</span>
+                        <span>All Analyses - Latest Updates</span>
                     </h3>
                     <div id="activeDashboardGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
                         <!-- Dashboard cards will be generated here -->
@@ -2464,8 +2464,11 @@ function switchView(mode) {
         journalView.style.display = 'block';
         calendarView.style.display = 'none';
         activeDashboard.style.display = 'none';
-        btnJournal.classList.add('active');
-        btnCalendar.classList.remove('active');
+        
+        // Show only Calendar button when on Journal
+        btnJournal.style.display = 'none';
+        btnCalendar.style.display = 'inline-block';
+        btnCalendar.innerHTML = '📅 Switch to Calendar';
         
         // Show filters
         filterSections.forEach(section => {
@@ -2475,8 +2478,11 @@ function switchView(mode) {
         journalView.style.display = 'none';
         calendarView.style.display = 'block';
         activeDashboard.style.display = 'block';
-        btnJournal.classList.remove('active');
-        btnCalendar.classList.add('active');
+        
+        // Show only Journal button when on Calendar
+        btnCalendar.style.display = 'none';
+        btnJournal.style.display = 'inline-block';
+        btnJournal.innerHTML = '📊 Switch to Table';
         
         // Hide filters
         filterSections.forEach(section => {
@@ -2762,20 +2768,32 @@ function createDayCell(day, month, year, isOtherMonth) {
         
         // Display badge for each pair
         Object.keys(pairGroups).forEach(pair => {
-            const versions = pairGroups[pair];
-            const latest = versions[versions.length - 1];
+            const versionsThisDay = pairGroups[pair];
+            const latest = versionsThisDay[versionsThisDay.length - 1];
+            
+            // Check in ALL analyses if this is the FIRST version for this pair
+            const allData = window.allAnalyses || analyses;
+            const allVersionsForPair = allData.filter(a => a.pair === pair).sort((a, b) => {
+                return new Date(a.date) - new Date(b.date);
+            });
+            
+            const firstVersionDate = allVersionsForPair[0]?.date;
+            const currentDate = latest.date;
+            const isFirstVersion = firstVersionDate === currentDate;
             
             let badgeColor, badgeText;
             
             if (latest.analysisStatus === 'Closed') {
                 badgeColor = '#FF5252'; // Red
                 badgeText = 'CLOSED';
-            } else if (versions.length > 1) {
-                badgeColor = '#FFB300'; // Orange (Updated)
-                badgeText = `UPD ${versions.length - 1}`;
-            } else {
-                badgeColor = '#00E676'; // Green (Active/New)
+            } else if (isFirstVersion) {
+                badgeColor = '#00E676'; // Green (New/First)
                 badgeText = 'NEW';
+            } else {
+                // It's an update - count which update number
+                const versionIndex = allVersionsForPair.findIndex(a => a.date === currentDate);
+                badgeColor = '#FFB300'; // Orange (Updated)
+                badgeText = versionIndex > 0 ? `UPD ${versionIndex}` : 'UPD';
             }
             
             const badge = document.createElement('div');
@@ -3551,16 +3569,12 @@ function renderActiveDashboard() {
     const grid = document.getElementById('activeDashboardGrid');
     const empty = document.getElementById('activeDashboardEmpty');
     
-    // Get only ACTIVE analyses from latest versions
-    const activeAnalyses = analyses.filter(a => {
-        const status = a.analysisStatus || 'Active'; // Default to Active if not set
-        return status === 'Active';
-    });
+    // Show ALL analyses (not just active) - display latest version for each pair
+    const allAnalysesForDashboard = analyses; // Already filtered to latest version in loadAnalyses
     
-    console.log('Dashboard: Total analyses:', analyses.length, 'Active:', activeAnalyses.length);
-    console.log('Active analyses:', activeAnalyses.map(a => ({ pair: a.pair, status: a.analysisStatus })));
+    console.log('Dashboard: Total analyses:', analyses.length);
     
-    if (activeAnalyses.length === 0) {
+    if (allAnalysesForDashboard.length === 0) {
         grid.style.display = 'none';
         empty.style.display = 'block';
         return;
@@ -3569,7 +3583,7 @@ function renderActiveDashboard() {
     grid.style.display = 'grid';
     empty.style.display = 'none';
     
-    grid.innerHTML = activeAnalyses.map(a => {
+    grid.innerHTML = allAnalysesForDashboard.map(a => {
         const biasColor = a.marketBias === 'Bullish' ? '#00E676' : 
                          a.marketBias === 'Bearish' ? '#FF5252' : '#90CAF9';
         const biasIcon = a.marketBias === 'Bullish' ? '🟢' : 
@@ -3581,6 +3595,13 @@ function renderActiveDashboard() {
             year: 'numeric' 
         }) : `${a.day}, ${a.month} ${a.year}`;
         
+        // Status badge
+        const status = a.analysisStatus || 'Active';
+        const statusColor = status === 'Closed' ? 
+            'linear-gradient(135deg, #FF5252, #E53935)' : 
+            'linear-gradient(135deg, #00E676, #00C853)';
+        const statusTextColor = status === 'Closed' ? '#fff' : '#000';
+        
         return `
             <div style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 12px; padding: 15px; transition: all 0.3s ease; cursor: pointer;"
                  onclick="editAnalysis(${analyses.indexOf(a)})"
@@ -3588,7 +3609,7 @@ function renderActiveDashboard() {
                  onmouseout="this.style.borderColor='rgba(33, 150, 243, 0.3)'; this.style.transform='translateY(0)'">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
                     <h4 style="color: #2196F3; margin: 0; font-size: 1.2em; font-weight: 700;">${a.pair}</h4>
-                    <span style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; padding: 3px 10px; border-radius: 10px; font-size: 0.7em; font-weight: 700;">ACTIVE</span>
+                    <span style="background: ${statusColor}; color: ${statusTextColor}; padding: 3px 10px; border-radius: 10px; font-size: 0.7em; font-weight: 700;">${status.toUpperCase()}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="font-size: 1.2em;">${biasIcon}</span>
@@ -3641,20 +3662,20 @@ function openEditPageForUpdate(i) {
     document.getElementById('editPair').value = a.pair;
     document.getElementById('editDate').value = todayStr;
     
-    // Populate status fields
+    // Populate status fields (keep same status and bias)
     document.getElementById('editTradeStatus').value = a.tradeStatus || 'Analysis Only';
     document.getElementById('editMarketBias').value = a.marketBias || 'Bullish';
     document.getElementById('editAnalysisStatus').value = a.analysisStatus || 'Active';
     
-    // Populate analysis fields
-    document.getElementById('editWeeklyAnalysis').value = a.weeklyAnalysis || '';
-    document.getElementById('editWeeklyPhoto').value = a.weeklyPhoto || '';
-    document.getElementById('editDailyAnalysis').value = a.dailyAnalysis || '';
-    document.getElementById('editDailyPhoto').value = a.dailyPhoto || '';
-    document.getElementById('editFourHAnalysis').value = a.fourHAnalysis || '';
-    document.getElementById('editFourHPhoto').value = a.fourHPhoto || '';
-    document.getElementById('editOneHAnalysis').value = a.oneHAnalysis || '';
-    document.getElementById('editOneHPhoto').value = a.oneHPhoto || '';
+    // CLEAR analysis fields for UPDATE (new notes, not copy old ones)
+    document.getElementById('editWeeklyAnalysis').value = '';
+    document.getElementById('editWeeklyPhoto').value = '';
+    document.getElementById('editDailyAnalysis').value = '';
+    document.getElementById('editDailyPhoto').value = '';
+    document.getElementById('editFourHAnalysis').value = '';
+    document.getElementById('editFourHPhoto').value = '';
+    document.getElementById('editOneHAnalysis').value = '';
+    document.getElementById('editOneHPhoto').value = '';
     
     // Show edit page
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
