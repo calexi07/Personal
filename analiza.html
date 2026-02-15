@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Version: 2026-02-15-HISTORY-COMPACT -->
     <title>A random trader</title>
     
     <style>
@@ -3938,11 +3939,27 @@ function showPairHistory(pair) {
             versionLabel = `📝 Update ${pairHistory.length - index - 1}`;
         }
         
+        // Find this analysis in main analyses array for proper index
+        const mainIndex = analyses.findIndex(an => 
+            an.pair === a.pair && 
+            an.date === a.date && 
+            an.weeklyAnalysis === a.weeklyAnalysis
+        );
+        
         const card = document.createElement('div');
-        card.style.cssText = 'background: rgba(33, 150, 243, 0.1); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 15px; padding: 20px; margin-bottom: 15px;';
+        card.style.cssText = 'background: rgba(33, 150, 243, 0.1); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 15px; padding: 20px; margin-bottom: 15px; transition: all 0.3s ease; cursor: pointer;';
+        card.onmouseover = () => {
+            card.style.borderColor = '#2196F3';
+            card.style.background = 'rgba(33, 150, 243, 0.15)';
+        };
+        card.onmouseout = () => {
+            card.style.borderColor = 'rgba(33, 150, 243, 0.3)';
+            card.style.background = 'rgba(33, 150, 243, 0.1)';
+        };
+        
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-                <div>
+                <div style="flex: 1;">
                     <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
                         <span style="color: #2196F3; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
                         <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusText}</span>
@@ -3950,40 +3967,34 @@ function showPairHistory(pair) {
                     </div>
                     <p style="color: #90CAF9; margin: 0; font-size: 0.9em;">${dateStr}</p>
                 </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
+                            style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600;">
+                        👁️ View
+                    </button>
+                    <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
+                            style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600;">
+                        ✏️ Edit
+                    </button>
+                    <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
+                            style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700;">
+                        🔄 Update
+                    </button>
+                    <button onclick="event.stopPropagation(); if(confirm('Delete this version?')) { closeHistoryModal(); deleteAnalysis(${mainIndex >= 0 ? mainIndex : 0}); }" 
+                            style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600;">
+                        🗑️ Delete
+                    </button>
+                </div>
             </div>
-            
-            ${a.weeklyAnalysis ? `
-                <div style="margin-bottom: 15px;">
-                    <h4 style="color: #FF9500; margin: 0 0 8px 0;">📅 Weekly</h4>
-                    <p style="color: #fff; margin: 0; line-height: 1.6;">${a.weeklyAnalysis}</p>
-                    ${a.weeklyPhoto ? `<a href="${a.weeklyPhoto}" target="_blank" style="color: #2196F3; font-size: 0.9em;">📸 View Chart</a>` : ''}
-                </div>
-            ` : ''}
-            
-            ${a.dailyAnalysis ? `
-                <div style="margin-bottom: 15px;">
-                    <h4 style="color: #4CAF50; margin: 0 0 8px 0;">📊 Daily</h4>
-                    <p style="color: #fff; margin: 0; line-height: 1.6;">${a.dailyAnalysis}</p>
-                    ${a.dailyPhoto ? `<a href="${a.dailyPhoto}" target="_blank" style="color: #2196F3; font-size: 0.9em;">📸 View Chart</a>` : ''}
-                </div>
-            ` : ''}
-            
-            ${a.fourHAnalysis ? `
-                <div style="margin-bottom: 15px;">
-                    <h4 style="color: #9C27B0; margin: 0 0 8px 0;">⏱️ 4H</h4>
-                    <p style="color: #fff; margin: 0; line-height: 1.6;">${a.fourHAnalysis}</p>
-                    ${a.fourHPhoto ? `<a href="${a.fourHPhoto}" target="_blank" style="color: #2196F3; font-size: 0.9em;">📸 View Chart</a>` : ''}
-                </div>
-            ` : ''}
-            
-            ${a.oneHAnalysis ? `
-                <div style="margin-bottom: 15px;">
-                    <h4 style="color: #00BCD4; margin: 0 0 8px 0;">⚡ 1H</h4>
-                    <p style="color: #fff; margin: 0; line-height: 1.6;">${a.oneHAnalysis}</p>
-                    ${a.oneHPhoto ? `<a href="${a.oneHPhoto}" target="_blank" style="color: #2196F3; font-size: 0.9em;">📸 View Chart</a>` : ''}
-                </div>
-            ` : ''}
         `;
+        
+        // Click on card opens View modal
+        card.onclick = () => {
+            if (mainIndex >= 0) {
+                closeHistoryModal();
+                viewAnalysis(mainIndex);
+            }
+        };
         
         contentEl.appendChild(card);
     });
