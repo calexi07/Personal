@@ -476,161 +476,348 @@
         </div>
 
         <!-- Form Page -->
-        <div id="formPage" class="page">
-            <div class="form-container">
-                <h2 style="margin-bottom: 25px; color: #2196F3;">📊 Add Market Analysis</h2>
-                
-                <!-- Basic Info -->
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="month">Month *</label>
-                        <select id="month" required>
-                            <option value="">Select</option>
-                            <option value="January">January</option>
-                            <option value="February">February</option>
-                            <option value="March">March</option>
-                            <option value="April">April</option>
-                            <option value="May">May</option>
-                            <option value="June">June</option>
-                            <option value="July">July</option>
-                            <option value="August">August</option>
-                            <option value="September">September</option>
-                            <option value="October">October</option>
-                            <option value="November">November</option>
-                            <option value="December">December</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="day">Day *</label>
-                        <select id="day" required>
-                            <option value="">Select</option>
-                            <option value="Monday">Monday</option>
-                            <option value="Tuesday">Tuesday</option>
-                            <option value="Wednesday">Wednesday</option>
-                            <option value="Thursday">Thursday</option>
-                            <option value="Friday">Friday</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="date">Date *</label>
-                        <input type="date" id="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="year">Year *</label>
-                        <select id="year" required>
-                            <option value="">Select</option>
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="pair">Pair *</label>
-                        <select id="pair" onchange="handlePairChange()" required>
-                            <option value="">Select</option>
-                            <option value="EUR/USD">EUR/USD</option>
-                            <option value="GBP/USD">GBP/USD</option>
-                            <option value="XAU/USD">XAU/USD</option>
-                            <option value="USD/JPY">USD/JPY</option>
-                            <option value="US100">US100</option>
-                            <option value="GER40">GER40</option>
-                            <option value="Other">Other...</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="customPairGroup" style="display: none;">
-                        <label for="customPair">Enter Pair</label>
-                        <input type="text" id="customPair" placeholder="ex: AUD/USD, BTC/USD">
-                    </div>
-                    <div class="form-group">
-                        <label for="tradeStatus">Trade Status *</label>
-                        <select id="tradeStatus" required style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); padding: 12px; border-radius: 10px; color: #fff; font-size: 1em; font-weight: 600;">
-                            <option value="Analysis Only">📊 Analysis Only</option>
-                            <option value="Trade Taken">💰 Trade Taken</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="marketBias">Market Bias *</label>
-                        <select id="marketBias" required style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); padding: 12px; border-radius: 10px; color: #fff; font-size: 1em; font-weight: 600;">
-                            <option value="Bullish">🟢 Bullish</option>
-                            <option value="Bearish">🔴 Bearish</option>
-                            <option value="Neutral">⚪ Neutral</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="analysisStatus">Analysis Status *</label>
-                        <select id="analysisStatus" required style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); padding: 12px; border-radius: 10px; color: #fff; font-size: 1em; font-weight: 600;">
-                            <option value="Active">🟢 Active</option>
-                            <option value="Closed">🔴 Closed</option>
-                        </select>
-                        <small style="color: #90CAF9; display: block; margin-top: 5px; font-style: italic;">Active = Analysis in progress | Closed = Analysis completed</small>
-                    </div>
-                </div>
+<!-- ============================================ -->
+<!-- COMPLETE MULTI-STEP WIZARD - REPLACE formPage -->
+<!-- Find <div id="formPage" class="page"> and replace entire section -->
+<!-- ============================================ -->
 
-                <!-- Weekly Analysis -->
-                <div class="analysis-section">
-                    <h3>📅 Weekly Analysis</h3>
-                    <div class="form-grid">
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label for="weeklyAnalysis">Analysis</label>
-                            <textarea id="weeklyAnalysis" rows="4" placeholder="Weekly market overview, key levels, bias..."></textarea>
-                        </div>
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label for="weeklyPhoto">Photo Link (Imgur, TradingView, etc.)</label>
-                            <input type="url" id="weeklyPhoto" placeholder="https://i.imgur.com/...">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Daily Analysis -->
-                <div class="analysis-section">
-                    <h3>📊 Daily Analysis</h3>
-                    <div class="form-grid">
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label for="dailyAnalysis">Analysis</label>
-                            <textarea id="dailyAnalysis" rows="4" placeholder="Daily zones, supply/demand, daily bias..."></textarea>
-                        </div>
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label for="dailyPhoto">Photo Link</label>
-                            <input type="url" id="dailyPhoto" placeholder="https://i.imgur.com/...">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4H Analysis -->
-                <div class="analysis-section">
-                    <h3>⏱️ 4H Analysis</h3>
-                    <div class="form-grid">
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label for="fourHAnalysis">Analysis</label>
-                            <textarea id="fourHAnalysis" rows="4" placeholder="4H structure, fractals, entry zones..."></textarea>
-                        </div>
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label for="fourHPhoto">Photo Link</label>
-                            <input type="url" id="fourHPhoto" placeholder="https://i.imgur.com/...">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 1H Analysis -->
-                <div class="analysis-section">
-                    <h3>⚡ 1H Analysis</h3>
-                    <div class="form-grid">
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label for="oneHAnalysis">Analysis</label>
-                            <textarea id="oneHAnalysis" rows="4" placeholder="1H entries, liquidity sweeps, timing..."></textarea>
-                        </div>
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label for="oneHPhoto">Photo Link</label>
-                            <input type="url" id="oneHPhoto" placeholder="https://i.imgur.com/...">
-                        </div>
-                    </div>
-                </div>
-
-                <button class="save-btn" id="saveBtn">💾 Save Analysis</button>
+<div id="formPage" class="page">
+    <!-- Step Indicator -->
+    <div style="max-width: 900px; margin: 0 auto 40px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+            <!-- Progress Line -->
+            <div style="position: absolute; top: 20px; left: 0; right: 0; height: 4px; background: rgba(33, 150, 243, 0.2); z-index: 0;">
+                <div id="progressBar" style="height: 100%; background: linear-gradient(90deg, #2196F3, #00BCD4); width: 0%; transition: width 0.3s ease;"></div>
+            </div>
+            
+            <!-- Steps -->
+            <div class="wizard-step active" id="stepIndicator1" style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                <div class="step-circle" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #2196F3, #1976D2); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; border: 3px solid #0a1929;">1</div>
+                <p style="margin: 0; color: #2196F3; font-size: 0.9em; font-weight: 600;">Pair</p>
+            </div>
+            <div class="wizard-step" id="stepIndicator2" style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                <div class="step-circle" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(33, 150, 243, 0.2); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: #90CAF9; font-weight: 600; border: 3px solid #0a1929;">2</div>
+                <p style="margin: 0; color: #90CAF9; font-size: 0.9em;">Date</p>
+            </div>
+            <div class="wizard-step" id="stepIndicator3" style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                <div class="step-circle" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(33, 150, 243, 0.2); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: #90CAF9; font-weight: 600; border: 3px solid #0a1929;">3</div>
+                <p style="margin: 0; color: #90CAF9; font-size: 0.9em;">Analysis</p>
+            </div>
+            <div class="wizard-step" id="stepIndicator4" style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                <div class="step-circle" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(33, 150, 243, 0.2); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: #90CAF9; font-weight: 600; border: 3px solid #0a1929;">4</div>
+                <p style="margin: 0; color: #90CAF9; font-size: 0.9em;">Confirm</p>
             </div>
         </div>
+    </div>
 
+    <!-- STEP 1: Select Pair -->
+    <div id="wizardStep1" class="wizard-step-content active">
+        <div style="max-width: 700px; margin: 0 auto; text-align: center;">
+            <h2 style="color: #2196F3; font-size: 2.2em; margin-bottom: 15px;">📊 Select Trading Pair</h2>
+            <p style="color: #90CAF9; margin-bottom: 40px; font-size: 1.1em;">Choose the pair you want to analyze</p>
+            
+            <div id="pairSelection" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;">
+                <button onclick="selectPair('EUR/USD')" class="pair-select-btn">EUR/USD</button>
+                <button onclick="selectPair('GBP/USD')" class="pair-select-btn">GBP/USD</button>
+                <button onclick="selectPair('XAU/USD')" class="pair-select-btn">XAU/USD</button>
+                <button onclick="selectPair('USD/JPY')" class="pair-select-btn">USD/JPY</button>
+                <button onclick="selectPair('US100')" class="pair-select-btn">US100</button>
+                <button onclick="selectPair('GER40')" class="pair-select-btn">GER40</button>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; background: rgba(33, 150, 243, 0.05); border-radius: 15px; border: 1px dashed rgba(33, 150, 243, 0.3);">
+                <p style="color: #90CAF9; margin-bottom: 15px; font-weight: 600;">Custom Pair</p>
+                <input type="text" id="customPairInput" placeholder="e.g., AUD/USD, BTC/USD" style="width: 100%; max-width: 300px; padding: 12px; background: rgba(33, 150, 243, 0.1); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 10px; color: #fff; font-size: 1em; text-align: center;">
+                <button onclick="selectCustomPair()" style="margin-left: 10px; padding: 12px 30px; background: linear-gradient(135deg, #00BCD4, #0097A7); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;">
+                    ✓ Use
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 2: Select Date -->
+    <div id="wizardStep2" class="wizard-step-content" style="display: none;">
+        <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+            <h2 style="color: #2196F3; font-size: 2.2em; margin-bottom: 15px;">📅 Select Analysis Date</h2>
+            <p style="color: #90CAF9; margin-bottom: 40px; font-size: 1.1em;">
+                Analyzing <span id="selectedPairDisplay" style="color: #00E676; font-weight: 700;"></span>
+            </p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                <div>
+                    <label style="display: block; color: #90CAF9; margin-bottom: 10px; font-weight: 600;">Month</label>
+                    <select id="wizardMonth" class="wizard-input">
+                        <option value="January">January</option>
+                        <option value="February" selected>February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; color: #90CAF9; margin-bottom: 10px; font-weight: 600;">Year</label>
+                    <select id="wizardYear" class="wizard-input">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; color: #90CAF9; margin-bottom: 10px; font-weight: 600;">Day of Week</label>
+                <select id="wizardDay" class="wizard-input">
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday" selected>Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 40px;">
+                <label style="display: block; color: #90CAF9; margin-bottom: 10px; font-weight: 600;">Exact Date</label>
+                <input type="date" id="wizardDate" class="wizard-input">
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <button onclick="wizardPrevStep()" class="wizard-btn-secondary">← Back</button>
+                <button onclick="wizardNextStep()" class="wizard-btn-primary">Continue →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 3: Analysis Content -->
+    <div id="wizardStep3" class="wizard-step-content" style="display: none;">
+        <div style="max-width: 900px; margin: 0 auto;">
+            <h2 style="color: #2196F3; font-size: 2.2em; margin-bottom: 15px; text-align: center;">📈 Market Analysis</h2>
+            <p style="color: #90CAF9; margin-bottom: 40px; font-size: 1.1em; text-align: center;">
+                <span id="pairDateSummary"></span>
+            </p>
+
+            <!-- Weekly -->
+            <div class="analysis-card" style="background: rgba(255, 149, 0, 0.1); border-left: 4px solid #FF9500; padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+                <h3 style="color: #FF9500; margin-bottom: 15px; font-size: 1.4em;">📅 Weekly Timeframe</h3>
+                <textarea id="wizardWeeklyAnalysis" placeholder="Enter your weekly analysis..." class="wizard-textarea"></textarea>
+                <input type="url" id="wizardWeeklyPhoto" placeholder="Chart link (optional)" class="wizard-input" style="margin-top: 15px;">
+            </div>
+
+            <!-- Daily -->
+            <div class="analysis-card" style="background: rgba(76, 175, 80, 0.1); border-left: 4px solid #4CAF50; padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+                <h3 style="color: #4CAF50; margin-bottom: 15px; font-size: 1.4em;">📊 Daily Timeframe</h3>
+                <textarea id="wizardDailyAnalysis" placeholder="Enter your daily analysis..." class="wizard-textarea"></textarea>
+                <input type="url" id="wizardDailyPhoto" placeholder="Chart link (optional)" class="wizard-input" style="margin-top: 15px;">
+            </div>
+
+            <!-- 4H -->
+            <div class="analysis-card" style="background: rgba(156, 39, 176, 0.1); border-left: 4px solid #9C27B0; padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+                <h3 style="color: #9C27B0; margin-bottom: 15px; font-size: 1.4em;">⏱️ 4H Timeframe</h3>
+                <textarea id="wizardFourHAnalysis" placeholder="Enter your 4H analysis..." class="wizard-textarea"></textarea>
+                <input type="url" id="wizardFourHPhoto" placeholder="Chart link (optional)" class="wizard-input" style="margin-top: 15px;">
+            </div>
+
+            <!-- 1H -->
+            <div class="analysis-card" style="background: rgba(0, 188, 212, 0.1); border-left: 4px solid #00BCD4; padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+                <h3 style="color: #00BCD4; margin-bottom: 15px; font-size: 1.4em;">⚡ 1H Timeframe</h3>
+                <textarea id="wizardOneHAnalysis" placeholder="Enter your 1H analysis..." class="wizard-textarea"></textarea>
+                <input type="url" id="wizardOneHPhoto" placeholder="Chart link (optional)" class="wizard-input" style="margin-top: 15px;">
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 40px;">
+                <button onclick="wizardPrevStep()" class="wizard-btn-secondary">← Back</button>
+                <button onclick="wizardNextStep()" class="wizard-btn-primary">Continue to Validation →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 4: Validation & Confirmation -->
+    <div id="wizardStep4" class="wizard-step-content" style="display: none;">
+        <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+            <h2 style="color: #2196F3; font-size: 2.2em; margin-bottom: 15px;">✅ Final Validation</h2>
+            <p style="color: #90CAF9; margin-bottom: 40px; font-size: 1.1em;">Confirm your analysis details</p>
+
+            <div style="background: rgba(33, 150, 243, 0.1); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 20px; padding: 30px; margin-bottom: 40px; text-align: left;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(33, 150, 243, 0.3);">
+                    <span style="color: #90CAF9;">Trading Pair:</span>
+                    <span id="confirmPair" style="color: #00E676; font-weight: 700; font-size: 1.2em;"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(33, 150, 243, 0.3);">
+                    <span style="color: #90CAF9;">Date:</span>
+                    <span id="confirmDate" style="color: #fff; font-weight: 600;"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #90CAF9;">Timeframes Analyzed:</span>
+                    <span id="confirmTimeframes" style="color: #fff; font-weight: 600;"></span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; color: #90CAF9; margin-bottom: 15px; font-weight: 600; font-size: 1.1em;">Is this an analysis or a trade?</label>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button onclick="selectTradeStatus('Analysis Only')" id="btnAnalysisOnly" class="validation-btn" style="flex: 1; max-width: 250px; padding: 20px; background: linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(33, 150, 243, 0.2)); border: 3px solid #2196F3; border-radius: 15px; color: #fff; font-weight: 700; font-size: 1.1em; cursor: pointer;">
+                        📊 Analysis Only
+                    </button>
+                    <button onclick="selectTradeStatus('Trade Taken')" id="btnTradeTaken" class="validation-btn" style="flex: 1; max-width: 250px; padding: 20px; background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.1)); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 15px; color: #fff; font-weight: 600; font-size: 1.1em; cursor: pointer;">
+                        💰 Trade Taken
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 40px;">
+                <label style="display: block; color: #90CAF9; margin-bottom: 15px; font-weight: 600; font-size: 1.1em;">What's your market bias?</label>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button onclick="selectBias('Bullish')" id="btnBullish" class="validation-btn" style="flex: 1; max-width: 160px; padding: 20px; background: linear-gradient(135deg, rgba(0, 230, 118, 0.2), rgba(0, 230, 118, 0.1)); border: 2px solid rgba(0, 230, 118, 0.3); border-radius: 15px; color: #fff; font-weight: 600; font-size: 1.1em; cursor: pointer;">
+                        🟢 Bullish
+                    </button>
+                    <button onclick="selectBias('Neutral')" id="btnNeutral" class="validation-btn" style="flex: 1; max-width: 160px; padding: 20px; background: linear-gradient(135deg, rgba(144, 202, 249, 0.2), rgba(144, 202, 249, 0.1)); border: 2px solid rgba(144, 202, 249, 0.3); border-radius: 15px; color: #fff; font-weight: 600; font-size: 1.1em; cursor: pointer;">
+                        ⚪ Neutral
+                    </button>
+                    <button onclick="selectBias('Bearish')" id="btnBearish" class="validation-btn" style="flex: 1; max-width: 160px; padding: 20px; background: linear-gradient(135deg, rgba(255, 82, 82, 0.2), rgba(255, 82, 82, 0.1)); border: 2px solid rgba(255, 82, 82, 0.3); border-radius: 15px; color: #fff; font-weight: 600; font-size: 1.1em; cursor: pointer;">
+                        🔴 Bearish
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <button onclick="wizardPrevStep()" class="wizard-btn-secondary">← Back</button>
+                <button onclick="wizardSave()" id="wizardSaveBtn" class="wizard-btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">
+                    💾 Save Analysis
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.wizard-step-content {
+    padding: 40px 20px;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.pair-select-btn {
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.1));
+    border: 2px solid rgba(33, 150, 243, 0.3);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pair-select-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
+    border-color: #2196F3;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(33, 150, 243, 0.2));
+}
+
+.wizard-input {
+    width: 100%;
+    padding: 12px 15px;
+    background: rgba(33, 150, 243, 0.1);
+    border: 2px solid rgba(33, 150, 243, 0.3);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 1em;
+}
+
+.wizard-input:focus {
+    outline: none;
+    border-color: #2196F3;
+    background: rgba(33, 150, 243, 0.15);
+}
+
+.wizard-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 1em;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.wizard-textarea:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.wizard-btn-primary {
+    flex: 2;
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.1em;
+    transition: all 0.3s ease;
+}
+
+.wizard-btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(33, 150, 243, 0.5);
+}
+
+.wizard-btn-secondary {
+    flex: 1;
+    padding: 15px 30px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.1em;
+    transition: all 0.3s ease;
+}
+
+.wizard-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.wizard-step.active .step-circle {
+    background: linear-gradient(135deg, #2196F3, #1976D2) !important;
+    color: #fff !important;
+}
+
+.wizard-step.active p {
+    color: #2196F3 !important;
+    font-weight: 600 !important;
+}
+
+.validation-btn.selected {
+    border-width: 3px !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+}
+
+.validation-btn:hover {
+    transform: translateY(-2px);
+}
+</style>
         <!-- List Page -->
         <div id="listPage" class="page active">
             <!-- Filters -->
@@ -2638,6 +2825,323 @@ window.onload = () => {
     // Set Calendar View as default
     switchView('calendar');
 };
+
+// ============================================
+// WIZARD JAVASCRIPT
+// ============================================
+
+// ============================================
+// WIZARD JAVASCRIPT - Add to <script> section
+// ============================================
+
+// Wizard state
+let wizardData = {
+    pair: '',
+    month: '',
+    day: '',
+    date: '',
+    year: '',
+    tradeStatus: '',
+    marketBias: '',
+    analysisStatus: 'Active',
+    weeklyAnalysis: '',
+    weeklyPhoto: '',
+    dailyAnalysis: '',
+    dailyPhoto: '',
+    fourHAnalysis: '',
+    fourHPhoto: '',
+    oneHAnalysis: '',
+    oneHPhoto: ''
+};
+
+let currentWizardStep = 1;
+
+// Step 1: Select Pair
+function selectPair(pair) {
+    // Check if pair has active analysis
+    const existingAnalysis = analyses.find(a => a.pair === pair && a.analysisStatus === 'Active');
+    
+    if (existingAnalysis) {
+        if (confirm(`⚠️ ${pair} already has an active analysis!\n\nDo you want to EDIT the existing analysis instead of creating a new one?`)) {
+            // Edit existing
+            const index = analyses.indexOf(existingAnalysis);
+            editAnalysis(index);
+            return;
+        } else {
+            // Cancel selection
+            return;
+        }
+    }
+    
+    // No active analysis - continue
+    wizardData.pair = pair;
+    document.getElementById('selectedPairDisplay').textContent = pair;
+    wizardNextStep();
+}
+
+function selectCustomPair() {
+    const customPair = document.getElementById('customPairInput').value.trim();
+    if (!customPair) {
+        alert('Please enter a pair name');
+        return;
+    }
+    
+    selectPair(customPair);
+}
+
+// Navigate wizard steps
+function wizardNextStep() {
+    // Validate current step
+    if (currentWizardStep === 1) {
+        if (!wizardData.pair) {
+            alert('Please select a pair first');
+            return;
+        }
+    } else if (currentWizardStep === 2) {
+        // Collect date data
+        wizardData.month = document.getElementById('wizardMonth').value;
+        wizardData.day = document.getElementById('wizardDay').value;
+        wizardData.date = document.getElementById('wizardDate').value;
+        wizardData.year = document.getElementById('wizardYear').value;
+        
+        if (!wizardData.date) {
+            alert('Please select an exact date');
+            return;
+        }
+        
+        // Update summary for step 3
+        document.getElementById('pairDateSummary').textContent = 
+            `${wizardData.pair} • ${wizardData.day}, ${wizardData.month} ${wizardData.year}`;
+    } else if (currentWizardStep === 3) {
+        // Collect analysis data
+        wizardData.weeklyAnalysis = document.getElementById('wizardWeeklyAnalysis').value;
+        wizardData.weeklyPhoto = document.getElementById('wizardWeeklyPhoto').value;
+        wizardData.dailyAnalysis = document.getElementById('wizardDailyAnalysis').value;
+        wizardData.dailyPhoto = document.getElementById('wizardDailyPhoto').value;
+        wizardData.fourHAnalysis = document.getElementById('wizardFourHAnalysis').value;
+        wizardData.fourHPhoto = document.getElementById('wizardFourHPhoto').value;
+        wizardData.oneHAnalysis = document.getElementById('wizardOneHAnalysis').value;
+        wizardData.oneHPhoto = document.getElementById('wizardOneHPhoto').value;
+        
+        // Update confirmation
+        document.getElementById('confirmPair').textContent = wizardData.pair;
+        document.getElementById('confirmDate').textContent = `${wizardData.day}, ${wizardData.month} ${wizardData.year} (${wizardData.date})`;
+        
+        // Count timeframes
+        let timeframes = [];
+        if (wizardData.weeklyAnalysis) timeframes.push('Weekly');
+        if (wizardData.dailyAnalysis) timeframes.push('Daily');
+        if (wizardData.fourHAnalysis) timeframes.push('4H');
+        if (wizardData.oneHAnalysis) timeframes.push('1H');
+        
+        document.getElementById('confirmTimeframes').textContent = 
+            timeframes.length > 0 ? timeframes.join(', ') : 'None';
+    }
+    
+    // Move to next step
+    currentWizardStep++;
+    if (currentWizardStep > 4) currentWizardStep = 4;
+    
+    updateWizardStep();
+}
+
+function wizardPrevStep() {
+    currentWizardStep--;
+    if (currentWizardStep < 1) currentWizardStep = 1;
+    
+    updateWizardStep();
+}
+
+function updateWizardStep() {
+    // Hide all steps
+    document.querySelectorAll('.wizard-step-content').forEach(step => {
+        step.style.display = 'none';
+    });
+    
+    // Show current step
+    document.getElementById(`wizardStep${currentWizardStep}`).style.display = 'block';
+    
+    // Update indicators
+    for (let i = 1; i <= 4; i++) {
+        const indicator = document.getElementById(`stepIndicator${i}`);
+        if (i <= currentWizardStep) {
+            indicator.classList.add('active');
+        } else {
+            indicator.classList.remove('active');
+        }
+    }
+    
+    // Update progress bar
+    const progress = ((currentWizardStep - 1) / 3) * 100;
+    document.getElementById('progressBar').style.width = progress + '%';
+}
+
+// Step 4: Validation selections
+function selectTradeStatus(status) {
+    wizardData.tradeStatus = status;
+    
+    // Update button styles
+    document.getElementById('btnAnalysisOnly').classList.remove('selected');
+    document.getElementById('btnTradeTaken').classList.remove('selected');
+    
+    if (status === 'Analysis Only') {
+        document.getElementById('btnAnalysisOnly').classList.add('selected');
+        document.getElementById('btnAnalysisOnly').style.borderColor = '#2196F3';
+        document.getElementById('btnAnalysisOnly').style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(33, 150, 243, 0.2))';
+    } else {
+        document.getElementById('btnTradeTaken').classList.add('selected');
+        document.getElementById('btnTradeTaken').style.borderColor = '#FFD700';
+        document.getElementById('btnTradeTaken').style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.2))';
+    }
+    
+    checkValidationComplete();
+}
+
+function selectBias(bias) {
+    wizardData.marketBias = bias;
+    
+    // Update button styles
+    document.getElementById('btnBullish').classList.remove('selected');
+    document.getElementById('btnNeutral').classList.remove('selected');
+    document.getElementById('btnBearish').classList.remove('selected');
+    
+    const btn = document.getElementById('btn' + bias);
+    btn.classList.add('selected');
+    
+    if (bias === 'Bullish') {
+        btn.style.borderColor = '#00E676';
+        btn.style.background = 'linear-gradient(135deg, rgba(0, 230, 118, 0.3), rgba(0, 230, 118, 0.2))';
+    } else if (bias === 'Bearish') {
+        btn.style.borderColor = '#FF5252';
+        btn.style.background = 'linear-gradient(135deg, rgba(255, 82, 82, 0.3), rgba(255, 82, 82, 0.2))';
+    } else {
+        btn.style.borderColor = '#90CAF9';
+        btn.style.background = 'linear-gradient(135deg, rgba(144, 202, 249, 0.3), rgba(144, 202, 249, 0.2))';
+    }
+    
+    checkValidationComplete();
+}
+
+function checkValidationComplete() {
+    const saveBtn = document.getElementById('wizardSaveBtn');
+    
+    if (wizardData.tradeStatus && wizardData.marketBias) {
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = '1';
+        saveBtn.style.cursor = 'pointer';
+    } else {
+        saveBtn.disabled = true;
+        saveBtn.style.opacity = '0.5';
+        saveBtn.style.cursor = 'not-allowed';
+    }
+}
+
+// Save wizard data
+function wizardSave() {
+    if (!wizardData.tradeStatus || !wizardData.marketBias) {
+        alert('Please select Trade Status and Market Bias');
+        return;
+    }
+    
+    showLoading();
+    
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'add',
+            ...wizardData
+        })
+    })
+    .then(r => r.json())
+    .then(() => {
+        hideLoading();
+        alert(`✅ ${wizardData.pair} analysis saved successfully!\n\n📊 Trade Status: ${wizardData.tradeStatus}\n🎯 Market Bias: ${wizardData.marketBias}`);
+        resetWizard();
+        showPage('list');
+        loadAnalyses();
+    })
+    .catch(err => {
+        console.error('Save error:', err);
+        hideLoading();
+        alert('❌ Error saving analysis. Please try again.');
+    });
+}
+
+// Reset wizard
+function resetWizard() {
+    currentWizardStep = 1;
+    
+    wizardData = {
+        pair: '',
+        month: '',
+        day: '',
+        date: '',
+        year: '',
+        tradeStatus: '',
+        marketBias: '',
+        analysisStatus: 'Active',
+        weeklyAnalysis: '',
+        weeklyPhoto: '',
+        dailyAnalysis: '',
+        dailyPhoto: '',
+        fourHAnalysis: '',
+        fourHPhoto: '',
+        oneHAnalysis: '',
+        oneHPhoto: ''
+    };
+    
+    // Clear inputs
+    document.getElementById('customPairInput').value = '';
+    document.getElementById('wizardMonth').value = 'February';
+    document.getElementById('wizardDay').value = 'Wednesday';
+    document.getElementById('wizardDate').value = '';
+    document.getElementById('wizardYear').value = '2026';
+    
+    document.getElementById('wizardWeeklyAnalysis').value = '';
+    document.getElementById('wizardWeeklyPhoto').value = '';
+    document.getElementById('wizardDailyAnalysis').value = '';
+    document.getElementById('wizardDailyPhoto').value = '';
+    document.getElementById('wizardFourHAnalysis').value = '';
+    document.getElementById('wizardFourHPhoto').value = '';
+    document.getElementById('wizardOneHAnalysis').value = '';
+    document.getElementById('wizardOneHPhoto').value = '';
+    
+    // Reset validation buttons
+    document.querySelectorAll('.validation-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    updateWizardStep();
+}
+
+// Override showPage to reset wizard when opening form
+const originalShowPageWizard = showPage;
+showPage = function(page) {
+    if (page === 'form') {
+        resetWizard();
+    }
+    
+    if (typeof originalShowPageWizard === 'function') {
+        originalShowPageWizard(page);
+    } else {
+        // Fallback
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        
+        if (page === 'form') {
+            document.getElementById('formPage').classList.add('active');
+            document.getElementById('btnForm').classList.add('active');
+        } else if (page === 'list') {
+            document.getElementById('listPage').classList.add('active');
+            document.getElementById('btnList').classList.add('active');
+        } else if (page === 'dashboard') {
+            document.getElementById('dashboardPage').classList.add('active');
+            document.getElementById('btnDashboard').classList.add('active');
+            if (typeof showDashboard === 'function') showDashboard();
+        }
+    }
+};
+
     </script>
 </body>
 </html>
