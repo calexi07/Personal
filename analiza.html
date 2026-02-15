@@ -818,6 +818,108 @@
     transform: translateY(-2px);
 }
 </style>
+        <!-- Edit Page -->
+        <div id="editPage" class="page" style="display: none;">
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 style="color: #2196F3; font-size: 2em; margin: 0;">✏️ Edit Analysis</h2>
+                    <button onclick="cancelEdit()" style="padding: 12px 24px; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600;">
+                        ✕ Cancel
+                    </button>
+                </div>
+
+                <!-- Edit Form -->
+                <div style="background: rgba(33, 150, 243, 0.05); border: 2px solid rgba(33, 150, 243, 0.2); border-radius: 20px; padding: 30px;">
+                    
+                    <!-- Pair & Date Info (Read-only display) -->
+                    <div style="background: rgba(33, 150, 243, 0.1); border-left: 4px solid #2196F3; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                            <div>
+                                <label style="color: #90CAF9; font-size: 0.9em; display: block; margin-bottom: 5px;">Pair</label>
+                                <p id="editPairDisplay" style="color: #00E676; font-size: 1.3em; font-weight: 700; margin: 0;"></p>
+                            </div>
+                            <div>
+                                <label style="color: #90CAF9; font-size: 0.9em; display: block; margin-bottom: 5px;">Date</label>
+                                <p id="editDateDisplay" style="color: #fff; font-size: 1.1em; font-weight: 600; margin: 0;"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields to preserve original data -->
+                    <input type="hidden" id="editMonth">
+                    <input type="hidden" id="editDay">
+                    <input type="hidden" id="editDate">
+                    <input type="hidden" id="editYear">
+                    <input type="hidden" id="editPair">
+
+                    <!-- Status Fields -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+                        <div>
+                            <label style="color: #90CAF9; display: block; margin-bottom: 10px; font-weight: 600;">Trade Status</label>
+                            <select id="editTradeStatus" class="wizard-input">
+                                <option value="Analysis Only">📊 Analysis Only</option>
+                                <option value="Trade Taken">💰 Trade Taken</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="color: #90CAF9; display: block; margin-bottom: 10px; font-weight: 600;">Market Bias</label>
+                            <select id="editMarketBias" class="wizard-input">
+                                <option value="Bullish">🟢 Bullish</option>
+                                <option value="Bearish">🔴 Bearish</option>
+                                <option value="Neutral">⚪ Neutral</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="color: #90CAF9; display: block; margin-bottom: 10px; font-weight: 600;">Status</label>
+                            <select id="editAnalysisStatus" class="wizard-input">
+                                <option value="Active">🟢 Active</option>
+                                <option value="Closed">🔴 Closed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Content -->
+                    <!-- Weekly -->
+                    <div style="background: rgba(255, 149, 0, 0.1); border-left: 4px solid #FF9500; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #FF9500; margin-bottom: 15px;">📅 Weekly Timeframe</h3>
+                        <textarea id="editWeeklyAnalysis" class="wizard-textarea" placeholder="Weekly analysis..."></textarea>
+                        <input type="url" id="editWeeklyPhoto" class="wizard-input" placeholder="Chart link" style="margin-top: 10px;">
+                    </div>
+
+                    <!-- Daily -->
+                    <div style="background: rgba(76, 175, 80, 0.1); border-left: 4px solid #4CAF50; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #4CAF50; margin-bottom: 15px;">📊 Daily Timeframe</h3>
+                        <textarea id="editDailyAnalysis" class="wizard-textarea" placeholder="Daily analysis..."></textarea>
+                        <input type="url" id="editDailyPhoto" class="wizard-input" placeholder="Chart link" style="margin-top: 10px;">
+                    </div>
+
+                    <!-- 4H -->
+                    <div style="background: rgba(156, 39, 176, 0.1); border-left: 4px solid #9C27B0; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #9C27B0; margin-bottom: 15px;">⏱️ 4H Timeframe</h3>
+                        <textarea id="editFourHAnalysis" class="wizard-textarea" placeholder="4H analysis..."></textarea>
+                        <input type="url" id="editFourHPhoto" class="wizard-input" placeholder="Chart link" style="margin-top: 10px;">
+                    </div>
+
+                    <!-- 1H -->
+                    <div style="background: rgba(0, 188, 212, 0.1); border-left: 4px solid #00BCD4; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                        <h3 style="color: #00BCD4; margin-bottom: 15px;">⚡ 1H Timeframe</h3>
+                        <textarea id="editOneHAnalysis" class="wizard-textarea" placeholder="1H analysis..."></textarea>
+                        <input type="url" id="editOneHPhoto" class="wizard-input" placeholder="Chart link" style="margin-top: 10px;">
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 15px;">
+                        <button onclick="cancelEdit()" style="flex: 1; padding: 15px; background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600; font-size: 1.1em;">
+                            ← Cancel
+                        </button>
+                        <button onclick="saveEdit()" style="flex: 2; padding: 15px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600; font-size: 1.1em;">
+                            💾 Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- List Page -->
         <div id="listPage" class="page active">
             <!-- Filters -->
@@ -2178,88 +2280,8 @@ function updateAnalysis(analysis) {
 }
 
 function editAnalysis(i) {
-    editingIndex = i;
-    const a = analyses[i];
-    
-    if (!a) {
-        console.error('Analysis not found at index:', i);
-        alert('Error: Analysis not found. Please refresh the page.');
-        return;
-    }
-    
-    // Populate wizard with existing data
-    wizardData = {
-        pair: a.pair || '',
-        month: a.month || 'February',
-        day: a.day || 'Wednesday',
-        date: a.date || '',
-        year: a.year || '2026',
-        tradeStatus: a.tradeStatus || 'Analysis Only',
-        marketBias: a.marketBias || 'Bullish',
-        analysisStatus: a.analysisStatus || 'Active',
-        weeklyAnalysis: a.weeklyAnalysis || '',
-        weeklyPhoto: a.weeklyPhoto || '',
-        dailyAnalysis: a.dailyAnalysis || '',
-        dailyPhoto: a.dailyPhoto || '',
-        fourHAnalysis: a.fourHAnalysis || '',
-        fourHPhoto: a.fourHPhoto || '',
-        oneHAnalysis: a.oneHAnalysis || '',
-        oneHPhoto: a.oneHPhoto || ''
-    };
-    
-    // Format date for input
-    if (wizardData.date) {
-        let dateValue = wizardData.date;
-        if (typeof dateValue === 'object' || typeof dateValue === 'number') {
-            const d = new Date(dateValue);
-            dateValue = d.toISOString().split('T')[0];
-        } else if (typeof dateValue === 'string' && dateValue.includes('T')) {
-            dateValue = dateValue.split('T')[0];
-        }
-        wizardData.date = dateValue;
-    }
-    
-    // Go to step 3 (analysis content) in wizard
-    currentWizardStep = 3;
-    
-    // Populate wizard fields
-    document.getElementById('selectedPairDisplay').textContent = wizardData.pair;
-    document.getElementById('wizardMonth').value = wizardData.month;
-    document.getElementById('wizardDay').value = wizardData.day;
-    document.getElementById('wizardDate').value = wizardData.date;
-    document.getElementById('wizardYear').value = wizardData.year;
-    
-    document.getElementById('wizardWeeklyAnalysis').value = wizardData.weeklyAnalysis;
-    document.getElementById('wizardWeeklyPhoto').value = wizardData.weeklyPhoto;
-    document.getElementById('wizardDailyAnalysis').value = wizardData.dailyAnalysis;
-    document.getElementById('wizardDailyPhoto').value = wizardData.dailyPhoto;
-    document.getElementById('wizardFourHAnalysis').value = wizardData.fourHAnalysis;
-    document.getElementById('wizardFourHPhoto').value = wizardData.fourHPhoto;
-    document.getElementById('wizardOneHAnalysis').value = wizardData.oneHAnalysis;
-    document.getElementById('wizardOneHPhoto').value = wizardData.oneHPhoto;
-    
-    // Update summary
-    document.getElementById('pairDateSummary').textContent = 
-        `${wizardData.pair} • ${wizardData.day}, ${wizardData.month} ${wizardData.year}`;
-    
-    // Update confirm page
-    document.getElementById('confirmPair').textContent = wizardData.pair;
-    document.getElementById('confirmDate').textContent = `${wizardData.day}, ${wizardData.month} ${wizardData.year} (${wizardData.date})`;
-    
-    // Pre-select validation buttons
-    if (wizardData.tradeStatus) {
-        selectTradeStatus(wizardData.tradeStatus);
-    }
-    if (wizardData.marketBias) {
-        selectBias(wizardData.marketBias);
-    }
-    
-    // Change wizard save to update mode
-    document.getElementById('wizardSaveBtn').textContent = '💾 Update Analysis';
-    
-    // Show wizard
-    showPage('form');
-    updateWizardStep();
+    // Open dedicated edit page instead of wizard
+    openEditPage(i);
 }
 
 function editAnalysisFromModal() {
@@ -3218,6 +3240,119 @@ showPage = function(page) {
         }
     }
 };
+
+
+// Edit Page Functions
+function openEditPage(i) {
+    editingIndex = i;
+    const a = analyses[i];
+    
+    if (!a) {
+        alert('Analysis not found');
+        return;
+    }
+    
+    // Display pair and date (read-only)
+    const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
+    document.getElementById('editPairDisplay').textContent = a.pair;
+    document.getElementById('editDateDisplay').textContent = `${a.day}, ${a.month} ${a.year} (${dateStr})`;
+    
+    // Store original data in hidden fields
+    document.getElementById('editMonth').value = a.month || '';
+    document.getElementById('editDay').value = a.day || '';
+    document.getElementById('editYear').value = a.year || '';
+    document.getElementById('editPair').value = a.pair || '';
+    
+    // Format date
+    let dateValue = a.date || '';
+    if (dateValue) {
+        if (typeof dateValue === 'object' || typeof dateValue === 'number') {
+            const d = new Date(dateValue);
+            dateValue = d.toISOString().split('T')[0];
+        } else if (typeof dateValue === 'string' && dateValue.includes('T')) {
+            dateValue = dateValue.split('T')[0];
+        }
+    }
+    document.getElementById('editDate').value = dateValue;
+    
+    // Populate status fields
+    document.getElementById('editTradeStatus').value = a.tradeStatus || 'Analysis Only';
+    document.getElementById('editMarketBias').value = a.marketBias || 'Bullish';
+    document.getElementById('editAnalysisStatus').value = a.analysisStatus || 'Active';
+    
+    // Populate analysis fields
+    document.getElementById('editWeeklyAnalysis').value = a.weeklyAnalysis || '';
+    document.getElementById('editWeeklyPhoto').value = a.weeklyPhoto || '';
+    document.getElementById('editDailyAnalysis').value = a.dailyAnalysis || '';
+    document.getElementById('editDailyPhoto').value = a.dailyPhoto || '';
+    document.getElementById('editFourHAnalysis').value = a.fourHAnalysis || '';
+    document.getElementById('editFourHPhoto').value = a.fourHPhoto || '';
+    document.getElementById('editOneHAnalysis').value = a.oneHAnalysis || '';
+    document.getElementById('editOneHPhoto').value = a.oneHPhoto || '';
+    
+    // Show edit page
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('editPage').style.display = 'block';
+    document.getElementById('editPage').classList.add('active');
+}
+
+function cancelEdit() {
+    editingIndex = -1;
+    showPage('list');
+}
+
+function saveEdit() {
+    if (editingIndex < 0) {
+        alert('No analysis selected for editing');
+        return;
+    }
+    
+    const editData = {
+        month: document.getElementById('editMonth').value,
+        day: document.getElementById('editDay').value,
+        date: document.getElementById('editDate').value,
+        year: document.getElementById('editYear').value,
+        pair: document.getElementById('editPair').value,
+        tradeStatus: document.getElementById('editTradeStatus').value,
+        marketBias: document.getElementById('editMarketBias').value,
+        analysisStatus: document.getElementById('editAnalysisStatus').value,
+        weeklyAnalysis: document.getElementById('editWeeklyAnalysis').value,
+        weeklyPhoto: document.getElementById('editWeeklyPhoto').value,
+        dailyAnalysis: document.getElementById('editDailyAnalysis').value,
+        dailyPhoto: document.getElementById('editDailyPhoto').value,
+        fourHAnalysis: document.getElementById('editFourHAnalysis').value,
+        fourHPhoto: document.getElementById('editFourHPhoto').value,
+        oneHAnalysis: document.getElementById('editOneHAnalysis').value,
+        oneHPhoto: document.getElementById('editOneHPhoto').value
+    };
+    
+    showLoading();
+    
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'update',
+            ...editData
+        })
+    })
+    .then(r => r.json())
+    .then(response => {
+        hideLoading();
+        if (response.success !== false) {
+            alert(`✅ ${editData.pair} updated successfully!`);
+            editingIndex = -1;
+            showPage('list');
+            loadAnalyses();
+        } else {
+            alert(`❌ Update failed: ${response.message || 'Unknown error'}`);
+        }
+    })
+    .catch(err => {
+        console.error('Update error:', err);
+        hideLoading();
+        alert('❌ Error updating analysis. Please try again.');
+    });
+}
 
     </script>
 </body>
