@@ -856,7 +856,7 @@
         <div id="editPage" class="page" style="display: none;">
             <div style="max-width: 900px; margin: 0 auto;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                    <h2 style="color: #2196F3; font-size: 2em; margin: 0;">✏️ Edit Analysis</h2>
+                    <h2 id="editPageTitle" style="color: #2196F3; font-size: 2em; margin: 0;">✏️ Edit Analysis</h2>
                     <button onclick="cancelEdit()" style="padding: 12px 24px; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600;">
                         ✕ Cancel
                     </button>
@@ -946,7 +946,7 @@
                         <button onclick="cancelEdit()" style="flex: 1; padding: 15px; background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600; font-size: 1.1em;">
                             ← Cancel
                         </button>
-                        <button onclick="saveEdit()" style="flex: 2; padding: 15px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600; font-size: 1.1em;">
+                        <button id="editSaveBtn" onclick="saveEditOrUpdate()" style="flex: 2; padding: 15px; background: linear-gradient(135deg, #2196F3, #1976D2); border: none; border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600; font-size: 1.1em;">
                             💾 Save Changes
                         </button>
                     </div>
@@ -1175,6 +1175,9 @@
                 <button onclick="editAnalysisFromModal()" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 149, 0, 0.4);">
                     ✏️ Edit Analysis
                 </button>
+                <button onclick="updateAnalysisFromModal()" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 700; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4);">
+                    🔄 Update Analysis
+                </button>
                 <button onclick="printAnalysisFromModal()" style="background: linear-gradient(135deg, #00BCD4, #0097A7); color: #fff; border: none; padding: 14px 40px; border-radius: 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);">
                     🖨️ Print to Word
                 </button>
@@ -1389,8 +1392,9 @@ function loadAnalyses() {
             populateFilterDropdowns();
             updateTable();
             
-            // Render calendar if in calendar view
+            // Render calendar and dashboard if in calendar view
             if (document.getElementById('calendarView').style.display !== 'none') {
+                renderActiveDashboard();
                 renderCalendar();
             }
         })
@@ -1609,6 +1613,7 @@ function updateTable() {
                     </button>
                     ${isLoggedIn ? `
                         <button class="edit-btn" onclick="editAnalysis(${analyses.indexOf(a)})" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85em;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">✏️ Edit</button>
+                        <button onclick="updateAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.85em; font-weight: 700; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🔄 Update</button>
                         <button class="delete-btn" onclick="deleteAnalysis(${analyses.indexOf(a)})" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85em;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🗑️ Delete</button>
                     ` : ''}
                 </div>
@@ -2347,8 +2352,8 @@ function updateAnalysis(analysis) {
 }
 
 function editAnalysis(i) {
-    // Open dedicated edit page instead of wizard
-    openEditPage(i);
+    // Open dedicated edit page in EDIT mode (keeps original date)
+    openEditPageForEdit(i);
 }
 
 function editAnalysisFromModal() {
@@ -2687,6 +2692,7 @@ function renderCalendar() {
 function createDayCell(day, month, year, isOtherMonth) {
     const dayDiv = document.createElement('div');
     dayDiv.className = 'calendar-day';
+    dayDiv.style.position = 'relative'; // Enable absolute positioning for badges
     
     if (isOtherMonth) {
         dayDiv.classList.add('other-month');
@@ -2739,11 +2745,8 @@ function createDayCell(day, month, year, isOtherMonth) {
     dayNumber.textContent = day;
     dayDiv.appendChild(dayNumber);
     
-    // Add pairs list with status badges
+    // Add visual status badges (top-right corner overlay)
     if (analysesForDay.length > 0 && !isOtherMonth) {
-        const pairsContainer = document.createElement('div');
-        pairsContainer.className = 'calendar-day-pairs';
-        
         // Group by pair and count versions
         const pairGroups = {};
         analysesForDay.forEach(a => {
@@ -2753,20 +2756,54 @@ function createDayCell(day, month, year, isOtherMonth) {
             pairGroups[a.pair].push(a);
         });
         
-        // Display each pair with status
+        // Create badge container (top-right corner)
+        const badgeContainer = document.createElement('div');
+        badgeContainer.style.cssText = 'position: absolute; top: 3px; right: 3px; display: flex; flex-direction: column; gap: 2px; align-items: flex-end; pointer-events: none;';
+        
+        // Display badge for each pair
         Object.keys(pairGroups).forEach(pair => {
             const versions = pairGroups[pair];
-            const latest = versions[versions.length - 1]; // Last version
+            const latest = versions[versions.length - 1];
             
+            let badgeColor, badgeText;
+            
+            if (latest.analysisStatus === 'Closed') {
+                badgeColor = '#FF5252'; // Red
+                badgeText = 'CLOSED';
+            } else if (versions.length > 1) {
+                badgeColor = '#FFB300'; // Orange (Updated)
+                badgeText = `UPD ${versions.length - 1}`;
+            } else {
+                badgeColor = '#00E676'; // Green (Active/New)
+                badgeText = 'NEW';
+            }
+            
+            const badge = document.createElement('div');
+            badge.style.cssText = `
+                background: ${badgeColor};
+                color: #000;
+                font-size: 0.55em;
+                font-weight: 700;
+                padding: 2px 5px;
+                border-radius: 4px;
+                line-height: 1;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                white-space: nowrap;
+            `;
+            badge.textContent = badgeText;
+            badgeContainer.appendChild(badge);
+        });
+        
+        dayDiv.appendChild(badgeContainer);
+        
+        // Also add pairs list at bottom
+        const pairsContainer = document.createElement('div');
+        pairsContainer.className = 'calendar-day-pairs';
+        
+        Object.keys(pairGroups).forEach(pair => {
             const pairBullet = document.createElement('div');
             pairBullet.className = 'calendar-pair-bullet';
-            pairBullet.style.cssText = 'display: flex; align-items: center; gap: 5px; margin-bottom: 3px;';
-            
-            // Status indicator
-            const statusBadge = latest.analysisStatus === 'Closed' ? 
-                '🔴' : versions.length > 1 ? `🟢(${versions.length})` : '🟢';
-            
-            pairBullet.innerHTML = `<span style="font-size: 0.75em;">${statusBadge}</span> <span>${pair}</span>`;
+            pairBullet.textContent = pair;
             pairsContainer.appendChild(pairBullet);
         });
         
@@ -2884,6 +2921,9 @@ function showAnalysesForDay(dateStr, day, month, year) {
                     </button>
                     <button onclick="event.stopPropagation(); editAnalysisFromDayModal(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
                         ✏️ Edit
+                    </button>
+                    <button onclick="event.stopPropagation(); updateAnalysisFromDayModal(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 700; transition: all 0.3s ease;">
+                        🔄 Update
                     </button>
                     <button onclick="event.stopPropagation(); printAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #00BCD4, #0097A7); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
                         🖨️ Print
@@ -3379,8 +3419,12 @@ showPage = function(page) {
 };
 
 
-// Edit Page Functions
-function openEditPage(i) {
+// Track if current edit is UPDATE (new version) or EDIT (fix typos)
+let isUpdateMode = false;
+
+// Edit Page Functions - EDIT MODE (keeps original date)
+function openEditPageForEdit(i) {
+    isUpdateMode = false;
     editingIndex = i;
     const a = analyses[i];
     
@@ -3389,26 +3433,30 @@ function openEditPage(i) {
         return;
     }
     
-    // Display pair and date (read-only)
-    const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
+    // Keep ORIGINAL date for editing typos
+    const originalDate = a.date ? new Date(a.date) : new Date();
+    const dateStr = originalDate.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    // Display pair and ORIGINAL date
     document.getElementById('editPairDisplay').textContent = a.pair;
     document.getElementById('editDateDisplay').textContent = `${a.day}, ${a.month} ${a.year} (${dateStr})`;
+    document.getElementById('editPageTitle').textContent = '✏️ Edit Analysis (Fix Typos)';
+    document.getElementById('editSaveBtn').textContent = '💾 Save Changes';
     
-    // Store original data in hidden fields
-    document.getElementById('editMonth').value = a.month || '';
-    document.getElementById('editDay').value = a.day || '';
-    document.getElementById('editYear').value = a.year || '';
-    document.getElementById('editPair').value = a.pair || '';
+    // Store ORIGINAL date in hidden fields
+    document.getElementById('editMonth').value = a.month || monthNames[originalDate.getMonth()];
+    document.getElementById('editDay').value = a.day || dayNames[originalDate.getDay()];
+    document.getElementById('editYear').value = a.year || originalDate.getFullYear();
+    document.getElementById('editPair').value = a.pair;
     
-    // Format date
-    let dateValue = a.date || '';
-    if (dateValue) {
-        if (typeof dateValue === 'object' || typeof dateValue === 'number') {
-            const d = new Date(dateValue);
-            dateValue = d.toISOString().split('T')[0];
-        } else if (typeof dateValue === 'string' && dateValue.includes('T')) {
-            dateValue = dateValue.split('T')[0];
-        }
+    let dateValue = a.date || originalDate.toISOString().split('T')[0];
+    if (typeof dateValue === 'object' || typeof dateValue === 'number') {
+        dateValue = new Date(dateValue).toISOString().split('T')[0];
+    } else if (typeof dateValue === 'string' && dateValue.includes('T')) {
+        dateValue = dateValue.split('T')[0];
     }
     document.getElementById('editDate').value = dateValue;
     
@@ -3552,6 +3600,142 @@ function renderActiveDashboard() {
             </div>
         `;
     }).join('');
+}
+
+
+// ============================================
+// UPDATE MODE FUNCTION (Today's date, new version)
+// ============================================
+
+function openEditPageForUpdate(i) {
+    isUpdateMode = true;
+    editingIndex = i;
+    const a = analyses[i];
+    
+    if (!a) {
+        alert('Analysis not found');
+        return;
+    }
+    
+    // Get TODAY's date for the update
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    const todayMonth = monthNames[today.getMonth()];
+    const todayDayName = dayNames[today.getDay()];
+    const todayYear = today.getFullYear();
+    
+    // Display pair and TODAY's date
+    document.getElementById('editPairDisplay').textContent = a.pair;
+    document.getElementById('editDateDisplay').textContent = `${todayDayName}, ${todayMonth} ${todayYear} (${today.toLocaleDateString('ro-RO')})`;
+    document.getElementById('editPageTitle').textContent = '🔄 Update Analysis (New Version)';
+    document.getElementById('editSaveBtn').textContent = '🔄 Save Update';
+    
+    // Store TODAY's date in hidden fields
+    document.getElementById('editMonth').value = todayMonth;
+    document.getElementById('editDay').value = todayDayName;
+    document.getElementById('editYear').value = todayYear;
+    document.getElementById('editPair').value = a.pair;
+    document.getElementById('editDate').value = todayStr;
+    
+    // Populate status fields
+    document.getElementById('editTradeStatus').value = a.tradeStatus || 'Analysis Only';
+    document.getElementById('editMarketBias').value = a.marketBias || 'Bullish';
+    document.getElementById('editAnalysisStatus').value = a.analysisStatus || 'Active';
+    
+    // Populate analysis fields
+    document.getElementById('editWeeklyAnalysis').value = a.weeklyAnalysis || '';
+    document.getElementById('editWeeklyPhoto').value = a.weeklyPhoto || '';
+    document.getElementById('editDailyAnalysis').value = a.dailyAnalysis || '';
+    document.getElementById('editDailyPhoto').value = a.dailyPhoto || '';
+    document.getElementById('editFourHAnalysis').value = a.fourHAnalysis || '';
+    document.getElementById('editFourHPhoto').value = a.fourHPhoto || '';
+    document.getElementById('editOneHAnalysis').value = a.oneHAnalysis || '';
+    document.getElementById('editOneHPhoto').value = a.oneHPhoto || '';
+    
+    // Show edit page
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('editPage').style.display = 'block';
+    document.getElementById('editPage').classList.add('active');
+}
+
+function saveEditOrUpdate() {
+    if (editingIndex < 0) {
+        alert('No analysis selected');
+        return;
+    }
+    
+    const editData = {
+        month: document.getElementById('editMonth').value,
+        day: document.getElementById('editDay').value,
+        date: document.getElementById('editDate').value,
+        year: document.getElementById('editYear').value,
+        pair: document.getElementById('editPair').value,
+        tradeStatus: document.getElementById('editTradeStatus').value,
+        marketBias: document.getElementById('editMarketBias').value,
+        analysisStatus: document.getElementById('editAnalysisStatus').value,
+        weeklyAnalysis: document.getElementById('editWeeklyAnalysis').value,
+        weeklyPhoto: document.getElementById('editWeeklyPhoto').value,
+        dailyAnalysis: document.getElementById('editDailyAnalysis').value,
+        dailyPhoto: document.getElementById('editDailyPhoto').value,
+        fourHAnalysis: document.getElementById('editFourHAnalysis').value,
+        fourHPhoto: document.getElementById('editFourHPhoto').value,
+        oneHAnalysis: document.getElementById('editOneHAnalysis').value,
+        oneHPhoto: document.getElementById('editOneHPhoto').value
+    };
+    
+    showLoading();
+    
+    // EDIT mode = update existing row
+    // UPDATE mode = add new row (versioning)
+    const action = isUpdateMode ? 'add' : 'update';
+    const actionText = isUpdateMode ? 'updated with new version' : 'edited';
+    
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: action,
+            ...editData
+        })
+    })
+    .then(r => r.json())
+    .then(response => {
+        hideLoading();
+        if (response.success !== false) {
+            alert(`✅ ${editData.pair} ${actionText} successfully!`);
+            editingIndex = -1;
+            isUpdateMode = false;
+            document.getElementById('editPage').style.display = 'none';
+            showPage('list');
+            loadAnalyses();
+        } else {
+            alert(`❌ Save failed: ${response.message || 'Unknown error'}`);
+        }
+    })
+    .catch(err => {
+        console.error('Save error:', err);
+        hideLoading();
+        alert('❌ Error saving. Please try again.');
+    });
+}
+
+function updateAnalysis(i) {
+    openEditPageForUpdate(i);
+}
+
+function updateAnalysisFromModal() {
+    if (currentViewIndex >= 0 && currentViewIndex < analyses.length) {
+        closeViewModal();
+        openEditPageForUpdate(currentViewIndex);
+    }
+}
+
+function updateAnalysisFromDayModal(index) {
+    closeDayModal();
+    openEditPageForUpdate(index);
 }
 
     </script>
