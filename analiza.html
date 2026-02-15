@@ -716,7 +716,7 @@
                         </thead>
                         <tbody id="analysisBody">
                             <tr>
-                                <td colspan="7" class="no-data">Loading analyses...</td>
+                                <td colspan="9" class="no-data">Loading analyses...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1001,7 +1001,18 @@ function loadAnalyses() {
         .then(r => r.json())
         .then(res => {
             hideLoading();
-            if (res.result === 'success') {
+            // Handle direct array response from Google Apps Script
+            if (Array.isArray(res)) {
+                analyses = res;
+                filteredAnalyses = [...analyses];
+                populateFilterDropdowns();
+                updateTable();
+                
+                // Render calendar if in calendar view
+                if (document.getElementById('calendarView').style.display !== 'none') {
+                    renderCalendar();
+                }
+            } else if (res.result === 'success') {
                 analyses = res.data || [];
                 filteredAnalyses = [...analyses];
                 populateFilterDropdowns();
@@ -1012,13 +1023,13 @@ function loadAnalyses() {
                     renderCalendar();
                 }
             } else {
-                throw new Error(res.message);
+                throw new Error(res.message || 'Failed to load data');
             }
         })
         .catch(err => {
-            console.error(err);
+            console.error('Load error:', err);
             hideLoading();
-            analysisBody.innerHTML = '<tr><td colspan="14" class="no-data">Loading error</td></tr>';
+            analysisBody.innerHTML = '<tr><td colspan="9" class="no-data">Loading error. Please check Google Script deployment.</td></tr>';
         });
 }
 
@@ -1183,7 +1194,7 @@ function resetFilters() {
 // Table
 function updateTable() {
     if (!filteredAnalyses.length) {
-        analysisBody.innerHTML = '<tr><td colspan="7" class="no-data">No analyses yet</td></tr>';
+        analysisBody.innerHTML = '<tr><td colspan="9" class="no-data">No analyses yet</td></tr>';
         return;
     }
     
