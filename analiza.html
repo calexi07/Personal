@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Market Analysis Journal - $225</title>
+    <title>A random trader</title>
     
     <style>
         * {
@@ -463,18 +463,15 @@
             <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
                 <div style="font-size: 4em; line-height: 1;">📊</div>
                 <div style="text-align: center;">
-                    <h1>Market Analysis Journal</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 1.2em; color: #2196F3; font-weight: 600;">$225 Personal Account</p>
-                    <p style="margin: 3px 0 0 0; font-size: 0.9em;">Track & Review Your Market Analysis</p>
+                    <h1>A random trader</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 1.1em; color: #90CAF9; font-weight: 500; font-style: italic;">Market analysis made easy</p>
                 </div>
             </div>
         </div>
 
         <div class="nav-buttons">
-            <button class="nav-btn active" id="btnList">Analysis History</button>
-            <button class="nav-btn" id="btnForm" style="display: none;">Add Analysis</button>
-            <button class="nav-btn" id="btnLogin" style="background: linear-gradient(135deg, #00cc88, #00aa72);">🔐 Login</button>
-            <button class="nav-btn" id="btnLogout" style="display: none; background: linear-gradient(135deg, #ff6b6b, #ee5a6f);">🚪 Logout</button>
+            <button class="nav-btn active" id="btnList">📊 Journal View</button>
+            <button class="nav-btn" id="btnForm" style="display: none;">➕ Add Analysis</button>
         </div>
 
         <!-- Form Page -->
@@ -543,6 +540,13 @@
                     <div class="form-group" id="customPairGroup" style="display: none;">
                         <label for="customPair">Enter Pair</label>
                         <input type="text" id="customPair" placeholder="ex: AUD/USD, BTC/USD">
+                    </div>
+                    <div class="form-group">
+                        <label for="tradeStatus">Trade Status *</label>
+                        <select id="tradeStatus" required style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); padding: 12px; border-radius: 10px; color: #fff; font-size: 1em; font-weight: 600;">
+                            <option value="Analysis Only">📊 Analysis Only</option>
+                            <option value="Trade Taken">💰 Trade Taken</option>
+                        </select>
                     </div>
                 </div>
 
@@ -696,6 +700,7 @@
                                 <th>Day</th>
                                 <th>Date</th>
                                 <th>Pair</th>
+                                <th>Trade</th>
                                 <th>Analysis</th>
                                 <th>Actions</th>
                             </tr>
@@ -889,8 +894,6 @@ const formPage = document.getElementById('formPage');
 const listPage = document.getElementById('listPage');
 const btnForm = document.getElementById('btnForm');
 const btnList = document.getElementById('btnList');
-const btnLogin = document.getElementById('btnLogin');
-const btnLogout = document.getElementById('btnLogout');
 const saveBtn = document.getElementById('saveBtn');
 const analysisBody = document.getElementById('analysisBody');
 const loadingOverlay = document.getElementById('loadingOverlay');
@@ -905,8 +908,6 @@ function hideLoading() {
 }
 
 // Navigation
-btnLogin.onclick = () => showLoginModal();
-btnLogout.onclick = () => logout();
 btnForm.onclick = () => showPage('form');
 btnList.onclick = () => {
     showPage('list');
@@ -1189,6 +1190,11 @@ function updateTable() {
             <td>${a.day}</td>
             <td>${a.date ? new Date(a.date).toLocaleDateString('ro-RO') : '-'}</td>
             <td style="font-weight: 600; color: #64B5F6;">${a.pair}</td>
+            <td style="font-weight: 600;">
+                ${a.tradeStatus === 'Trade Taken' ? 
+                    '<span style="color: #00E676;">💰 Trade</span>' : 
+                    '<span style="color: #90CAF9;">📊 Analysis</span>'}
+            </td>
             <td>
                 <button onclick="viewAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #2196F3, #1976D2); color: #fff; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 0.9em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(33, 150, 243, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(33, 150, 243, 0.3)';">
                     👁️ View Analysis
@@ -1232,8 +1238,12 @@ function viewAnalysis(index) {
     // Format date
     const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
     
-    // Set title
-    document.getElementById('viewModalTitle').textContent = `📊 ${dateStr} - ${a.pair}`;
+    // Set title with trade status
+    const tradeStatusBadge = a.tradeStatus === 'Trade Taken' ? 
+        '<span style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; padding: 4px 12px; border-radius: 15px; font-size: 0.85em; margin-left: 10px;">💰 Trade</span>' : 
+        '<span style="background: linear-gradient(135deg, #64B5F6, #42A5F5); color: #000; padding: 4px 12px; border-radius: 15px; font-size: 0.85em; margin-left: 10px;">📊 Analysis</span>';
+    
+    document.getElementById('viewModalTitle').innerHTML = `📊 ${dateStr} - ${a.pair} ${tradeStatusBadge}`;
     
     // Build timeline navigation for same pair
     buildAnalysisTimeline(index);
@@ -1585,251 +1595,6 @@ async function sendToDiscordFromModal() {
     }
 }
 
-async function postToDiscordWithProxy(analysis) {
-    const webhookUrl = DISCORD_WEBHOOKS[analysis.pair] || DEFAULT_DISCORD_WEBHOOK;
-    
-    if (!webhookUrl || webhookUrl === '') {
-        alert(`⚠️ Discord Webhook not configured for ${analysis.pair}!`);
-        return;
-    }
-    
-    showLoading();
-    
-    try {
-        const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
-        
-        // Use image proxy to bypass CORS
-        const proxyImage = (url) => {
-            if (!url) return null;
-            // Try multiple proxy services
-            return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=1200&output=png`;
-        };
-        
-        // Header message
-        await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username: `${analysis.pair} Market Analysis`,
-                avatar_url: CUSTOM_AVATAR_URL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                content: `# 🔔 ${analysis.pair} ANALYSIS\n**${dateStr}** • Multi-timeframe breakdown\n${'═'.repeat(50)}`
-            })
-        });
-        
-        await new Promise(r => setTimeout(r, 400));
-        
-        // Post each timeframe separately with PROXIED image
-        if (analysis.weeklyAnalysis || analysis.weeklyPhoto) {
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        author: {
-                            name: '📅 WEEKLY TIMEFRAME ANALYSIS',
-                            icon_url: 'https://cdn-icons-png.flaticon.com/512/2920/2920349.png'
-                        },
-                        description: analysis.weeklyAnalysis || '*No analysis provided*',
-                        color: 0xFF9500,
-                        image: analysis.weeklyPhoto ? { url: proxyImage(analysis.weeklyPhoto) } : undefined,
-                        thumbnail: analysis.weeklyPhoto ? { url: analysis.weeklyPhoto } : undefined,
-                        fields: [{
-                            name: '🔗 Original Chart',
-                            value: analysis.weeklyPhoto ? `[Click to view full size](${analysis.weeklyPhoto})` : 'No chart',
-                            inline: false
-                        }]
-                    }]
-                })
-            });
-            await new Promise(r => setTimeout(r, 600));
-        }
-        
-        if (analysis.dailyAnalysis || analysis.dailyPhoto) {
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        author: {
-                            name: '📊 DAILY TIMEFRAME ANALYSIS',
-                            icon_url: 'https://cdn-icons-png.flaticon.com/512/2920/2920349.png'
-                        },
-                        description: analysis.dailyAnalysis || '*No analysis provided*',
-                        color: 0x4CAF50,
-                        image: analysis.dailyPhoto ? { url: proxyImage(analysis.dailyPhoto) } : undefined,
-                        thumbnail: analysis.dailyPhoto ? { url: analysis.dailyPhoto } : undefined,
-                        fields: [{
-                            name: '🔗 Original Chart',
-                            value: analysis.dailyPhoto ? `[Click to view full size](${analysis.dailyPhoto})` : 'No chart',
-                            inline: false
-                        }]
-                    }]
-                })
-            });
-            await new Promise(r => setTimeout(r, 600));
-        }
-        
-        if (analysis.fourHAnalysis || analysis.fourHPhoto) {
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        author: {
-                            name: '⏱️ 4H TIMEFRAME ANALYSIS',
-                            icon_url: 'https://cdn-icons-png.flaticon.com/512/2920/2920349.png'
-                        },
-                        description: analysis.fourHAnalysis || '*No analysis provided*',
-                        color: 0x9C27B0,
-                        image: analysis.fourHPhoto ? { url: proxyImage(analysis.fourHPhoto) } : undefined,
-                        thumbnail: analysis.fourHPhoto ? { url: analysis.fourHPhoto } : undefined,
-                        fields: [{
-                            name: '🔗 Original Chart',
-                            value: analysis.fourHPhoto ? `[Click to view full size](${analysis.fourHPhoto})` : 'No chart',
-                            inline: false
-                        }]
-                    }]
-                })
-            });
-            await new Promise(r => setTimeout(r, 600));
-        }
-        
-        if (analysis.oneHAnalysis || analysis.oneHPhoto) {
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        author: {
-                            name: '⚡ 1H TIMEFRAME ANALYSIS',
-                            icon_url: 'https://cdn-icons-png.flaticon.com/512/2920/2920349.png'
-                        },
-                        description: analysis.oneHAnalysis || '*No analysis provided*',
-                        color: 0x00BCD4,
-                        image: analysis.oneHPhoto ? { url: proxyImage(analysis.oneHPhoto) } : undefined,
-                        thumbnail: analysis.oneHPhoto ? { url: analysis.oneHPhoto } : undefined,
-                        fields: [{
-                            name: '🔗 Original Chart',
-                            value: analysis.oneHPhoto ? `[Click to view full size](${analysis.oneHPhoto})` : 'No chart',
-                            inline: false
-                        }]
-                    }]
-                })
-            });
-        }
-        
-        hideLoading();
-        alert(`✅ Analysis posted!\n\n💡 Using image proxy service.\nImages should be visible now!`);
-        
-    } catch (error) {
-        console.error('Error:', error);
-        hideLoading();
-        alert(`❌ Error: ${error.message}`);
-    }
-}
-
-// Main function that tries direct first, then proxy
-async function postToDiscord(analysis) {
-    const webhookUrl = DISCORD_WEBHOOKS[analysis.pair] || DEFAULT_DISCORD_WEBHOOK;
-    
-    if (!webhookUrl || webhookUrl === '') {
-        alert(`⚠️ Discord Webhook not configured for ${analysis.pair}!`);
-        return;
-    }
-    
-    showLoading();
-    
-    try {
-        const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
-        
-        // Header
-        await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username: `${analysis.pair} Analysis`,
-                avatar_url: CUSTOM_AVATAR_URL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                content: `# 🔔 ${analysis.pair} ANALYSIS\n**${dateStr}**\n${'═'.repeat(40)}`
-            })
-        });
-        
-        await new Promise(r => setTimeout(r, 400));
-        
-        // Weekly
-        if (analysis.weeklyAnalysis || analysis.weeklyPhoto) {
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        title: '📅 WEEKLY TIMEFRAME',
-                        description: analysis.weeklyAnalysis || '*No analysis*',
-                        color: 0xFF9500,
-                        image: analysis.weeklyPhoto ? { url: analysis.weeklyPhoto } : undefined
-                    }]
-                })
-            });
-            await new Promise(r => setTimeout(r, 500));
-        }
-        
-        // Daily
-        if (analysis.dailyAnalysis || analysis.dailyPhoto) {
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        title: '📊 DAILY TIMEFRAME',
-                        description: analysis.dailyAnalysis || '*No analysis*',
-                        color: 0x4CAF50,
-                        image: analysis.dailyPhoto ? { url: analysis.dailyPhoto } : undefined
-                    }]
-                })
-            });
-            await new Promise(r => setTimeout(r, 500));
-        }
-        
-        // 4H
-        if (analysis.fourHAnalysis || analysis.fourHPhoto) {
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        title: '⏱️ 4H TIMEFRAME',
-                        description: analysis.fourHAnalysis || '*No analysis*',
-                        color: 0x9C27B0,
-                        image: analysis.fourHPhoto ? { url: analysis.fourHPhoto } : undefined
-                    }]
-                })
-            });
-            await new Promise(r => setTimeout(r, 500));
-        }
-        
-        // 1H
-        if (analysis.oneHAnalysis || analysis.oneHPhoto) {
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        title: '⚡ 1H TIMEFRAME',
-                        description: analysis.oneHAnalysis || '*No analysis*',
-                        color: 0x00BCD4,
-                        image: analysis.oneHPhoto ? { url: analysis.oneHPhoto } : undefined
-                    }]
-                })
-            });
-        }
-        
-        hideLoading();
-        alert(`✅ Posted to Discord!\n\nIf images don't show:\n• TradingView URLs may be blocked\n• Try uploading charts to Imgur\n• Or use Discord CDN (upload to Discord first)`);
-        
-    } catch (error) {
-        console.error('Error:', error);
-        hideLoading();
-        alert(`❌ Error: ${error.message}`);
-    }
 }
 
 function shareFromModal() {
@@ -2128,6 +1893,7 @@ function getFormData() {
         date: dateInput, // Save as YYYY-MM-DD without time
         year: document.getElementById('year').value,
         pair: pairValue,
+        tradeStatus: document.getElementById('tradeStatus').value,
         weeklyAnalysis: document.getElementById('weeklyAnalysis').value,
         weeklyPhoto: document.getElementById('weeklyPhoto').value,
         dailyAnalysis: document.getElementById('dailyAnalysis').value,
@@ -2193,6 +1959,7 @@ function editAnalysis(i) {
     document.getElementById('day').value = a.day || '';
     document.getElementById('date').value = a.date || '';
     document.getElementById('year').value = a.year || '';
+    document.getElementById('tradeStatus').value = a.tradeStatus || 'Analysis Only';
     document.getElementById('weeklyAnalysis').value = a.weeklyAnalysis || '';
     document.getElementById('weeklyPhoto').value = a.weeklyPhoto || '';
     document.getElementById('dailyAnalysis').value = a.dailyAnalysis || '';
