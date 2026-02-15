@@ -3896,15 +3896,24 @@ function sendToDiscordTable(i) {
 
 // Show history modal for a specific pair
 function showPairHistory(pair) {
+    const titleEl = document.getElementById('historyModalTitle');
+    const contentEl = document.getElementById('historyModalContent');
+    const modalEl = document.getElementById('historyModal');
+    
+    if (!titleEl || !contentEl || !modalEl) {
+        console.error('History modal elements not found in DOM');
+        alert('Error: History modal not loaded. Please refresh the page.');
+        return;
+    }
+    
     const allData = window.allAnalyses || analyses;
     const pairHistory = allData.filter(a => a.pair === pair).sort((a, b) => {
         return new Date(b.date) - new Date(a.date); // Newest first
     });
     
-    document.getElementById('historyModalTitle').textContent = `📊 ${pair} - Analysis History (${pairHistory.length} versions)`;
+    titleEl.textContent = `📊 ${pair} - Analysis History (${pairHistory.length} versions)`;
     
-    const content = document.getElementById('historyModalContent');
-    content.innerHTML = '';
+    contentEl.innerHTML = '';
     
     pairHistory.forEach((a, index) => {
         const versionNum = pairHistory.length - index;
@@ -3976,10 +3985,10 @@ function showPairHistory(pair) {
             ` : ''}
         `;
         
-        content.appendChild(card);
+        contentEl.appendChild(card);
     });
     
-    document.getElementById('historyModal').style.display = 'flex';
+    modalEl.style.display = 'flex';
 }
 
 function closeHistoryModal() {
