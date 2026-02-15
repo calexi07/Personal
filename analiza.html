@@ -1301,28 +1301,45 @@ function loadAnalyses() {
         .then(res => {
             hideLoading();
             // Handle direct array response from Google Apps Script
+            let rawData = [];
             if (Array.isArray(res)) {
-                analyses = res;
-                filteredAnalyses = [...analyses];
-                populateFilterDropdowns();
-                updateTable();
-                
-                // Render calendar if in calendar view
-                if (document.getElementById('calendarView').style.display !== 'none') {
-                    renderCalendar();
-                }
+                rawData = res;
             } else if (res.result === 'success') {
-                analyses = res.data || [];
-                filteredAnalyses = [...analyses];
-                populateFilterDropdowns();
-                updateTable();
-                
-                // Render calendar if in calendar view
-                if (document.getElementById('calendarView').style.display !== 'none') {
-                    renderCalendar();
-                }
+                rawData = res.data || [];
             } else {
                 throw new Error(res.message || 'Failed to load data');
+            }
+            
+            // Store ALL versions in allAnalyses (for history)
+            window.allAnalyses = rawData;
+            
+            // Get only LATEST version for each pair (for UI display)
+            // Group by pair, then get the one with latest date
+            const latestByPair = {};
+            rawData.forEach(analysis => {
+                const key = analysis.pair;
+                if (!latestByPair[key]) {
+                    latestByPair[key] = analysis;
+                } else {
+                    // Compare dates - keep the most recent
+                    const existingDate = new Date(latestByPair[key].date || 0);
+                    const newDate = new Date(analysis.date || 0);
+                    if (newDate >= existingDate) {
+                        latestByPair[key] = analysis;
+                    }
+                }
+            });
+            
+            // Convert to array
+            analyses = Object.values(latestByPair);
+            
+            filteredAnalyses = [...analyses];
+            populateFilterDropdowns();
+            updateTable();
+            
+            // Render calendar if in calendar view
+            if (document.getElementById('calendarView').style.display !== 'none') {
+                renderCalendar();
             }
         })
         .catch(err => {
@@ -2738,7 +2755,12 @@ function showAnalysesForDay(dateStr, day, month, year) {
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
                 <div>
-                    <h3 style="color: #2196F3; margin: 0 0 8px 0; font-size: 1.8em;">${a.pair}</h3>
+                    <h3 style="color: #2196F3; margin: 0 0 8px 0; font-size: 1.8em;">
+                        ${a.pair}
+                        ${a.analysisStatus === 'Active' ? 
+                            '<span style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; padding: 4px 12px; border-radius: 12px; font-size: 0.5em; margin-left: 10px; vertical-align: middle;">🟢 ACTIVE</span>' : 
+                            '<span style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 0.5em; margin-left: 10px; vertical-align: middle;">🔴 CLOSED</span>'}
+                    </h3>
                     <p style="color: #aaa; margin: 0; font-size: 0.9em;">${a.day}, ${a.month} ${a.year}</p>
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -3298,6 +3320,8 @@ function openEditPage(i) {
 
 function cancelEdit() {
     editingIndex = -1;
+    document.getElementById('editPage').style.display = 'none';
+    document.getElementById('editPage').classList.remove('active');
     showPage('list');
 }
 
@@ -3328,10 +3352,12 @@ function saveEdit() {
     
     showLoading();
     
+    // IMPORTANT: Use 'add' action to create NEW VERSION (append new row)
+    // This creates a history of all updates in the spreadsheet
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({
-            action: 'update',
+            action: 'add',  // Changed from 'update' to 'add' for versioning
             ...editData
         })
     })
@@ -3339,8 +3365,10 @@ function saveEdit() {
     .then(response => {
         hideLoading();
         if (response.success !== false) {
-            alert(`✅ ${editData.pair} updated successfully!`);
+            const statusMsg = editData.analysisStatus === 'Closed' ? '🔴 Closed' : '🟢 Updated';
+            alert(`✅ ${editData.pair} ${statusMsg}!\n\nNew version saved to spreadsheet.`);
             editingIndex = -1;
+            document.getElementById('editPage').style.display = 'none';
             showPage('list');
             loadAnalyses();
         } else {
@@ -3350,7 +3378,7 @@ function saveEdit() {
     .catch(err => {
         console.error('Update error:', err);
         hideLoading();
-        alert('❌ Error updating analysis. Please try again.');
+        alert('❌ Error saving update. Please try again.');
     });
 }
 
