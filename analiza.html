@@ -2187,51 +2187,79 @@ function editAnalysis(i) {
         return;
     }
     
-    // Handle pair selection (check if it's a predefined pair or custom)
-    const predefinedPairs = ['EUR/USD', 'GBP/USD', 'XAU/USD', 'USD/JPY', 'US100', 'GER40'];
-    if (predefinedPairs.includes(a.pair)) {
-        document.getElementById('pair').value = a.pair;
-        document.getElementById('customPairGroup').style.display = 'none';
-    } else {
-        document.getElementById('pair').value = 'Other';
-        document.getElementById('customPair').value = a.pair;
-        document.getElementById('customPairGroup').style.display = 'block';
-    }
+    // Populate wizard with existing data
+    wizardData = {
+        pair: a.pair || '',
+        month: a.month || 'February',
+        day: a.day || 'Wednesday',
+        date: a.date || '',
+        year: a.year || '2026',
+        tradeStatus: a.tradeStatus || 'Analysis Only',
+        marketBias: a.marketBias || 'Bullish',
+        analysisStatus: a.analysisStatus || 'Active',
+        weeklyAnalysis: a.weeklyAnalysis || '',
+        weeklyPhoto: a.weeklyPhoto || '',
+        dailyAnalysis: a.dailyAnalysis || '',
+        dailyPhoto: a.dailyPhoto || '',
+        fourHAnalysis: a.fourHAnalysis || '',
+        fourHPhoto: a.fourHPhoto || '',
+        oneHAnalysis: a.oneHAnalysis || '',
+        oneHPhoto: a.oneHPhoto || ''
+    };
     
-    // Populate all fields
-    document.getElementById('month').value = a.month || '';
-    document.getElementById('day').value = a.day || '';
-    document.getElementById('year').value = a.year || '';
-    
-    // Format date properly for input type="date" (needs YYYY-MM-DD)
-    if (a.date) {
-        let dateValue = a.date;
-        // If it's a timestamp or Date object, convert to YYYY-MM-DD
+    // Format date for input
+    if (wizardData.date) {
+        let dateValue = wizardData.date;
         if (typeof dateValue === 'object' || typeof dateValue === 'number') {
             const d = new Date(dateValue);
             dateValue = d.toISOString().split('T')[0];
         } else if (typeof dateValue === 'string' && dateValue.includes('T')) {
-            // If it's ISO string with time, extract just the date part
             dateValue = dateValue.split('T')[0];
         }
-        document.getElementById('date').value = dateValue;
-    } else {
-        document.getElementById('date').value = '';
+        wizardData.date = dateValue;
     }
     
-    document.getElementById('tradeStatus').value = a.tradeStatus || 'Analysis Only';
-    document.getElementById('marketBias').value = a.marketBias || 'Neutral';
-    document.getElementById('analysisStatus').value = a.analysisStatus || 'Active';
-    document.getElementById('weeklyAnalysis').value = a.weeklyAnalysis || '';
-    document.getElementById('weeklyPhoto').value = a.weeklyPhoto || '';
-    document.getElementById('dailyAnalysis').value = a.dailyAnalysis || '';
-    document.getElementById('dailyPhoto').value = a.dailyPhoto || '';
-    document.getElementById('fourHAnalysis').value = a.fourHAnalysis || '';
-    document.getElementById('fourHPhoto').value = a.fourHPhoto || '';
-    document.getElementById('oneHAnalysis').value = a.oneHAnalysis || '';
-    document.getElementById('oneHPhoto').value = a.oneHPhoto || '';
+    // Go to step 3 (analysis content) in wizard
+    currentWizardStep = 3;
     
+    // Populate wizard fields
+    document.getElementById('selectedPairDisplay').textContent = wizardData.pair;
+    document.getElementById('wizardMonth').value = wizardData.month;
+    document.getElementById('wizardDay').value = wizardData.day;
+    document.getElementById('wizardDate').value = wizardData.date;
+    document.getElementById('wizardYear').value = wizardData.year;
+    
+    document.getElementById('wizardWeeklyAnalysis').value = wizardData.weeklyAnalysis;
+    document.getElementById('wizardWeeklyPhoto').value = wizardData.weeklyPhoto;
+    document.getElementById('wizardDailyAnalysis').value = wizardData.dailyAnalysis;
+    document.getElementById('wizardDailyPhoto').value = wizardData.dailyPhoto;
+    document.getElementById('wizardFourHAnalysis').value = wizardData.fourHAnalysis;
+    document.getElementById('wizardFourHPhoto').value = wizardData.fourHPhoto;
+    document.getElementById('wizardOneHAnalysis').value = wizardData.oneHAnalysis;
+    document.getElementById('wizardOneHPhoto').value = wizardData.oneHPhoto;
+    
+    // Update summary
+    document.getElementById('pairDateSummary').textContent = 
+        `${wizardData.pair} • ${wizardData.day}, ${wizardData.month} ${wizardData.year}`;
+    
+    // Update confirm page
+    document.getElementById('confirmPair').textContent = wizardData.pair;
+    document.getElementById('confirmDate').textContent = `${wizardData.day}, ${wizardData.month} ${wizardData.year} (${wizardData.date})`;
+    
+    // Pre-select validation buttons
+    if (wizardData.tradeStatus) {
+        selectTradeStatus(wizardData.tradeStatus);
+    }
+    if (wizardData.marketBias) {
+        selectBias(wizardData.marketBias);
+    }
+    
+    // Change wizard save to update mode
+    document.getElementById('wizardSaveBtn').textContent = '💾 Update Analysis';
+    
+    // Show wizard
     showPage('form');
+    updateWizardStep();
 }
 
 function editAnalysisFromModal() {
@@ -2259,6 +2287,13 @@ function deleteAnalysis(i) {
         return;
     }
     
+    console.log('Deleting analysis:', {
+        pair: a.pair,
+        month: a.month,
+        day: a.day,
+        year: a.year
+    });
+    
     showLoading();
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
@@ -2272,10 +2307,16 @@ function deleteAnalysis(i) {
         })
     })
         .then(r => r.json())
-        .then(() => {
+        .then(response => {
             hideLoading();
-            alert('✅ Analysis deleted successfully!');
-            loadAnalyses();
+            console.log('Delete response:', response);
+            
+            if (response.success) {
+                alert('✅ Analysis deleted successfully!');
+                loadAnalyses();
+            } else {
+                alert(`❌ Delete failed: ${response.message || 'Row not found in sheet'}\n\nPlease refresh and try again.`);
+            }
         })
         .catch(err => {
             console.error('Delete error:', err);
@@ -3076,17 +3117,22 @@ function wizardSave() {
     
     showLoading();
     
+    // Determine if this is add or update
+    const action = editingIndex >= 0 ? 'update' : 'add';
+    const actionText = editingIndex >= 0 ? 'updated' : 'saved';
+    
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({
-            action: 'add',
+            action: action,
             ...wizardData
         })
     })
     .then(r => r.json())
     .then(() => {
         hideLoading();
-        alert(`✅ ${wizardData.pair} analysis saved successfully!\n\n📊 Trade Status: ${wizardData.tradeStatus}\n🎯 Market Bias: ${wizardData.marketBias}`);
+        alert(`✅ ${wizardData.pair} analysis ${actionText} successfully!\n\n📊 Trade Status: ${wizardData.tradeStatus}\n🎯 Market Bias: ${wizardData.marketBias}`);
+        editingIndex = -1; // Reset edit mode
         resetWizard();
         showPage('list');
         loadAnalyses();
