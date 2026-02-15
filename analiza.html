@@ -1333,15 +1333,16 @@ function attemptLogin() {
         localStorage.setItem('analysisAuth', 'true');
         closeLoginModal();
         updateUIForLogin();
-        alert('Login successful!');
+        customAlert('Login successful!', 'Notice', 'ℹ️');
     } else {
         document.getElementById('loginError').textContent = 'Invalid credentials';
         document.getElementById('loginError').style.display = 'block';
     }
 }
 
-function logout() {
-    if (confirm('Logout?')) {
+async function logout() {
+    const confirmed = await customConfirm('Are you sure you want to logout?', 'Logout');
+    if (confirmed) {
         isLoggedIn = false;
         localStorage.removeItem('analysisAuth');
         updateUIForLogin();
@@ -2007,12 +2008,12 @@ async function generateWordDocument(analysis) {
         setTimeout(() => URL.revokeObjectURL(url), 100);
         
         hideLoading();
-        alert('✅ Analysis exported as Word document!\n\n📱 QR codes included - scan with your phone to view charts!');
+        customAlert(' Analysis exported as Word document!\n\n📱 QR codes included - scan with your phone to view charts!', 'Notice', 'ℹ️');
         
     } catch (error) {
         console.error('Error generating Word document:', error);
         hideLoading();
-        alert('❌ Error generating Word document. Please try again.');
+        customAlert(' Error generating Word document. Please try again.', 'Notice', 'ℹ️');
     }
 }
 
@@ -2063,9 +2064,9 @@ function shareFromModal() {
         }
         
         navigator.clipboard.writeText(template).then(() => {
-            alert('✅ Copied to clipboard! Paste in Discord.');
+            customAlert(' Copied to clipboard! Paste in Discord.', 'Notice', 'ℹ️');
         }).catch(err => {
-            alert('Copy failed! Please try again.');
+            customAlert('Copy failed! Please try again.', 'Notice', 'ℹ️');
         });
     }
 }
@@ -2116,9 +2117,9 @@ function copyForTradingViewFromModal() {
         template += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
         
         navigator.clipboard.writeText(template).then(() => {
-            alert('✅ Copied to clipboard! Paste in TradingView comments.');
+            customAlert(' Copied to clipboard! Paste in TradingView comments.', 'Notice', 'ℹ️');
         }).catch(err => {
-            alert('Copy failed! Please try again.');
+            customAlert('Copy failed! Please try again.', 'Notice', 'ℹ️');
         });
     }
 }
@@ -2193,7 +2194,7 @@ function shareToDiscord(index, event) {
             btn.style.background = 'linear-gradient(135deg, #9c27b0, #7b1fa2)';
         }, 2000);
     }).catch(err => {
-        alert('Copy failed! Please try again.');
+        customAlert('Copy failed! Please try again.', 'Notice', 'ℹ️');
         console.error(err);
     });
 }
@@ -2277,7 +2278,7 @@ function shareToTradingView(index, event) {
             btn.style.background = 'linear-gradient(135deg, #2962FF, #1E53E5)';
         }, 2000);
     }).catch(err => {
-        alert('Copy failed! Please try again.');
+        customAlert('Copy failed! Please try again.', 'Notice', 'ℹ️');
         console.error(err);
     });
 }
@@ -2301,7 +2302,7 @@ function getFormData() {
     const required = ['month', 'day', 'date', 'year', 'pair'];
     for (const id of required) {
         if (!document.getElementById(id).value) {
-            alert('Please fill Month, Day, Date, Year, and Pair');
+            customAlert('Please fill Month, Day, Date, Year, and Pair', 'Notice', 'ℹ️');
             return null;
         }
     }
@@ -2311,7 +2312,7 @@ function getFormData() {
     if (pairValue === 'Other') {
         pairValue = document.getElementById('customPair').value;
         if (!pairValue || pairValue.trim() === '') {
-            alert('Please enter a custom pair');
+            customAlert('Please enter a custom pair', 'Notice', 'ℹ️');
             return null;
         }
     }
@@ -2359,7 +2360,7 @@ function addAnalysis(analysis) {
         .catch(err => {
             console.error('Add error:', err);
             hideLoading();
-            alert('Save error');
+            customAlert('Save error', 'Notice', 'ℹ️');
         });
 }
 
@@ -2377,7 +2378,7 @@ function updateAnalysis(analysis) {
         .catch(err => {
             console.error(err);
             hideLoading();
-            alert('Update error');
+            customAlert('Update error', 'Notice', 'ℹ️');
         });
 }
 
@@ -2392,7 +2393,7 @@ function editAnalysisFromModal() {
         editAnalysis(currentViewIndex);
     } else {
         console.error('Invalid currentViewIndex:', currentViewIndex, 'analyses length:', analyses.length);
-        alert('Error: Cannot edit this analysis. Please try again from the table.');
+        customAlert('Error: Cannot edit this analysis. Please try again from the table.', 'Notice', 'ℹ️');
         closeViewModal();
     }
 }
@@ -2440,13 +2441,13 @@ async function deleteAnalysis(i) {
                 customAlert('Analysis deleted successfully!', 'Deleted', '✅');
                 loadAnalyses();
             } else {
-                alert(`❌ Delete failed: ${response.message || 'Row not found in sheet'}\n\nPlease refresh and try again.`);
+                customAlert(`Delete failed: ${response.message || 'Row not found in sheet'}\n\nPlease refresh and try again.`, 'Error', '❌');
             }
         })
         .catch(err => {
             console.error('Delete error:', err);
             hideLoading();
-            alert('❌ Delete error. Please try again.');
+            customAlert(' Delete error. Please try again.', 'Notice', 'ℹ️');
         });
 }
 
@@ -3177,12 +3178,17 @@ let wizardData = {
 let currentWizardStep = 1;
 
 // Step 1: Select Pair
-function selectPair(pair) {
+async function selectPair(pair) {
     // Check if pair has active analysis
     const existingAnalysis = analyses.find(a => a.pair === pair && a.analysisStatus === 'Active');
     
     if (existingAnalysis) {
-        if (confirm(`⚠️ ${pair} already has an active analysis!\n\nDo you want to EDIT the existing analysis instead of creating a new one?`)) {
+        const confirmed = await customConfirm(
+            `${pair} already has an active analysis!\n\nDo you want to EDIT the existing analysis instead of creating a new one?`,
+            'Duplicate Analysis'
+        );
+        
+        if (confirmed) {
             // Edit existing
             const index = analyses.indexOf(existingAnalysis);
             editAnalysis(index);
@@ -3202,7 +3208,7 @@ function selectPair(pair) {
 function selectCustomPair() {
     const customPair = document.getElementById('customPairInput').value.trim();
     if (!customPair) {
-        alert('Please enter a pair name');
+        customAlert('Please enter a pair name', 'Notice', 'ℹ️');
         return;
     }
     
@@ -3214,7 +3220,7 @@ function wizardNextStep() {
     // Validate current step
     if (currentWizardStep === 1) {
         if (!wizardData.pair) {
-            alert('Please select a pair first');
+            customAlert('Please select a pair first', 'Notice', 'ℹ️');
             return;
         }
     } else if (currentWizardStep === 2) {
@@ -3225,7 +3231,7 @@ function wizardNextStep() {
         wizardData.year = document.getElementById('wizardYear').value;
         
         if (!wizardData.date) {
-            alert('Please select an exact date');
+            customAlert('Please select an exact date', 'Notice', 'ℹ️');
             return;
         }
         
@@ -3359,7 +3365,7 @@ function checkValidationComplete() {
 // Save wizard data
 function wizardSave() {
     if (!wizardData.tradeStatus || !wizardData.marketBias) {
-        alert('Please select Trade Status and Market Bias');
+        customAlert('Please select Trade Status and Market Bias', 'Notice', 'ℹ️');
         return;
     }
     
@@ -3379,7 +3385,11 @@ function wizardSave() {
     .then(r => r.json())
     .then(() => {
         hideLoading();
-        alert(`✅ ${wizardData.pair} analysis ${actionText} successfully!\n\n📊 Trade Status: ${wizardData.tradeStatus}\n🎯 Market Bias: ${wizardData.marketBias}`);
+        customAlert(
+            `${wizardData.pair} analysis ${actionText} successfully!\n\nTrade Status: ${wizardData.tradeStatus}\nMarket Bias: ${wizardData.marketBias}`,
+            'Success',
+            '✅'
+        );
         editingIndex = -1; // Reset edit mode
         resetWizard();
         showPage('list');
@@ -3388,7 +3398,7 @@ function wizardSave() {
     .catch(err => {
         console.error('Save error:', err);
         hideLoading();
-        alert('❌ Error saving analysis. Please try again.');
+        customAlert(' Error saving analysis. Please try again.', 'Notice', 'ℹ️');
     });
 }
 
@@ -3478,7 +3488,7 @@ function openEditPageForEdit(i) {
     const a = analyses[i];
     
     if (!a) {
-        alert('Analysis not found');
+        customAlert('Analysis not found', 'Notice', 'ℹ️');
         return;
     }
     
@@ -3546,7 +3556,7 @@ function cancelEdit() {
 
 function saveEdit() {
     if (editingIndex < 0) {
-        alert('No analysis selected for editing');
+        customAlert('No analysis selected for editing', 'Notice', 'ℹ️');
         return;
     }
     
@@ -3585,19 +3595,19 @@ function saveEdit() {
         hideLoading();
         if (response.success !== false) {
             const statusMsg = editData.analysisStatus === 'Closed' ? '🔴 Closed' : '🟢 Updated';
-            alert(`✅ ${editData.pair} ${statusMsg}!\n\nNew version saved to spreadsheet.`);
+            customAlert(`${editData.pair} ${statusMsg}!\n\nNew version saved to spreadsheet.`, 'Success', '✅');
             editingIndex = -1;
             document.getElementById('editPage').style.display = 'none';
             showPage('list');
             loadAnalyses();
         } else {
-            alert(`❌ Update failed: ${response.message || 'Unknown error'}`);
+            customAlert(`Update failed: ${response.message || 'Unknown error'}`, 'Error', '❌');
         }
     })
     .catch(err => {
         console.error('Update error:', err);
         hideLoading();
-        alert('❌ Error saving update. Please try again.');
+        customAlert(' Error saving update. Please try again.', 'Notice', 'ℹ️');
     });
 }
 
@@ -3725,7 +3735,7 @@ function openEditPageForUpdate(i) {
     const a = analyses[i];
     
     if (!a) {
-        alert('Analysis not found');
+        customAlert('Analysis not found', 'Notice', 'ℹ️');
         return;
     }
     
@@ -3776,7 +3786,7 @@ function openEditPageForUpdate(i) {
 
 function saveEditOrUpdate() {
     if (editingIndex < 0) {
-        alert('No analysis selected');
+        customAlert('No analysis selected', 'Notice', 'ℹ️');
         return;
     }
     
@@ -3817,20 +3827,20 @@ function saveEditOrUpdate() {
     .then(response => {
         hideLoading();
         if (response.success !== false) {
-            alert(`✅ ${editData.pair} ${actionText} successfully!`);
+            customAlert(`${editData.pair} ${actionText} successfully!`, 'Success', '✅');
             editingIndex = -1;
             isUpdateMode = false;
             document.getElementById('editPage').style.display = 'none';
             showPage('list');
             loadAnalyses();
         } else {
-            alert(`❌ Save failed: ${response.message || 'Unknown error'}`);
+            customAlert(`Save failed: ${response.message || 'Unknown error'}`, 'Error', '❌');
         }
     })
     .catch(err => {
         console.error('Save error:', err);
         hideLoading();
-        alert('❌ Error saving. Please try again.');
+        customAlert(' Error saving. Please try again.', 'Notice', 'ℹ️');
     });
 }
 
@@ -3860,7 +3870,7 @@ function editTableAnalysis(i) {
     if (mainIndex >= 0) {
         editAnalysis(mainIndex);
     } else {
-        alert('Analysis not found in main array');
+        customAlert('Analysis not found in main array', 'Notice', 'ℹ️');
     }
 }
 
@@ -3871,7 +3881,7 @@ function updateTableAnalysis(i) {
     if (mainIndex >= 0) {
         updateAnalysis(mainIndex);
     } else {
-        alert('Analysis not found in main array');
+        customAlert('Analysis not found in main array', 'Notice', 'ℹ️');
     }
 }
 
@@ -3882,7 +3892,7 @@ function deleteTableAnalysis(i) {
     if (mainIndex >= 0) {
         deleteAnalysis(mainIndex);
     } else {
-        alert('Analysis not found in main array');
+        customAlert('Analysis not found in main array', 'Notice', 'ℹ️');
     }
 }
 
@@ -3922,7 +3932,7 @@ function showPairHistory(pair) {
     
     if (!titleEl || !contentEl || !modalEl) {
         console.error('History modal elements not found in DOM');
-        alert('Error: History modal not loaded. Please refresh the page.');
+        customAlert('Error: History modal not loaded. Please refresh the page.', 'Notice', 'ℹ️');
         return;
     }
     
