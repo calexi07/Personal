@@ -1984,6 +1984,12 @@ function editAnalysis(i) {
     editingIndex = i;
     const a = analyses[i];
     
+    if (!a) {
+        console.error('Analysis not found at index:', i);
+        alert('Error: Analysis not found. Please refresh the page.');
+        return;
+    }
+    
     // Handle pair selection (check if it's a predefined pair or custom)
     const predefinedPairs = ['EUR/USD', 'GBP/USD', 'XAU/USD', 'USD/JPY', 'US100', 'GER40'];
     if (predefinedPairs.includes(a.pair)) {
@@ -2032,9 +2038,13 @@ function editAnalysis(i) {
 }
 
 function editAnalysisFromModal() {
-    if (currentViewIndex >= 0) {
+    if (currentViewIndex >= 0 && currentViewIndex < analyses.length) {
         closeViewModal();
         editAnalysis(currentViewIndex);
+    } else {
+        console.error('Invalid currentViewIndex:', currentViewIndex, 'analyses length:', analyses.length);
+        alert('Error: Cannot edit this analysis. Please try again from the table.');
+        closeViewModal();
     }
 }
 
