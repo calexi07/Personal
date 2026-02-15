@@ -1565,14 +1565,18 @@ function resetFilters() {
 
 // Table
 function updateTable() {
-    if (!filteredAnalyses.length) {
+    // Use allAnalyses to show ALL versions (not just latest)
+    const tableData = window.allAnalyses || analyses;
+    const filtered = tableData; // TODO: apply filters if needed
+    
+    if (!filtered.length) {
         analysisBody.innerHTML = '<tr><td colspan="9" class="no-data">No analyses yet</td></tr>';
         return;
     }
     
     analysisBody.innerHTML = '';
     
-    filteredAnalyses.forEach((a, i) => {
+    filtered.forEach((a, i) => {
         const tr = document.createElement('tr');
         
         tr.innerHTML = `
@@ -1602,19 +1606,19 @@ function updateTable() {
                     <button onclick="printAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #00BCD4, #0097A7); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         🖨️ Print
                     </button>
-                    <button onclick="shareToTradingView(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <button onclick="viewTableAnalysis(${i})" style="background: linear-gradient(135deg, #2962FF, #1E53E5); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         📈 TV
                     </button>
-                    <button onclick="shareToDiscord(${analyses.indexOf(a)}, event)" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <button onclick="shareToDiscordTable(${i}, event)" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         📋 Copy
                     </button>
-                    <button onclick="sendToDiscordChannel(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #5865F2, #4752C4); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <button onclick="sendToDiscordTable(${i})" style="background: linear-gradient(135deg, #5865F2, #4752C4); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         🚀 Send to Discord
                     </button>
                     ${isLoggedIn ? `
-                        <button class="edit-btn" onclick="editAnalysis(${analyses.indexOf(a)})" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85em;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">✏️ Edit</button>
-                        <button onclick="updateAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.85em; font-weight: 700; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🔄 Update</button>
-                        <button class="delete-btn" onclick="deleteAnalysis(${analyses.indexOf(a)})" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85em;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🗑️ Delete</button>
+                        <button class="edit-btn" onclick="editTableAnalysis(${i})" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85em;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">✏️ Edit</button>
+                        <button onclick="updateTableAnalysis(${i})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.85em; font-weight: 700; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🔄 Update</button>
+                        <button class="delete-btn" onclick="deleteTableAnalysis(${i})" style="padding: 6px 12px; border-radius: 8px; font-size: 0.85em;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🗑️ Delete</button>
                     ` : ''}
                 </div>
             </td>
@@ -3757,6 +3761,69 @@ function updateAnalysisFromModal() {
 function updateAnalysisFromDayModal(index) {
     closeDayModal();
     openEditPageForUpdate(index);
+}
+
+
+// Table-specific wrappers (work with allAnalyses)
+function editTableAnalysis(i) {
+    const tableData = window.allAnalyses || analyses;
+    const a = tableData[i];
+    // Find in analyses array
+    const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date);
+    if (mainIndex >= 0) {
+        editAnalysis(mainIndex);
+    } else {
+        alert('Analysis not found in main array');
+    }
+}
+
+function updateTableAnalysis(i) {
+    const tableData = window.allAnalyses || analyses;
+    const a = tableData[i];
+    const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date);
+    if (mainIndex >= 0) {
+        updateAnalysis(mainIndex);
+    } else {
+        alert('Analysis not found in main array');
+    }
+}
+
+function deleteTableAnalysis(i) {
+    const tableData = window.allAnalyses || analyses;
+    const a = tableData[i];
+    const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date);
+    if (mainIndex >= 0) {
+        deleteAnalysis(mainIndex);
+    } else {
+        alert('Analysis not found in main array');
+    }
+}
+
+function viewTableAnalysis(i) {
+    const tableData = window.allAnalyses || analyses;
+    const a = tableData[i];
+    const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date);
+    if (mainIndex >= 0) {
+        shareToTradingView(mainIndex, event);
+    }
+}
+
+function shareToDiscordTable(i, event) {
+    const tableData = window.allAnalyses || analyses;
+    const a = tableData[i];
+    const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date);
+    if (mainIndex >= 0) {
+        shareToDiscord(mainIndex, event);
+    }
+}
+
+function sendToDiscordTable(i) {
+    const tableData = window.allAnalyses || analyses;
+    const a = tableData[i];
+    const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date);
+    if (mainIndex >= 0) {
+        sendToDiscordChannel(mainIndex);
+    }
 }
 
     </script>
