@@ -1254,6 +1254,16 @@ let filteredAnalyses = [];
 let editingIndex = -1;
 let isLoggedIn = true; // Always logged in (login system removed)
 
+// Helper function to format date in local timezone (prevents timezone shift bugs)
+function formatDateLocal(date) {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // DOM
 const formPage = document.getElementById('formPage');
 const listPage = document.getElementById('listPage');
@@ -1954,6 +1964,21 @@ async function generateWordDocument(analysis) {
         <p><strong>Generated:</strong> ${new Date().toLocaleString('ro-RO')}</p>
         <p>Market Analysis Journal - Professional Trading Analysis</p>
     </div>
+<!-- History Modal -->
+<div id="historyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; overflow-y: auto; padding: 40px 20px;">
+    <div style="max-width: 1000px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #2196F3, #1976D2); padding: 25px 30px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="historyModalTitle" style="color: #fff; margin: 0; font-size: 1.8em;">📊 Analysis History</h2>
+            <button onclick="closeHistoryModal()" style="background: rgba(255, 255, 255, 0.2); border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.5em; display: flex; align-items: center; justify-content: center;">×</button>
+        </div>
+        
+        <!-- Content -->
+        <div id="historyModalContent" style="padding: 30px; max-height: 70vh; overflow-y: auto;">
+            <!-- History items will be inserted here -->
+        </div>
+    </div>
+</div>
 </body>
 </html>
 `;
@@ -3474,11 +3499,18 @@ function openEditPageForEdit(i) {
     document.getElementById('editYear').value = a.year || originalDate.getFullYear();
     document.getElementById('editPair').value = a.pair;
     
-    let dateValue = a.date || originalDate.toISOString().split('T')[0];
-    if (typeof dateValue === 'object' || typeof dateValue === 'number') {
-        dateValue = new Date(dateValue).toISOString().split('T')[0];
-    } else if (typeof dateValue === 'string' && dateValue.includes('T')) {
-        dateValue = dateValue.split('T')[0];
+    // Format date in LOCAL timezone (not UTC) to avoid timezone shift
+    let dateValue = a.date;
+    if (dateValue) {
+        if (typeof dateValue === 'object' || typeof dateValue === 'number') {
+            const d = new Date(dateValue);
+            dateValue = formatDateLocal(d);
+        } else if (typeof dateValue === 'string' && dateValue.includes('T')) {
+            const d = new Date(dateValue);
+            dateValue = formatDateLocal(d);
+        }
+    } else {
+        dateValue = formatDateLocal(originalDate);
     }
     document.getElementById('editDate').value = dateValue;
     
@@ -3642,9 +3674,9 @@ function openEditPageForUpdate(i) {
         return;
     }
     
-    // Get TODAY's date for the update
+    // Get TODAY's date for the update (in LOCAL timezone)
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    const todayStr = formatDateLocal(today); // Use local date formatter
     
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -3824,6 +3856,99 @@ function sendToDiscordTable(i) {
     if (mainIndex >= 0) {
         sendToDiscordChannel(mainIndex);
     }
+}
+
+
+// Show history modal for a specific pair
+function showPairHistory(pair) {
+    const allData = window.allAnalyses || analyses;
+    const pairHistory = allData.filter(a => a.pair === pair).sort((a, b) => {
+        return new Date(b.date) - new Date(a.date); // Newest first
+    });
+    
+    document.getElementById('historyModalTitle').textContent = `📊 ${pair} - Analysis History (${pairHistory.length} versions)`;
+    
+    const content = document.getElementById('historyModalContent');
+    content.innerHTML = '';
+    
+    pairHistory.forEach((a, index) => {
+        const versionNum = pairHistory.length - index;
+        const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { 
+            weekday: 'long',
+            day: '2-digit', 
+            month: 'long', 
+            year: 'numeric' 
+        }) : `${a.day}, ${a.month} ${a.year}`;
+        
+        const statusColor = a.analysisStatus === 'Closed' ? '#FF5252' : '#00E676';
+        const statusText = a.analysisStatus === 'Closed' ? 'CLOSED' : 'ACTIVE';
+        const biasColor = a.marketBias === 'Bullish' ? '#00E676' : 
+                         a.marketBias === 'Bearish' ? '#FF5252' : '#90CAF9';
+        
+        let versionLabel;
+        if (index === 0) {
+            versionLabel = a.analysisStatus === 'Closed' ? '🔴 Latest (Closed)' : '🟢 Latest';
+        } else if (index === pairHistory.length - 1) {
+            versionLabel = '📝 Initial';
+        } else {
+            versionLabel = `📝 Update ${pairHistory.length - index - 1}`;
+        }
+        
+        const card = document.createElement('div');
+        card.style.cssText = 'background: rgba(33, 150, 243, 0.1); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 15px; padding: 20px; margin-bottom: 15px;';
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                <div>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+                        <span style="color: #2196F3; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
+                        <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusText}</span>
+                        <span style="background: ${biasColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${a.marketBias || 'N/A'}</span>
+                    </div>
+                    <p style="color: #90CAF9; margin: 0; font-size: 0.9em;">${dateStr}</p>
+                </div>
+            </div>
+            
+            ${a.weeklyAnalysis ? `
+                <div style="margin-bottom: 15px;">
+                    <h4 style="color: #FF9500; margin: 0 0 8px 0;">📅 Weekly</h4>
+                    <p style="color: #fff; margin: 0; line-height: 1.6;">${a.weeklyAnalysis}</p>
+                    ${a.weeklyPhoto ? `<a href="${a.weeklyPhoto}" target="_blank" style="color: #2196F3; font-size: 0.9em;">📸 View Chart</a>` : ''}
+                </div>
+            ` : ''}
+            
+            ${a.dailyAnalysis ? `
+                <div style="margin-bottom: 15px;">
+                    <h4 style="color: #4CAF50; margin: 0 0 8px 0;">📊 Daily</h4>
+                    <p style="color: #fff; margin: 0; line-height: 1.6;">${a.dailyAnalysis}</p>
+                    ${a.dailyPhoto ? `<a href="${a.dailyPhoto}" target="_blank" style="color: #2196F3; font-size: 0.9em;">📸 View Chart</a>` : ''}
+                </div>
+            ` : ''}
+            
+            ${a.fourHAnalysis ? `
+                <div style="margin-bottom: 15px;">
+                    <h4 style="color: #9C27B0; margin: 0 0 8px 0;">⏱️ 4H</h4>
+                    <p style="color: #fff; margin: 0; line-height: 1.6;">${a.fourHAnalysis}</p>
+                    ${a.fourHPhoto ? `<a href="${a.fourHPhoto}" target="_blank" style="color: #2196F3; font-size: 0.9em;">📸 View Chart</a>` : ''}
+                </div>
+            ` : ''}
+            
+            ${a.oneHAnalysis ? `
+                <div style="margin-bottom: 15px;">
+                    <h4 style="color: #00BCD4; margin: 0 0 8px 0;">⚡ 1H</h4>
+                    <p style="color: #fff; margin: 0; line-height: 1.6;">${a.oneHAnalysis}</p>
+                    ${a.oneHPhoto ? `<a href="${a.oneHPhoto}" target="_blank" style="color: #2196F3; font-size: 0.9em;">📸 View Chart</a>` : ''}
+                </div>
+            ` : ''}
+        `;
+        
+        content.appendChild(card);
+    });
+    
+    document.getElementById('historyModal').style.display = 'flex';
+}
+
+function closeHistoryModal() {
+    document.getElementById('historyModal').style.display = 'none';
 }
 
     </script>
