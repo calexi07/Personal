@@ -2705,8 +2705,9 @@ function createDayCell(day, month, year, isOtherMonth) {
     
     const dateStr = `${actualYear}-${String(actualMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     
-    // Count analyses for this day - parse date in local timezone
-    const analysesForDay = analyses.filter(a => {
+    // Use allAnalyses to count ALL versions for this day (not just latest)
+    const allData = window.allAnalyses || analyses;
+    const analysesForDay = allData.filter(a => {
         if (!a.date) return false;
         
         // Parse the ISO date string and format it in local timezone (not UTC)
@@ -2738,15 +2739,34 @@ function createDayCell(day, month, year, isOtherMonth) {
     dayNumber.textContent = day;
     dayDiv.appendChild(dayNumber);
     
-    // Add pairs list
+    // Add pairs list with status badges
     if (analysesForDay.length > 0 && !isOtherMonth) {
         const pairsContainer = document.createElement('div');
         pairsContainer.className = 'calendar-day-pairs';
         
+        // Group by pair and count versions
+        const pairGroups = {};
         analysesForDay.forEach(a => {
+            if (!pairGroups[a.pair]) {
+                pairGroups[a.pair] = [];
+            }
+            pairGroups[a.pair].push(a);
+        });
+        
+        // Display each pair with status
+        Object.keys(pairGroups).forEach(pair => {
+            const versions = pairGroups[pair];
+            const latest = versions[versions.length - 1]; // Last version
+            
             const pairBullet = document.createElement('div');
             pairBullet.className = 'calendar-pair-bullet';
-            pairBullet.textContent = `• ${a.pair}`;
+            pairBullet.style.cssText = 'display: flex; align-items: center; gap: 5px; margin-bottom: 3px;';
+            
+            // Status indicator
+            const statusBadge = latest.analysisStatus === 'Closed' ? 
+                '🔴' : versions.length > 1 ? `🟢(${versions.length})` : '🟢';
+            
+            pairBullet.innerHTML = `<span style="font-size: 0.75em;">${statusBadge}</span> <span>${pair}</span>`;
             pairsContainer.appendChild(pairBullet);
         });
         
@@ -3484,7 +3504,13 @@ function renderActiveDashboard() {
     const empty = document.getElementById('activeDashboardEmpty');
     
     // Get only ACTIVE analyses from latest versions
-    const activeAnalyses = analyses.filter(a => a.analysisStatus === 'Active');
+    const activeAnalyses = analyses.filter(a => {
+        const status = a.analysisStatus || 'Active'; // Default to Active if not set
+        return status === 'Active';
+    });
+    
+    console.log('Dashboard: Total analyses:', analyses.length, 'Active:', activeAnalyses.length);
+    console.log('Active analyses:', activeAnalyses.map(a => ({ pair: a.pair, status: a.analysisStatus })));
     
     if (activeAnalyses.length === 0) {
         grid.style.display = 'none';
