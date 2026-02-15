@@ -2027,6 +2027,11 @@ function editAnalysisFromModal() {
     }
 }
 
+function editAnalysisFromDayModal(index) {
+    closeDayModal();
+    editAnalysis(index);
+}
+
 function deleteAnalysis(i) {
     if (!confirm('Delete this analysis?')) return;
     showLoading();
@@ -2420,6 +2425,9 @@ function showAnalysesForDay(dateStr, day, month, year) {
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button onclick="event.stopPropagation(); viewAnalysisFromDay(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
                         👁️ View Full
+                    </button>
+                    <button onclick="event.stopPropagation(); editAnalysisFromDayModal(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
+                        ✏️ Edit
                     </button>
                     <button onclick="event.stopPropagation(); printAnalysis(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #00BCD4, #0097A7); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
                         🖨️ Print
