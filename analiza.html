@@ -1947,16 +1947,23 @@ function getFormData() {
 
 function addAnalysis(analysis) {
     showLoading();
-    const qs = new URLSearchParams({ action: 'add', ...analysis });
-    fetch(GOOGLE_SCRIPT_URL + '?' + qs)
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'add',
+            ...analysis
+        })
+    })
+        .then(r => r.json())
         .then(() => {
             hideLoading();
+            alert('✅ Analysis added successfully!');
             clearForm();
             showPage('list');
             loadAnalyses();
         })
         .catch(err => {
-            console.error(err);
+            console.error('Add error:', err);
             hideLoading();
             alert('Save error');
         });
@@ -2074,6 +2081,16 @@ function clearForm() {
      'oneHAnalysis', 'oneHPhoto'].forEach(id => {
         document.getElementById(id).value = '';
     });
+    
+    // Reset selects to defaults
+    document.getElementById('tradeStatus').value = 'Analysis Only';
+    document.getElementById('marketBias').value = 'Bullish';
+    document.getElementById('analysisStatus').value = 'Active';
+    
+    // Hide custom pair input
+    document.getElementById('customPairGroup').style.display = 'none';
+    document.getElementById('customPair').value = '';
+    
     editingIndex = -1;
 }
 
