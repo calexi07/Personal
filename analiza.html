@@ -471,7 +471,7 @@
 
         <div class="nav-buttons">
             <button class="nav-btn active" id="btnList">📊 Journal View</button>
-            <button class="nav-btn" id="btnForm" style="display: none;">➕ Add Analysis</button>
+            <button class="nav-btn" id="btnForm">➕ Add Analysis</button>
         </div>
 
         <!-- Form Page -->
@@ -887,7 +887,7 @@ const CREDENTIALS = {
 let analyses = [];
 let filteredAnalyses = [];
 let editingIndex = -1;
-let isLoggedIn = false;
+let isLoggedIn = true; // Always logged in (login system removed)
 
 // DOM
 const formPage = document.getElementById('formPage');
@@ -973,17 +973,13 @@ function logout() {
 }
 
 function updateUIForLogin() {
-    btnForm.style.display = isLoggedIn ? 'inline-block' : 'none';
-    btnLogin.style.display = isLoggedIn ? 'none' : 'inline-block';
-    btnLogout.style.display = isLoggedIn ? 'inline-block' : 'none';
+    // No longer needed - always logged in
     updateTable();
 }
 
 function checkAuth() {
-    if (localStorage.getItem('analysisAuth') === 'true') {
-        isLoggedIn = true;
-        updateUIForLogin();
-    }
+    // No longer needed - always logged in
+    isLoggedIn = true;
 }
 
 // Load Analyses
