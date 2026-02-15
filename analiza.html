@@ -4007,6 +4007,51 @@ function closeHistoryModal() {
 }
 
     </script>
+<!-- Custom Alert Modal -->
+<div id="customAlertModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 20000; align-items: center; justify-content: center;">
+    <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 400px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: modalSlideIn 0.3s ease;">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <div id="customAlertIcon" style="font-size: 2.5em;"></div>
+            <h3 id="customAlertTitle" style="color: #fff; margin: 0; font-size: 1.3em;"></h3>
+        </div>
+        <p id="customAlertMessage" style="color: #90CAF9; margin: 0 0 25px 0; line-height: 1.6; font-size: 1em;"></p>
+        <button id="customAlertBtn" onclick="closeCustomAlert()" style="width: 100%; background: linear-gradient(135deg, #2196F3, #1976D2); color: #fff; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
+            OK
+        </button>
+    </div>
+</div>
+
+<!-- Custom Confirm Modal -->
+<div id="customConfirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 20000; align-items: center; justify-content: center;">
+    <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 400px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: modalSlideIn 0.3s ease;">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <div style="font-size: 2.5em;">⚠️</div>
+            <h3 id="customConfirmTitle" style="color: #fff; margin: 0; font-size: 1.3em;">Confirm Action</h3>
+        </div>
+        <p id="customConfirmMessage" style="color: #90CAF9; margin: 0 0 25px 0; line-height: 1.6; font-size: 1em;"></p>
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeCustomConfirm(false)" style="flex: 1; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(255, 255, 255, 0.3); padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
+                Cancel
+            </button>
+            <button onclick="closeCustomConfirm(true)" style="flex: 1; background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+</style>
 
     <!-- History Modal -->
     <div id="historyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; overflow-y: auto; padding: 40px 20px;">
