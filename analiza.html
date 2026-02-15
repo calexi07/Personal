@@ -516,13 +516,47 @@
             <h2 style="color: #2196F3; font-size: 2.2em; margin-bottom: 15px;">📊 Select Trading Pair</h2>
             <p style="color: #90CAF9; margin-bottom: 40px; font-size: 1.1em;">Choose the pair you want to analyze</p>
             
-            <div id="pairSelection" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;">
+            <div id="pairSelection" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px; max-height: 400px; overflow-y: auto; padding: 10px;">
+                <!-- Major Pairs -->
                 <button onclick="selectPair('EUR/USD')" class="pair-select-btn">EUR/USD</button>
                 <button onclick="selectPair('GBP/USD')" class="pair-select-btn">GBP/USD</button>
-                <button onclick="selectPair('XAU/USD')" class="pair-select-btn">XAU/USD</button>
                 <button onclick="selectPair('USD/JPY')" class="pair-select-btn">USD/JPY</button>
-                <button onclick="selectPair('US100')" class="pair-select-btn">US100</button>
-                <button onclick="selectPair('GER40')" class="pair-select-btn">GER40</button>
+                <button onclick="selectPair('USD/CHF')" class="pair-select-btn">USD/CHF</button>
+                <button onclick="selectPair('AUD/USD')" class="pair-select-btn">AUD/USD</button>
+                <button onclick="selectPair('USD/CAD')" class="pair-select-btn">USD/CAD</button>
+                <button onclick="selectPair('NZD/USD')" class="pair-select-btn">NZD/USD</button>
+                
+                <!-- JPY Crosses -->
+                <button onclick="selectPair('GBP/JPY')" class="pair-select-btn">GBP/JPY</button>
+                <button onclick="selectPair('EUR/JPY')" class="pair-select-btn">EUR/JPY</button>
+                <button onclick="selectPair('AUD/JPY')" class="pair-select-btn">AUD/JPY</button>
+                <button onclick="selectPair('CHF/JPY')" class="pair-select-btn">CHF/JPY</button>
+                <button onclick="selectPair('CAD/JPY')" class="pair-select-btn">CAD/JPY</button>
+                <button onclick="selectPair('NZD/JPY')" class="pair-select-btn">NZD/JPY</button>
+                
+                <!-- EUR Crosses -->
+                <button onclick="selectPair('EUR/AUD')" class="pair-select-btn">EUR/AUD</button>
+                <button onclick="selectPair('EUR/CHF')" class="pair-select-btn">EUR/CHF</button>
+                <button onclick="selectPair('EUR/CAD')" class="pair-select-btn">EUR/CAD</button>
+                <button onclick="selectPair('EUR/NZD')" class="pair-select-btn">EUR/NZD</button>
+                <button onclick="selectPair('EUR/GBP')" class="pair-select-btn">EUR/GBP</button>
+                
+                <!-- GBP Crosses -->
+                <button onclick="selectPair('GBP/AUD')" class="pair-select-btn">GBP/AUD</button>
+                <button onclick="selectPair('GBP/CHF')" class="pair-select-btn">GBP/CHF</button>
+                <button onclick="selectPair('GBP/CAD')" class="pair-select-btn">GBP/CAD</button>
+                <button onclick="selectPair('GBP/NZD')" class="pair-select-btn">GBP/NZD</button>
+                
+                <!-- Other Crosses -->
+                <button onclick="selectPair('AUD/CHF')" class="pair-select-btn">AUD/CHF</button>
+                <button onclick="selectPair('AUD/CAD')" class="pair-select-btn">AUD/CAD</button>
+                <button onclick="selectPair('AUD/NZD')" class="pair-select-btn">AUD/NZD</button>
+                <button onclick="selectPair('CAD/CHF')" class="pair-select-btn">CAD/CHF</button>
+                <button onclick="selectPair('NZD/CHF')" class="pair-select-btn">NZD/CHF</button>
+                
+                <!-- Metals -->
+                <button onclick="selectPair('XAU/USD')" class="pair-select-btn">XAU/USD</button>
+                <button onclick="selectPair('XAG/USD')" class="pair-select-btn">XAG/USD</button>
             </div>
             
             <div style="margin-top: 30px; padding: 20px; background: rgba(33, 150, 243, 0.05); border-radius: 15px; border: 1px dashed rgba(33, 150, 243, 0.3);">
@@ -1018,6 +1052,24 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Active Analyses Dashboard (above calendar) -->
+            <div id="activeDashboard" style="display: none; margin-bottom: 30px;">
+                <div style="background: rgba(33, 150, 243, 0.05); border: 2px solid rgba(33, 150, 243, 0.2); border-radius: 20px; padding: 25px;">
+                    <h3 style="color: #2196F3; margin: 0 0 20px 0; font-size: 1.3em; display: flex; align-items: center; gap: 10px;">
+                        <span>📊</span>
+                        <span>Active Analyses Dashboard</span>
+                    </h3>
+                    <div id="activeDashboardGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                        <!-- Dashboard cards will be generated here -->
+                    </div>
+                    <div id="activeDashboardEmpty" style="display: none; text-align: center; padding: 40px; color: #90CAF9;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📊</div>
+                        <p style="margin: 0; font-size: 1.1em;">No active analyses yet</p>
+                        <p style="margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.7;">Create your first analysis to see it here</p>
+                    </div>
                 </div>
             </div>
 
@@ -2175,8 +2227,6 @@ function shareToTradingView(index, event) {
         template += `\n`;
     }
     
-    template += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    template += `💡 Analysis by @YourUsername | ${dateStr}\n`;
     template += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
     
     // Copy to clipboard
@@ -2396,6 +2446,7 @@ function clearForm() {
 function switchView(mode) {
     const journalView = document.getElementById('journalView');
     const calendarView = document.getElementById('calendarView');
+    const activeDashboard = document.getElementById('activeDashboard');
     const btnJournal = document.getElementById('btnJournalView');
     const btnCalendar = document.getElementById('btnCalendarView');
     
@@ -2407,6 +2458,7 @@ function switchView(mode) {
     if (mode === 'journal') {
         journalView.style.display = 'block';
         calendarView.style.display = 'none';
+        activeDashboard.style.display = 'none';
         btnJournal.classList.add('active');
         btnCalendar.classList.remove('active');
         
@@ -2417,6 +2469,7 @@ function switchView(mode) {
     } else {
         journalView.style.display = 'none';
         calendarView.style.display = 'block';
+        activeDashboard.style.display = 'block';
         btnJournal.classList.remove('active');
         btnCalendar.classList.add('active');
         
@@ -2425,6 +2478,7 @@ function switchView(mode) {
             if (section) section.style.display = 'none';
         });
         
+        renderActiveDashboard();
         renderCalendar();
     }
 }
@@ -2713,15 +2767,26 @@ function showAnalysesForDay(dateStr, day, month, year) {
     currentSelectedDate = dateStr;
     renderCalendar();
     
+    // Use allAnalyses to show ALL versions (not just latest)
+    const allData = window.allAnalyses || analyses;
+    
     // Filter analyses by date - parse in local timezone
-    const analysesForDay = analyses.filter(a => {
+    const analysesForDay = allData.filter(a => {
         if (!a.date) return false;
         const date = new Date(a.date);
         const localDateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         return localDateStr === dateStr;
     });
     
-    console.log('showAnalysesForDay - dateStr:', dateStr, 'found:', analysesForDay.length);
+    // Sort by pair first, then by date (chronological order for same pair)
+    analysesForDay.sort((a, b) => {
+        if (a.pair !== b.pair) {
+            return a.pair.localeCompare(b.pair);
+        }
+        return new Date(a.date) - new Date(b.date);
+    });
+    
+    console.log('showAnalysesForDay - dateStr:', dateStr, 'found:', analysesForDay.length, 'versions');
     
     if (analysesForDay.length === 0) {
         return;
@@ -2739,9 +2804,32 @@ function showAnalysesForDay(dateStr, day, month, year) {
     const content = document.getElementById('dayModalContent');
     content.innerHTML = '';
     
+    // Track versions per pair
+    const pairVersions = {};
+    
     analysesForDay.forEach((a, index) => {
+        // Calculate version label for this pair
+        if (!pairVersions[a.pair]) {
+            pairVersions[a.pair] = 0;
+        }
+        pairVersions[a.pair]++;
+        
+        const versionNumber = pairVersions[a.pair];
+        const totalVersionsForPair = analysesForDay.filter(x => x.pair === a.pair).length;
+        
+        let versionLabel = '';
+        if (a.analysisStatus === 'Closed') {
+            versionLabel = '🔴 CLOSED';
+        } else if (versionNumber === 1 && totalVersionsForPair === 1) {
+            versionLabel = '🟢 ACTIVE';
+        } else if (versionNumber === totalVersionsForPair) {
+            versionLabel = `🟢 UPDATE ${versionNumber - 1}`;
+        } else {
+            versionLabel = versionNumber === 1 ? '📝 Initial' : `📝 Update ${versionNumber - 1}`;
+        }
+        
         const card = document.createElement('div');
-        card.style.cssText = 'background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(25, 118, 210, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 15px; padding: 25px; transition: all 0.3s ease; cursor: pointer;';
+        card.style.cssText = 'background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(25, 118, 210, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 15px; padding: 25px; margin-bottom: 15px; transition: all 0.3s ease; cursor: pointer;';
         
         card.onmouseover = () => {
             card.style.borderColor = '#2196F3';
@@ -2752,19 +2840,26 @@ function showAnalysesForDay(dateStr, day, month, year) {
             card.style.boxShadow = 'none';
         };
         
+        // Find this analysis in the main analyses array for index
+        const mainIndex = analyses.findIndex(an => 
+            an.pair === a.pair && 
+            an.date === a.date && 
+            an.weeklyAnalysis === a.weeklyAnalysis
+        );
+        const useIndex = mainIndex >= 0 ? mainIndex : index;
+        
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
-                <div>
-                    <h3 style="color: #2196F3; margin: 0 0 8px 0; font-size: 1.8em;">
-                        ${a.pair}
-                        ${a.analysisStatus === 'Active' ? 
-                            '<span style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; padding: 4px 12px; border-radius: 12px; font-size: 0.5em; margin-left: 10px; vertical-align: middle;">🟢 ACTIVE</span>' : 
-                            '<span style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 0.5em; margin-left: 10px; vertical-align: middle;">🔴 CLOSED</span>'}
-                    </h3>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <h3 style="color: #2196F3; margin: 0; font-size: 1.8em;">${a.pair}</h3>
+                        <span style="background: ${a.analysisStatus === 'Closed' ? 'linear-gradient(135deg, #FF5252, #E53935)' : 'linear-gradient(135deg, #00E676, #00C853)'}; color: ${a.analysisStatus === 'Closed' ? '#fff' : '#000'}; padding: 6px 14px; border-radius: 12px; font-size: 0.75em; font-weight: 700; white-space: nowrap;">${versionLabel}</span>
+                        <span style="background: ${a.marketBias === 'Bullish' ? 'rgba(0, 230, 118, 0.2)' : a.marketBias === 'Bearish' ? 'rgba(255, 82, 82, 0.2)' : 'rgba(144, 202, 249, 0.2)'}; color: ${a.marketBias === 'Bullish' ? '#00E676' : a.marketBias === 'Bearish' ? '#FF5252' : '#90CAF9'}; padding: 6px 14px; border-radius: 12px; font-size: 0.75em; font-weight: 600;">${a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪'} ${a.marketBias}</span>
+                    </div>
                     <p style="color: #aaa; margin: 0; font-size: 0.9em;">${a.day}, ${a.month} ${a.year}</p>
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button onclick="event.stopPropagation(); viewAnalysisFromDay(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
+                    <button onclick="event.stopPropagation(); viewAnalysisFromDay(${useIndex})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
                         👁️ View Full
                     </button>
                     <button onclick="event.stopPropagation(); editAnalysisFromDayModal(${analyses.indexOf(a)})" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.95em; font-weight: 600; transition: all 0.3s ease;">
@@ -3380,6 +3475,57 @@ function saveEdit() {
         hideLoading();
         alert('❌ Error saving update. Please try again.');
     });
+}
+
+
+// Render Active Analyses Dashboard
+function renderActiveDashboard() {
+    const grid = document.getElementById('activeDashboardGrid');
+    const empty = document.getElementById('activeDashboardEmpty');
+    
+    // Get only ACTIVE analyses from latest versions
+    const activeAnalyses = analyses.filter(a => a.analysisStatus === 'Active');
+    
+    if (activeAnalyses.length === 0) {
+        grid.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+    }
+    
+    grid.style.display = 'grid';
+    empty.style.display = 'none';
+    
+    grid.innerHTML = activeAnalyses.map(a => {
+        const biasColor = a.marketBias === 'Bullish' ? '#00E676' : 
+                         a.marketBias === 'Bearish' ? '#FF5252' : '#90CAF9';
+        const biasIcon = a.marketBias === 'Bullish' ? '🟢' : 
+                        a.marketBias === 'Bearish' ? '🔴' : '⚪';
+        
+        const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { 
+            day: '2-digit', 
+            month: 'short', 
+            year: 'numeric' 
+        }) : `${a.day}, ${a.month} ${a.year}`;
+        
+        return `
+            <div style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 12px; padding: 15px; transition: all 0.3s ease; cursor: pointer;"
+                 onclick="editAnalysis(${analyses.indexOf(a)})"
+                 onmouseover="this.style.borderColor='#2196F3'; this.style.transform='translateY(-2px)'"
+                 onmouseout="this.style.borderColor='rgba(33, 150, 243, 0.3)'; this.style.transform='translateY(0)'">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                    <h4 style="color: #2196F3; margin: 0; font-size: 1.2em; font-weight: 700;">${a.pair}</h4>
+                    <span style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; padding: 3px 10px; border-radius: 10px; font-size: 0.7em; font-weight: 700;">ACTIVE</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="font-size: 1.2em;">${biasIcon}</span>
+                    <span style="color: ${biasColor}; font-weight: 600; font-size: 0.95em;">${a.marketBias}</span>
+                </div>
+                <div style="color: #90CAF9; font-size: 0.85em;">
+                    <span style="opacity: 0.7;">Last update:</span> ${dateStr}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
     </script>
