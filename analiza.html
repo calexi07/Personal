@@ -3605,34 +3605,61 @@ function renderActiveDashboard() {
     const grid = document.getElementById('activeDashboardGrid');
     const empty = document.getElementById('activeDashboardEmpty');
     
-    // Show ALL analyses (not just active) - display latest version for each pair
-    const allAnalysesForDashboard = analyses; // Already filtered to latest version in loadAnalyses
+    // ALL predefined pairs (29 total)
+    const allPairs = [
+        'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD',
+        'GBP/JPY', 'EUR/JPY', 'AUD/JPY', 'CHF/JPY', 'CAD/JPY', 'NZD/JPY',
+        'EUR/AUD', 'EUR/CHF', 'EUR/CAD', 'EUR/NZD', 'EUR/GBP',
+        'GBP/AUD', 'GBP/CHF', 'GBP/CAD', 'GBP/NZD',
+        'AUD/CHF', 'AUD/CAD', 'AUD/NZD', 'CAD/CHF', 'NZD/CHF',
+        'XAU/USD', 'XAG/USD'
+    ];
     
-    console.log('Dashboard: Total analyses:', analyses.length);
+    // Map each pair to its latest analysis (or null if no analysis)
+    const pairData = allPairs.map(pair => {
+        const pairAnalyses = analyses.filter(a => a.pair === pair);
+        return {
+            pair: pair,
+            analysis: pairAnalyses.length > 0 ? pairAnalyses[0] : null
+        };
+    });
     
-    if (allAnalysesForDashboard.length === 0) {
-        grid.style.display = 'none';
-        empty.style.display = 'block';
-        return;
-    }
+    console.log('Dashboard: Showing', pairData.length, 'pairs');
     
     grid.style.display = 'grid';
     empty.style.display = 'none';
     
-    grid.innerHTML = allAnalysesForDashboard.map(a => {
-        const biasColor = a.marketBias === 'Bullish' ? '#00E676' : 
-                         a.marketBias === 'Bearish' ? '#FF5252' : '#90CAF9';
-        const biasIcon = a.marketBias === 'Bullish' ? '🟢' : 
-                        a.marketBias === 'Bearish' ? '🔴' : '⚪';
+    grid.innerHTML = pairData.map(({pair, analysis}) => {
+    grid.innerHTML = pairData.map(({pair, analysis}) => {
+        // If no analysis, show placeholder
+        if (!analysis) {
+            return `
+                <div style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.05), rgba(33, 150, 243, 0.02)); border: 2px dashed rgba(33, 150, 243, 0.2); border-radius: 12px; padding: 15px; transition: all 0.3s ease; opacity: 0.6;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <h4 style="color: #64B5F6; margin: 0; font-size: 1.2em; font-weight: 700;">${pair}</h4>
+                        <span style="background: rgba(144, 202, 249, 0.2); color: #90CAF9; padding: 3px 10px; border-radius: 10px; font-size: 0.7em; font-weight: 700;">NO DATA</span>
+                    </div>
+                    <div style="color: #64B5F6; font-size: 0.85em; opacity: 0.7;">
+                        No analysis yet
+                    </div>
+                </div>
+            `;
+        }
         
-        const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { 
+        // Has analysis - show data
+        const biasColor = analysis.marketBias === 'Bullish' ? '#00E676' : 
+                         analysis.marketBias === 'Bearish' ? '#FF5252' : '#90CAF9';
+        const biasIcon = analysis.marketBias === 'Bullish' ? '🟢' : 
+                        analysis.marketBias === 'Bearish' ? '🔴' : '⚪';
+        
+        const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { 
             day: '2-digit', 
             month: 'short', 
             year: 'numeric' 
-        }) : `${a.day}, ${a.month} ${a.year}`;
+        }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
         
         // Status badge
-        const status = a.analysisStatus || 'Active';
+        const status = analysis.analysisStatus || 'Active';
         const statusColor = status === 'Closed' ? 
             'linear-gradient(135deg, #FF5252, #E53935)' : 
             'linear-gradient(135deg, #00E676, #00C853)';
@@ -3640,16 +3667,16 @@ function renderActiveDashboard() {
         
         return `
             <div style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 12px; padding: 15px; transition: all 0.3s ease; cursor: pointer;"
-                 onclick="editAnalysis(${analyses.indexOf(a)})"
+                 onclick="showPairHistory('${pair}')"
                  onmouseover="this.style.borderColor='#2196F3'; this.style.transform='translateY(-2px)'"
                  onmouseout="this.style.borderColor='rgba(33, 150, 243, 0.3)'; this.style.transform='translateY(0)'">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                    <h4 style="color: #2196F3; margin: 0; font-size: 1.2em; font-weight: 700;">${a.pair}</h4>
+                    <h4 style="color: #2196F3; margin: 0; font-size: 1.2em; font-weight: 700;">${pair}</h4>
                     <span style="background: ${statusColor}; color: ${statusTextColor}; padding: 3px 10px; border-radius: 10px; font-size: 0.7em; font-weight: 700;">${status.toUpperCase()}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="font-size: 1.2em;">${biasIcon}</span>
-                    <span style="color: ${biasColor}; font-weight: 600; font-size: 0.95em;">${a.marketBias}</span>
+                    <span style="color: ${biasColor}; font-weight: 600; font-size: 0.95em;">${analysis.marketBias}</span>
                 </div>
                 <div style="color: #90CAF9; font-size: 0.85em;">
                     <span style="opacity: 0.7;">Last update:</span> ${dateStr}
