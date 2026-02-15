@@ -1933,6 +1933,7 @@ function getFormData() {
         pair: pairValue,
         tradeStatus: document.getElementById('tradeStatus').value,
         marketBias: document.getElementById('marketBias').value,
+        analysisStatus: document.getElementById('analysisStatus').value,
         weeklyAnalysis: document.getElementById('weeklyAnalysis').value,
         weeklyPhoto: document.getElementById('weeklyPhoto').value,
         dailyAnalysis: document.getElementById('dailyAnalysis').value,
@@ -2017,6 +2018,7 @@ function editAnalysis(i) {
     
     document.getElementById('tradeStatus').value = a.tradeStatus || 'Analysis Only';
     document.getElementById('marketBias').value = a.marketBias || 'Neutral';
+    document.getElementById('analysisStatus').value = a.analysisStatus || 'Active';
     document.getElementById('weeklyAnalysis').value = a.weeklyAnalysis || '';
     document.getElementById('weeklyPhoto').value = a.weeklyPhoto || '';
     document.getElementById('dailyAnalysis').value = a.dailyAnalysis || '';
