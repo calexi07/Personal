@@ -3652,11 +3652,20 @@ function renderActiveDashboard() {
         const biasIcon = analysis.marketBias === 'Bullish' ? '🟢' : 
                         analysis.marketBias === 'Bearish' ? '🔴' : '⚪';
         
-        const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { 
-            day: '2-digit', 
-            month: 'short', 
-            year: 'numeric' 
-        }) : `${analysis.day}, ${analysis.month} ${analysis.year}`;
+        let dateStr = '';
+        if (analysis.date) {
+            try {
+                dateStr = new Date(analysis.date).toLocaleDateString('ro-RO', { 
+                    day: '2-digit', 
+                    month: 'short', 
+                    year: 'numeric' 
+                });
+            } catch(e) {
+                dateStr = analysis.day + ', ' + analysis.month + ' ' + analysis.year;
+            }
+        } else {
+            dateStr = analysis.day + ', ' + analysis.month + ' ' + analysis.year;
+        }
         
         // Status badge
         const status = analysis.analysisStatus || 'Active';
@@ -3667,7 +3676,7 @@ function renderActiveDashboard() {
         
         return `
             <div style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 12px; padding: 15px; transition: all 0.3s ease; cursor: pointer;"
-                 onclick='showPairHistory("${pair}")'
+                 onclick="showPairHistory('${pair}')"
                  onmouseover="this.style.borderColor='#2196F3'; this.style.transform='translateY(-2px)'"
                  onmouseout="this.style.borderColor='rgba(33, 150, 243, 0.3)'; this.style.transform='translateY(0)'">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
