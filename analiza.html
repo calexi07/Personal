@@ -464,7 +464,7 @@
             <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
                 <div style="font-size: 4em; line-height: 1;">📊</div>
                 <div style="text-align: center;">
-                    <h1>A random trader</h1>
+                    <h1>Cristian - A random trader</h1>
                     <p style="margin: 10px 0 0 0; font-size: 1.1em; color: #90CAF9; font-weight: 500; font-style: italic;">Market analysis made easy</p>
                 </div>
             </div>
@@ -2473,10 +2473,10 @@ async function deleteAnalysis(i) {
     }
     
     console.log('Deleting analysis:', {
+        rowNumber: a.rowNumber,
+        createdAt: a.createdAt,
         pair: a.pair,
-        month: a.month,
-        day: a.day,
-        year: a.year
+        date: a.date
     });
     
     showLoading();
@@ -2484,6 +2484,8 @@ async function deleteAnalysis(i) {
         method: 'POST',
         body: JSON.stringify({
             action: 'delete',
+            rowNumber: a.rowNumber, // Primary identifier
+            createdAt: a.createdAt, // Fallback identifier
             month: a.month,
             day: a.day,
             date: a.date,
@@ -4332,14 +4334,24 @@ async function saveCloseAnalysis() {
         return;
     }
     
-    // Close the LATEST active analysis (don't create new row)
+    // Create NEW row with Closed status (keep all previous data)
     const closeData = {
-        action: 'close', // Use close action to UPDATE existing row
+        action: 'close',
         month: a.month,
         day: a.day,
         date: a.date,
         year: a.year,
         pair: a.pair,
+        tradeStatus: a.tradeStatus,
+        marketBias: a.marketBias,
+        weeklyAnalysis: a.weeklyAnalysis || '',
+        weeklyPhoto: a.weeklyPhoto || '',
+        dailyAnalysis: a.dailyAnalysis || '',
+        dailyPhoto: a.dailyPhoto || '',
+        fourHAnalysis: a.fourHAnalysis || '',
+        fourHPhoto: a.fourHPhoto || '',
+        oneHAnalysis: a.oneHAnalysis || '',
+        oneHPhoto: a.oneHPhoto || '',
         closeReason: reason,
         closeObservations: observations || ''
     };
