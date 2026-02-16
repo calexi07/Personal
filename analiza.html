@@ -1397,7 +1397,10 @@ function checkAuth() {
 
 // Load Analyses
 function loadAnalyses() {
+    console.log('=== loadAnalyses() called ===');
+    console.log('GOOGLE_SCRIPT_URL:', GOOGLE_SCRIPT_URL);
     showLoading();
+    console.log('Loading overlay shown, starting fetch...');
     fetch(GOOGLE_SCRIPT_URL)
         .then(r => r.json())
         .then(res => {
