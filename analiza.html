@@ -4093,9 +4093,11 @@ function renderActiveDashboard() {
                                             <span class="pair-flags">${getPairFlags(pair)}</span>
                                             <span>${pair}</span>
                                         </div>
-                                        <div class="no-analysis-badge">No analysis</div>
                                     </div>
                                     <div class="pair-date">📭 No analysis</div>
+                                    <div class="pair-status">
+                                        <div class="no-analysis-badge">No analysis</div>
+                                    </div>
                                     <div class="card-actions">
                                         <button class="card-btn btn-add" onclick="event.stopPropagation(); createAnalysisForPair('${pair}')">
                                             ➕ Add Analysis
