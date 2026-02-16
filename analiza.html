@@ -3891,13 +3891,13 @@ function updateAnalysis(i) {
 function updateAnalysisFromModal() {
     if (currentViewIndex >= 0 && currentViewIndex < analyses.length) {
         closeViewModal();
-        openEditPageForUpdate(currentViewIndex);
+        updateAnalysis(currentViewIndex); // Use new function that shows choice modal
     }
 }
 
 function updateAnalysisFromDayModal(index) {
     closeDayModal();
-    openEditPageForUpdate(index);
+    updateAnalysis(index); // Use new function that shows choice modal
 }
 
 
