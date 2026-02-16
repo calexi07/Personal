@@ -4157,8 +4157,8 @@ function showPairHistory(pair) {
                     <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysisByData(a)" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">👁️ View</button>
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">✏️ Edit</button>
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">🔄 Update</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysisByData(a)" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">✏️ Edit</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysisByData(a)" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">🔄 Update</button>
                         <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysisByDeleteId('${a.deleteId}', '${a.pair}')" style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">🗑️ Delete</button>
                     </div>
                 </div>
@@ -4385,23 +4385,60 @@ function filterCalendarByPair() {
     renderCalendar(); // Re-render calendar with filter
 }
 
-async function deleteAnalysisByDeleteId(deleteId, pair) {
-    const confirmed = await customConfirm(`Delete this ${pair} analysis?`, 'Confirm Delete');
-    if (!confirmed) return;
+function updateAnalysisByData(analysisData) {
+    closeHistoryModal();
     
-    if (!deleteId) {
-        customAlert('Cannot delete: missing deleteId', 'Error', '❌');
+    // Find this analysis in main analyses array by deleteId
+    const index = analyses.findIndex(a => a.deleteId === analysisData.deleteId);
+    
+    if (index === -1) {
+        // Not in main array (it's an old version from history)
+        customAlert('Cannot update historical versions. Please update the latest version from the main list.', 'Cannot Update', '⚠️');
         return;
     }
     
-    console.log('Deleting by deleteId:', deleteId);
+    // Use existing updateAnalysis function with found index
+    updateAnalysis(index);
+}
+
+function editAnalysisByData(analysisData) {
+    closeHistoryModal();
+    
+    // Find this analysis in main analyses array by deleteId
+    const index = analyses.findIndex(a => a.deleteId === analysisData.deleteId);
+    
+    if (index === -1) {
+        // Not in main array (it's an old version from history)
+        customAlert('Cannot edit historical versions. Please edit the latest version from the main list.', 'Cannot Edit', '⚠️');
+        return;
+    }
+    
+    // Use existing editAnalysis function with found index
+    editAnalysis(index);
+}
+
+async function deleteAnalysisByDeleteId(deleteId, pair) {
+    console.log('=== DELETE DEBUG ===');
+    console.log('Received deleteId:', deleteId);
+    console.log('Received pair:', pair);
+    console.log('Type of deleteId:', typeof deleteId);
+    
+    if (!deleteId || deleteId === 'undefined') {
+        customAlert('ERROR: deleteId is missing or undefined!\n\nThis analysis was created before deleteId was added.\n\nPlease:\n1. Delete it manually from Excel\n2. Or recreate this analysis', 'Missing DeleteId', '❌');
+        return;
+    }
+    
+    const confirmed = await customConfirm(`Delete ${pair} analysis?\n\nDeleteId: ${deleteId}`, 'Confirm Delete');
+    if (!confirmed) return;
+    
+    console.log('Sending delete request...');
     
     showLoading();
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({
             action: 'delete',
-            deleteId: deleteId
+            deleteId: String(deleteId) // Force string
         })
     })
         .then(r => r.json())
@@ -4413,13 +4450,13 @@ async function deleteAnalysisByDeleteId(deleteId, pair) {
                 customAlert('Analysis deleted successfully!', 'Deleted', '✅');
                 loadAnalyses();
             } else {
-                customAlert(`Delete failed: ${response.message}\n\nPlease refresh and try again.`, 'Error', '❌');
+                customAlert(`Delete failed: ${response.message}\n\nDeleteId sent: ${deleteId}\n\nCheck Google Apps Script logs for details.`, 'Error', '❌');
             }
         })
         .catch(err => {
             console.error('Delete error:', err);
             hideLoading();
-            customAlert('Delete error. Please try again.', 'Notice', 'ℹ️');
+            customAlert('Network error. Please try again.', 'Error', '❌');
         });
 }
 
