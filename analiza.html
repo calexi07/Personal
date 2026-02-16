@@ -3827,13 +3827,16 @@ function renderActiveDashboard() {
             .pair-card {
                 background: linear-gradient(135deg, rgba(26, 26, 42, 0.95), rgba(30, 30, 50, 0.95));
                 border: 1px solid rgba(33, 150, 243, 0.2);
-                border-radius: 12px;
-                padding: 18px;
+                border-radius: 14px;
+                padding: 20px;
                 cursor: pointer;
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 position: relative;
                 overflow: hidden;
                 animation: cardSlideIn 0.4s ease backwards;
+                min-height: 160px;
+                display: flex;
+                flex-direction: column;
             }
             
             .pair-card.no-analysis {
@@ -3914,6 +3917,7 @@ function renderActiveDashboard() {
                 align-items: center;
                 gap: 6px;
                 margin-bottom: 10px;
+                min-height: 24px;
             }
             
             .bias-badge {
@@ -3923,6 +3927,7 @@ function renderActiveDashboard() {
                 font-weight: 600;
                 text-transform: uppercase;
                 letter-spacing: 0.3px;
+                white-space: nowrap;
             }
             
             .bias-bullish {
@@ -3945,11 +3950,12 @@ function renderActiveDashboard() {
             
             .no-analysis-badge {
                 background: rgba(255, 255, 255, 0.05);
-                color: rgba(255, 255, 255, 0.5);
+                color: rgba(255, 255, 255, 0.4);
                 padding: 4px 10px;
                 border-radius: 12px;
                 font-size: 0.7em;
                 border: 1px solid rgba(255, 255, 255, 0.1);
+                white-space: nowrap;
             }
             
             .pair-date {
@@ -3974,21 +3980,22 @@ function renderActiveDashboard() {
             
             .card-actions {
                 display: flex;
-                gap: 8px;
-                margin-top: 15px;
-                padding-top: 15px;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                gap: 10px;
+                margin-top: auto;
+                padding-top: 16px;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
             }
             
             .card-btn {
                 flex: 1;
-                padding: 8px 12px;
+                padding: 10px 14px;
                 border: none;
-                border-radius: 8px;
+                border-radius: 10px;
                 cursor: pointer;
                 font-size: 0.85em;
                 font-weight: 600;
                 transition: all 0.3s ease;
+                white-space: nowrap;
             }
             
             .btn-view {
@@ -4088,7 +4095,7 @@ function renderActiveDashboard() {
                                         </div>
                                         <div class="no-analysis-badge">No analysis</div>
                                     </div>
-                                    <div class="pair-date">📭 Not analyzed yet</div>
+                                    <div class="pair-date">📭 No analysis</div>
                                     <div class="card-actions">
                                         <button class="card-btn btn-add" onclick="event.stopPropagation(); createAnalysisForPair('${pair}')">
                                             ➕ Add Analysis
