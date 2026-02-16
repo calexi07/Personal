@@ -4222,8 +4222,6 @@ function renderChains(chains, pair) {
             }
             
             const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
-            console.log(`Chain ${chainIndex}, Item ${index}: ${versionLabel} - mainIndex: ${mainIndex}, pair: ${a.pair}, date: ${a.date}`);
-            const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
             const hasTrade = a.tradeStatus === 'Trade Taken';
             
             // CRITICAL FIX: Match with MORE specific fields to avoid wrong index
