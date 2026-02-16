@@ -4178,7 +4178,17 @@ function renderChains(chains, pair) {
             
             const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
             const hasTrade = a.tradeStatus === 'Trade Taken';
-            const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date && an.weeklyAnalysis === a.weeklyAnalysis);
+            
+            // FIX: Find correct index in MAIN analyses array using unique identifiers
+            const mainIndex = analyses.findIndex(an => 
+                an.pair === a.pair && 
+                an.date === a.date && 
+                an.month === a.month &&
+                an.day === a.day &&
+                an.year === a.year
+            );
+            
+            console.log(`Chain ${chainIndex}, Item ${index}: ${versionLabel} - mainIndex: ${mainIndex}, pair: ${a.pair}, date: ${a.date}`);
             
             const itemWrapper = document.createElement('div');
             itemWrapper.style.cssText = 'position: relative; margin-bottom: 20px;';
@@ -4219,10 +4229,10 @@ function renderChains(chains, pair) {
                     </div>
                     <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">👁️ View</button>
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">✏️ Edit</button>
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">🔄 Update</button>
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">🗑️ Delete</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysis(${mainIndex})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">👁️ View</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex})" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">✏️ Edit</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">🔄 Update</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysis(${mainIndex})" style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">🗑️ Delete</button>
                     </div>
                 </div>
             `;
@@ -4254,9 +4264,6 @@ function renderChains(chains, pair) {
         chainsContainer.appendChild(chainContainer);
     });
 }
-
-
-
 
 function closeHistoryModal() {
     document.getElementById('historyModal').style.display = 'none';
