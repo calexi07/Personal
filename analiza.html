@@ -2540,11 +2540,18 @@ function clearForm() {
 
 // View Mode Switch
 function switchView(mode) {
+    console.log('=== switchView() called with mode:', mode);
     const journalView = document.getElementById('journalView');
     const calendarView = document.getElementById('calendarView');
     const activeDashboard = document.getElementById('activeDashboard');
     const btnJournal = document.getElementById('btnJournalView');
     const btnCalendar = document.getElementById('btnCalendarView');
+    
+    console.log('Elements found:', {
+        journalView: !!journalView,
+        calendarView: !!calendarView,
+        activeDashboard: !!activeDashboard
+    });
     
     // Get filter sections
     const filterSections = document.querySelectorAll('.filter-section, #pairButtonsContainer').length > 0 
@@ -2566,6 +2573,7 @@ function switchView(mode) {
             if (section) section.style.display = 'block';
         });
     } else {
+        console.log('Switching to calendar mode...');
         journalView.style.display = 'none';
         calendarView.style.display = 'block';
         activeDashboard.style.display = 'block';
@@ -2580,8 +2588,11 @@ function switchView(mode) {
             if (section) section.style.display = 'none';
         });
         
+        console.log('About to call renderActiveDashboard()...');
         renderActiveDashboard();
+        console.log('About to call renderCalendar()...');
         renderCalendar();
+        console.log('Both render functions called');
     }
 }
 
