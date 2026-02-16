@@ -4002,30 +4002,47 @@ function showPairHistory(pair) {
     
     const allData = window.allAnalyses || analyses;
     const pairHistory = allData.filter(a => a.pair === pair).sort((a, b) => {
-        return new Date(b.date) - new Date(a.date);
+        return new Date(a.date) - new Date(b.date); // Sort chronologically (oldest first)
     });
     
     titleEl.textContent = `📊 ${pair} - Analysis History (${pairHistory.length} versions)`;
     contentEl.innerHTML = '';
     
-    const chronological = [...pairHistory].reverse();
+    console.log('=== CHAIN SPLITTING DEBUG ===');
+    console.log('All analyses for pair:', pairHistory.map(a => ({
+        date: a.date,
+        status: a.analysisStatus,
+        tradeStatus: a.tradeStatus
+    })));
     
+    // Split into separate chains (each chain ends with Closed)
     const chains = [];
     let currentChain = [];
     
-    chronological.forEach(a => {
+    pairHistory.forEach((a, idx) => {
         currentChain.push(a);
+        console.log(`Analysis ${idx}: date=${a.date}, status=${a.analysisStatus}, currentChain length=${currentChain.length}`);
+        
         if (a.analysisStatus === 'Closed') {
             chains.push([...currentChain]);
+            console.log(`Chain completed with ${currentChain.length} items, pushed to chains`);
             currentChain = [];
         }
     });
     
+    // If there's an open chain remaining, add it
     if (currentChain.length > 0) {
         chains.push(currentChain);
+        console.log(`Open chain with ${currentChain.length} items added`);
     }
     
+    // Reverse chains so newest is first
     chains.reverse();
+    
+    console.log(`Total chains: ${chains.length}`);
+    chains.forEach((chain, idx) => {
+        console.log(`Chain ${idx}: ${chain.length} items, dates: ${chain[0].date} to ${chain[chain.length-1].date}`);
+    });
     
     // Date picker filter
     const filterContainer = document.createElement('div');
@@ -4046,7 +4063,7 @@ function showPairHistory(pair) {
     chainsContainer.id = 'chainsContainer';
     contentEl.appendChild(chainsContainer);
     
-    window.currentPairChains = chains; // Store for filtering
+    window.currentPairChains = chains;
     window.currentPair = pair;
     renderChains(chains, pair);
     modalEl.style.display = 'flex';
