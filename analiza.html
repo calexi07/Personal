@@ -3959,9 +3959,9 @@ function renderActiveDashboard() {
             }
             
             .pair-date {
-                color: rgba(144, 202, 249, 0.7);
-                font-size: 0.8em;
-                margin-bottom: 8px;
+                color: rgba(144, 202, 249, 0.6);
+                font-size: 0.75em;
+                margin-bottom: 10px;
             }
             
             .trade-badge {
@@ -4070,11 +4070,11 @@ function renderActiveDashboard() {
                                             <span>${pair}</span>
                                         </div>
                                     </div>
+                                    <div class="pair-date">📅 ${dateStr}</div>
                                     <div class="pair-status">
                                         <div class="bias-badge ${biasClass}">${biasIcon} ${analysis.marketBias}</div>
                                         ${analysis.tradeStatus === 'Trade Taken' ? '<div class="trade-badge">💰 Trade</div>' : ''}
                                     </div>
-                                    <div class="pair-date">📅 ${dateStr}</div>
                                     <div class="card-actions">
                                         <button class="card-btn btn-view" onclick="event.stopPropagation(); viewAnalysis(${analyses.indexOf(analysis)})">
                                             👁️ View
