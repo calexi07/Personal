@@ -4001,18 +4001,32 @@ function showPairHistory(pair) {
     }
     
     const allData = window.allAnalyses || analyses;
-    const pairHistory = allData.filter(a => a.pair === pair).sort((a, b) => {
-        return new Date(a.date) - new Date(b.date); // Sort chronologically (oldest first)
-    });
+    
+    // CRITICAL: Sort by ID (UUID timestamp) to get TRUE chronological order
+    // NOT by date, because multiple entries can have same date!
+    const pairHistory = allData
+        .filter(a => a.pair === pair)
+        .sort((a, b) => {
+            // If both have ID, compare IDs (UUIDs contain timestamps)
+            if (a.id && b.id) {
+                return a.id.localeCompare(b.id);
+            }
+            // Fallback to date if no ID
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dateA - dateB;
+        });
     
     titleEl.textContent = `📊 ${pair} - Analysis History (${pairHistory.length} versions)`;
     contentEl.innerHTML = '';
     
     console.log('=== CHAIN SPLITTING DEBUG ===');
-    console.log('All analyses for pair:', pairHistory.map(a => ({
+    console.log('Sorted by ID:', pairHistory.map(a => ({
         date: a.date,
         status: a.analysisStatus,
-        tradeStatus: a.tradeStatus
+        trade: a.tradeStatus,
+        bias: a.marketBias,
+        id: a.id ? a.id.substring(0, 8) : 'NO-ID'
     })));
     
     // Split into separate chains (each chain ends with Closed)
@@ -4021,11 +4035,11 @@ function showPairHistory(pair) {
     
     pairHistory.forEach((a, idx) => {
         currentChain.push(a);
-        console.log(`Analysis ${idx}: date=${a.date}, status=${a.analysisStatus}, currentChain length=${currentChain.length}`);
+        console.log(`Analysis ${idx}: date=${a.date}, status=${a.analysisStatus}, bias=${a.marketBias}, id=${a.id ? a.id.substring(0, 8) : 'NO-ID'}`);
         
         if (a.analysisStatus === 'Closed') {
             chains.push([...currentChain]);
-            console.log(`Chain completed with ${currentChain.length} items, pushed to chains`);
+            console.log(`✅ Chain completed with ${currentChain.length} items`);
             currentChain = [];
         }
     });
@@ -4033,15 +4047,19 @@ function showPairHistory(pair) {
     // If there's an open chain remaining, add it
     if (currentChain.length > 0) {
         chains.push(currentChain);
-        console.log(`Open chain with ${currentChain.length} items added`);
+        console.log(`⚠️ Open chain with ${currentChain.length} items added`);
     }
     
     // Reverse chains so newest is first
     chains.reverse();
     
-    console.log(`Total chains: ${chains.length}`);
+    console.log(`📊 Total chains: ${chains.length}`);
     chains.forEach((chain, idx) => {
-        console.log(`Chain ${idx}: ${chain.length} items, dates: ${chain[0].date} to ${chain[chain.length-1].date}`);
+        const start = chain[0];
+        const end = chain[chain.length - 1];
+        console.log(`Chain ${idx}: ${chain.length} items`);
+        console.log(`  Start: ${start.date} (${start.marketBias}) - ID: ${start.id ? start.id.substring(0, 8) : 'NO-ID'}`);
+        console.log(`  End: ${end.date} (${end.analysisStatus}) - ID: ${end.id ? end.id.substring(0, 8) : 'NO-ID'}`);
     });
     
     // Date picker filter
