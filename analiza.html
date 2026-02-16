@@ -4002,55 +4002,37 @@ function showPairHistory(pair) {
     
     const allData = window.allAnalyses || analyses;
     const pairHistory = allData.filter(a => a.pair === pair).sort((a, b) => {
-        return new Date(b.date) - new Date(a.date); // Newest first
+        return new Date(b.date) - new Date(a.date);
     });
     
     titleEl.textContent = `📊 ${pair} - Analysis History (${pairHistory.length} versions)`;
-    
     contentEl.innerHTML = '';
     
-    // Determine setup type from FIRST analysis (initial bias)
-    const initialBias = pairHistory[0]?.marketBias; // First in sorted array (newest) has initial bias from original
-    const firstAnalysis = pairHistory[pairHistory.length - 1]; // Oldest = first chronologically
+    const firstAnalysis = pairHistory[pairHistory.length - 1];
     const setupBias = firstAnalysis.marketBias;
     const setupType = setupBias === 'Bullish' ? 'LONG' : setupBias === 'Bearish' ? 'SHORT' : 'NEUTRAL';
     const setupColor = setupBias === 'Bullish' ? '#00E676' : setupBias === 'Bearish' ? '#FF5252' : '#90CAF9';
     
-    // Add SETUP header
-    const setupHeader = document.createElement('div');
-    setupHeader.style.cssText = `
-        background: ${setupColor};
-        color: #000;
-        padding: 12px 24px;
-        border-radius: 25px;
-        font-size: 1em;
-        font-weight: 700;
-        margin-bottom: 30px;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        width: fit-content;
-    `;
-    setupHeader.textContent = `${setupType} SETUP`;
-    contentEl.appendChild(setupHeader);
+    const mainContainer = document.createElement('div');
+    mainContainer.style.cssText = 'display: flex; gap: 30px; align-items: flex-start;';
     
-    // Create timeline container
+    const setupSide = document.createElement('div');
+    setupSide.style.cssText = 'display: flex; align-items: center; justify-content: center; min-width: 60px;';
+    setupSide.innerHTML = `
+        <div style="writing-mode: vertical-rl; transform: rotate(180deg); background: ${setupColor}; color: #000; padding: 20px 10px; border-radius: 25px; font-size: 1.1em; font-weight: 700; letter-spacing: 3px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            ${setupType} SETUP
+        </div>
+    `;
+    
     const timelineContainer = document.createElement('div');
-    timelineContainer.style.cssText = 'position: relative; padding-left: 80px;';
+    timelineContainer.style.cssText = 'flex: 1; position: relative; padding-left: 80px;';
     
     pairHistory.forEach((a, index) => {
-        const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { 
-            weekday: 'long',
-            day: '2-digit', 
-            month: 'long', 
-            year: 'numeric' 
-        }) : `${a.day}, ${a.month} ${a.year}`;
+        const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
+        const isFirst = (index === pairHistory.length - 1);
+        const isLast = (index === 0);
         
-        const isFirst = (index === pairHistory.length - 1); // Last in array = first chronologically
-        const isLast = (index === 0); // First in array = last chronologically
-        
-        // Determine version label and status
         let versionLabel, versionIcon, statusLabel;
-        
         if (isFirst) {
             versionLabel = '📝 Initial Analysis';
             versionIcon = '🎯';
@@ -4066,85 +4048,33 @@ function showPairHistory(pair) {
             statusLabel = 'UPDATE';
         }
         
-        const statusColor = statusLabel === 'START' ? '#2196F3' : 
-                           statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
+        const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
+        const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date && an.weeklyAnalysis === a.weeklyAnalysis);
         
-        // Find this analysis in main analyses array
-        const mainIndex = analyses.findIndex(an => 
-            an.pair === a.pair && 
-            an.date === a.date && 
-            an.weeklyAnalysis === a.weeklyAnalysis
-        );
-        
-        // Create item wrapper
         const itemWrapper = document.createElement('div');
-        itemWrapper.style.cssText = 'position: relative; margin-bottom: 10px;';
+        itemWrapper.style.cssText = 'position: relative; margin-bottom: 20px;';
         
-        // Timeline node (icon on the left)
         const node = document.createElement('div');
-        node.style.cssText = `
-            position: absolute;
-            left: -80px;
-            top: 20px;
-            width: 50px;
-            height: 50px;
-            background: ${setupColor};
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5em;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            z-index: 2;
-        `;
+        node.style.cssText = `position: absolute; left: -80px; top: 20px; width: 50px; height: 50px; background: ${setupColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5em; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 3;`;
         node.textContent = versionIcon;
         
-        // Vertical line connector (if not last)
         if (!isLast) {
             const line = document.createElement('div');
-            line.style.cssText = `
-                position: absolute;
-                left: -56px;
-                top: 70px;
-                width: 4px;
-                height: calc(100% + 30px);
-                background: ${setupColor};
-                z-index: 1;
-            `;
+            line.style.cssText = `position: absolute; left: -57px; top: 70px; width: 4px; height: 60px; background: ${setupColor}; z-index: 1;`;
             itemWrapper.appendChild(line);
             
-            // Arrow
             const arrow = document.createElement('div');
-            arrow.style.cssText = `
-                position: absolute;
-                left: -66px;
-                top: calc(100% + 20px);
-                font-size: 2em;
-                color: ${setupColor};
-                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                z-index: 2;
-            `;
-            arrow.textContent = '↓';
+            arrow.style.cssText = `position: absolute; left: -57px; top: 125px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 12px solid ${setupColor}; z-index: 2; transform: translateX(-6px);`;
             itemWrapper.appendChild(arrow);
         }
         
-        // Card content
         const card = document.createElement('div');
-        card.style.cssText = `
-            background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05));
-            border: 2px solid ${setupColor};
-            border-radius: 15px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        `;
-        
+        card.style.cssText = `background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid ${setupColor}; border-radius: 15px; padding: 20px; transition: all 0.3s ease; cursor: pointer;`;
         card.onmouseover = () => {
             card.style.borderColor = '#2196F3';
             card.style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(33, 150, 243, 0.1))';
             card.style.transform = 'translateX(5px)';
         };
-        
         card.onmouseout = () => {
             card.style.borderColor = setupColor;
             card.style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))';
@@ -4156,30 +4086,14 @@ function showPairHistory(pair) {
                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
                     <span style="color: ${setupColor}; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
                     <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusLabel}</span>
-                    ${a.analysisStatus === 'Closed' && a.closeReason ? `
-                        <span style="background: ${a.closeReason === 'Correct' ? '#00E676' : '#FF5252'}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">
-                            ${a.closeReason === 'Correct' ? '✅ Correct' : '❌ Incorrect'}
-                        </span>
-                    ` : ''}
+                    ${a.analysisStatus === 'Closed' && a.closeReason ? `<span style="background: ${a.closeReason === 'Correct' ? '#00E676' : '#FF5252'}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${a.closeReason === 'Correct' ? '✅ Correct' : '❌ Incorrect'}</span>` : ''}
                 </div>
                 <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">
-                        👁️ View
-                    </button>
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">
-                        ✏️ Edit
-                    </button>
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">
-                        🔄 Update
-                    </button>
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">
-                        🗑️ Delete
-                    </button>
+                    <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">👁️ View</button>
+                    <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">✏️ Edit</button>
+                    <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">🔄 Update</button>
+                    <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">🗑️ Delete</button>
                 </div>
             </div>
         `;
@@ -4196,8 +4110,9 @@ function showPairHistory(pair) {
         timelineContainer.appendChild(itemWrapper);
     });
     
-    contentEl.appendChild(timelineContainer);
-    
+    mainContainer.appendChild(setupSide);
+    mainContainer.appendChild(timelineContainer);
+    contentEl.appendChild(mainContainer);
     modalEl.style.display = 'flex';
 }
 
