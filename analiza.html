@@ -4171,6 +4171,7 @@ function renderChains(chains, pair) {
             
             const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
             const hasTrade = a.tradeStatus === 'Trade Taken';
+            console.log(`Analysis ${versionLabel}: tradeStatus="${a.tradeStatus}", hasTrade=${hasTrade}, pair=${a.pair}, date=${a.date}`);
             
             // FIX: Find correct index in MAIN analyses array using unique identifiers
             const mainIndex = analyses.findIndex(an => 
