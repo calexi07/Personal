@@ -2473,24 +2473,22 @@ async function deleteAnalysis(i) {
     }
     
     console.log('Deleting analysis:', {
-        id: a.id,
-        createdAt: a.createdAt,
+        deleteId: a.deleteId,
         pair: a.pair,
         date: a.date
     });
+    
+    if (!a.deleteId) {
+        customAlert('Cannot delete: missing deleteId. Please refresh and try again.', 'Error', '❌');
+        return;
+    }
     
     showLoading();
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({
             action: 'delete',
-            id: a.id, // Primary identifier (UUID - never changes!)
-            createdAt: a.createdAt, // Fallback identifier
-            month: a.month,
-            day: a.day,
-            date: a.date,
-            year: a.year,
-            pair: a.pair
+            deleteId: a.deleteId // ONLY identifier needed!
         })
     })
         .then(r => r.json())
