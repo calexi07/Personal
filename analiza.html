@@ -1058,8 +1058,19 @@
 
             <!-- Active Analyses Dashboard (above calendar) -->
             <div id="activeDashboard" style="display: none; margin-bottom: 30px;">
-                <div id="activeDashboardContainer">
-                    <!-- Modern dashboard with tabs will be rendered here -->
+                <div style="background: rgba(33, 150, 243, 0.05); border: 2px solid rgba(33, 150, 243, 0.2); border-radius: 20px; padding: 25px;">
+                    <h3 style="color: #2196F3; margin: 0 0 20px 0; font-size: 1.3em; display: flex; align-items: center; gap: 10px;">
+                        <span>📊</span>
+                        <span>All Analyses - Latest Updates</span>
+                    </h3>
+                    <div id="activeDashboardGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                        <!-- Dashboard cards will be generated here -->
+                    </div>
+                    <div id="activeDashboardEmpty" style="display: none; text-align: center; padding: 40px; color: #90CAF9;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📊</div>
+                        <p style="margin: 0; font-size: 1.1em;">No active analyses yet</p>
+                        <p style="margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.7;">Create your first analysis to see it here</p>
+                    </div>
                 </div>
             </div>
 
@@ -3670,7 +3681,7 @@ function renderActiveDashboard() {
     const container = document.getElementById('activeDashboardContainer');
     if (!container) return;
     
-    // Group pairs by category
+    // ALL pairs organized by category
     const categories = {
         'Major Pairs': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF'],
         'EUR Crosses': ['EUR/GBP', 'EUR/JPY', 'EUR/CHF', 'EUR/CAD', 'EUR/AUD', 'EUR/NZD'],
@@ -3680,16 +3691,47 @@ function renderActiveDashboard() {
         'Metals & Indices': ['XAU/USD', 'XAG/USD', 'US100', 'US30', 'GER40', 'UK100']
     };
     
+    // Flag emoji map
+    const flags = {
+        'EUR': '🇪🇺',
+        'USD': '🇺🇸',
+        'GBP': '🇬🇧',
+        'JPY': '🇯🇵',
+        'CHF': '🇨🇭',
+        'CAD': '🇨🇦',
+        'AUD': '🇦🇺',
+        'NZD': '🇳🇿',
+        'XAU': '🥇', // Gold
+        'XAG': '🥈', // Silver
+        'US100': '📊',
+        'US30': '📊',
+        'GER40': '🇩🇪',
+        'UK100': '🇬🇧'
+    };
+    
+    // Get flag icons for pair
+    function getPairFlags(pair) {
+        if (pair.includes('/')) {
+            const [base, quote] = pair.split('/');
+            return `${flags[base] || '💱'}${flags[quote] || '💱'}`;
+        }
+        return flags[pair] || '📊';
+    }
+    
     // Get active analyses
     const activeAnalyses = analyses.filter(a => a.analysisStatus === 'Active');
-    
-    // Group by category
-    const grouped = {};
-    Object.keys(categories).forEach(category => {
-        grouped[category] = activeAnalyses.filter(a => categories[category].includes(a.pair));
+    const analysisMap = {};
+    activeAnalyses.forEach(a => {
+        analysisMap[a.pair] = a;
     });
     
-    console.log('Dashboard: Showing', activeAnalyses.length, 'active analyses');
+    console.log('Dashboard: Showing', Object.keys(categories).reduce((sum, cat) => sum + categories[cat].length, 0), 'pairs');
+    
+    // Count analyses per category
+    const categoryCounts = {};
+    Object.keys(categories).forEach(category => {
+        categoryCounts[category] = categories[category].filter(pair => analysisMap[pair]).length;
+    });
     
     // Create tabs + content
     container.innerHTML = `
@@ -3789,6 +3831,16 @@ function renderActiveDashboard() {
                 animation: cardSlideIn 0.4s ease backwards;
             }
             
+            .pair-card.no-analysis {
+                opacity: 0.6;
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+            
+            .pair-card.no-analysis:hover {
+                opacity: 0.8;
+                border-color: rgba(33, 150, 243, 0.4);
+            }
+            
             @keyframes cardSlideIn {
                 from {
                     opacity: 0;
@@ -3832,6 +3884,13 @@ function renderActiveDashboard() {
                 font-size: 1.3em;
                 font-weight: 700;
                 color: #2196F3;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .pair-flags {
+                font-size: 1.2em;
             }
             
             .bias-badge {
@@ -3855,6 +3914,14 @@ function renderActiveDashboard() {
             .bias-neutral {
                 background: linear-gradient(135deg, #90CAF9, #64B5F6);
                 color: #000;
+            }
+            
+            .no-analysis-badge {
+                background: rgba(255, 255, 255, 0.1);
+                color: #90CAF9;
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 0.75em;
             }
             
             .pair-date {
@@ -3904,6 +3971,12 @@ function renderActiveDashboard() {
                 box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
             }
             
+            .btn-view:disabled {
+                background: rgba(255, 255, 255, 0.05);
+                color: rgba(255, 255, 255, 0.3);
+                cursor: not-allowed;
+            }
+            
             .btn-history {
                 background: rgba(255, 255, 255, 0.1);
                 color: #90CAF9;
@@ -3915,27 +3988,26 @@ function renderActiveDashboard() {
                 border-color: #2196F3;
             }
             
-            .empty-state {
-                text-align: center;
-                padding: 60px 20px;
-                color: #90CAF9;
-                font-size: 1.1em;
+            .btn-add {
+                background: linear-gradient(135deg, #00E676, #00C853);
+                color: #000;
+                font-weight: 700;
             }
             
-            .empty-icon {
-                font-size: 4em;
-                margin-bottom: 20px;
-                opacity: 0.5;
+            .btn-add:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(0, 230, 118, 0.4);
             }
         </style>
         
         <div class="dashboard-tabs">
             ${Object.keys(categories).map((category, index) => {
-                const count = grouped[category].length;
+                const count = categoryCounts[category];
+                const total = categories[category].length;
                 return `
                     <button class="tab-btn ${index === 0 ? 'active' : ''}" onclick="switchDashboardTab('${category}')" data-category="${category}">
                         ${category}
-                        <span class="tab-badge">${count}</span>
+                        <span class="tab-badge">${count}/${total}</span>
                     </button>
                 `;
             }).join('')}
@@ -3943,42 +4015,86 @@ function renderActiveDashboard() {
         
         ${Object.keys(categories).map((category, catIndex) => `
             <div class="dashboard-content" data-category="${category}" style="display: ${catIndex === 0 ? 'block' : 'none'};">
-                ${grouped[category].length > 0 ? `
-                    <div class="dashboard-grid">
-                        ${grouped[category].map((a, index) => {
-                            const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short', year: 'numeric' }) : `${a.day}, ${a.month}`;
-                            const biasClass = a.marketBias === 'Bullish' ? 'bias-bullish' : a.marketBias === 'Bearish' ? 'bias-bearish' : 'bias-neutral';
-                            const biasIcon = a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪';
+                <div class="dashboard-grid">
+                    ${categories[category].map((pair, index) => {
+                        const analysis = analysisMap[pair];
+                        const hasAnalysis = !!analysis;
+                        
+                        if (hasAnalysis) {
+                            const dateStr = analysis.date ? new Date(analysis.date).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short', year: 'numeric' }) : `${analysis.day}, ${analysis.month}`;
+                            const biasClass = analysis.marketBias === 'Bullish' ? 'bias-bullish' : analysis.marketBias === 'Bearish' ? 'bias-bearish' : 'bias-neutral';
+                            const biasIcon = analysis.marketBias === 'Bullish' ? '🟢' : analysis.marketBias === 'Bearish' ? '🔴' : '⚪';
                             
                             return `
                                 <div class="pair-card" style="animation-delay: ${index * 0.05}s;">
                                     <div class="pair-header">
-                                        <div class="pair-name">${a.pair}</div>
-                                        <div class="bias-badge ${biasClass}">${biasIcon} ${a.marketBias}</div>
+                                        <div class="pair-name">
+                                            <span class="pair-flags">${getPairFlags(pair)}</span>
+                                            <span>${pair}</span>
+                                        </div>
+                                        <div class="bias-badge ${biasClass}">${biasIcon} ${analysis.marketBias}</div>
                                     </div>
                                     <div class="pair-date">📅 ${dateStr}</div>
-                                    ${a.tradeStatus === 'Trade Taken' ? '<div class="trade-badge">💰 Trade Active</div>' : ''}
+                                    ${analysis.tradeStatus === 'Trade Taken' ? '<div class="trade-badge">💰 Trade Active</div>' : ''}
                                     <div class="card-actions">
-                                        <button class="card-btn btn-view" onclick="event.stopPropagation(); viewAnalysis(${analyses.indexOf(a)})">
+                                        <button class="card-btn btn-view" onclick="event.stopPropagation(); viewAnalysis(${analyses.indexOf(analysis)})">
                                             👁️ View
                                         </button>
-                                        <button class="card-btn btn-history" onclick="event.stopPropagation(); showPairHistory('${a.pair}')">
+                                        <button class="card-btn btn-history" onclick="event.stopPropagation(); showPairHistory('${pair}')">
                                             📊 History
                                         </button>
                                     </div>
                                 </div>
                             `;
-                        }).join('')}
-                    </div>
-                ` : `
-                    <div class="empty-state">
-                        <div class="empty-icon">📭</div>
-                        <div>No active analyses in this category</div>
-                    </div>
-                `}
+                        } else {
+                            return `
+                                <div class="pair-card no-analysis" style="animation-delay: ${index * 0.05}s;">
+                                    <div class="pair-header">
+                                        <div class="pair-name">
+                                            <span class="pair-flags">${getPairFlags(pair)}</span>
+                                            <span>${pair}</span>
+                                        </div>
+                                        <div class="no-analysis-badge">No analysis</div>
+                                    </div>
+                                    <div class="pair-date">📭 Not analyzed yet</div>
+                                    <div class="card-actions">
+                                        <button class="card-btn btn-add" onclick="event.stopPropagation(); createAnalysisForPair('${pair}')">
+                                            ➕ Add Analysis
+                                        </button>
+                                        <button class="card-btn btn-history" onclick="event.stopPropagation(); showPairHistory('${pair}')">
+                                            📊 History
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }).join('')}
+                </div>
             </div>
         `).join('')}
     `;
+}
+
+function switchDashboardTab(category) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.category === category) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Show/hide content
+    document.querySelectorAll('.dashboard-content').forEach(content => {
+        content.style.display = content.dataset.category === category ? 'block' : 'none';
+    });
+}
+
+function createAnalysisForPair(pair) {
+    // Pre-fill pair and switch to form
+    document.getElementById('pair').value = pair;
+    showPage('form');
 }
 
 function switchDashboardTab(category) {
