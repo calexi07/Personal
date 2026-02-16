@@ -4311,31 +4311,14 @@ async function saveCloseAnalysis() {
         return;
     }
     
-    // Get TODAY's date for the close action (like update)
-    const today = new Date();
-    const todayStr = formatDateLocal(today);
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    
-    // Create NEW row with today's date + Closed status + reason/observations
+    // Close the LATEST active analysis (don't create new row)
     const closeData = {
-        action: 'add', // Add new row like an update
-        month: monthNames[today.getMonth()],
-        day: dayNames[today.getDay()],
-        date: todayStr,
-        year: today.getFullYear(),
+        action: 'close', // Use close action to UPDATE existing row
+        month: a.month,
+        day: a.day,
+        date: a.date,
+        year: a.year,
         pair: a.pair,
-        tradeStatus: a.tradeStatus || 'Analysis Only',
-        marketBias: a.marketBias || 'Bullish',
-        analysisStatus: 'Closed', // Set to Closed
-        weeklyAnalysis: a.weeklyAnalysis || '',
-        weeklyPhoto: a.weeklyPhoto || '',
-        dailyAnalysis: a.dailyAnalysis || '',
-        dailyPhoto: a.dailyPhoto || '',
-        fourHAnalysis: a.fourHAnalysis || '',
-        fourHPhoto: a.fourHPhoto || '',
-        oneHAnalysis: a.oneHAnalysis || '',
-        oneHPhoto: a.oneHPhoto || '',
         closeReason: reason,
         closeObservations: observations || ''
     };
