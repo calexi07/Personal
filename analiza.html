@@ -4063,25 +4063,42 @@ function filterChainsByDate(pair) {
         return;
     }
     
-    // Filter chains that contain an analysis matching the selected date
+    const selected = new Date(selectedDate + 'T12:00:00'); // Noon to avoid timezone issues
+    
+    // Filter chains where selected date is WITHIN the chain's date range
     const filtered = window.currentPairChains.filter(chain => {
-        return chain.some(a => {
-            if (!a.date) return false;
-            const analysisDate = new Date(a.date);
-            const analysisDateStr = analysisDate.toISOString().split('T')[0]; // YYYY-MM-DD
-            return analysisDateStr === selectedDate;
-        });
+        if (chain.length === 0) return false;
+        
+        // Get first and last analysis dates
+        const firstAnalysis = chain[0];
+        const lastAnalysis = chain[chain.length - 1];
+        
+        // Parse dates in local timezone (not UTC)
+        const startDate = new Date(firstAnalysis.date);
+        const endDate = new Date(lastAnalysis.date);
+        
+        // Normalize to midnight local time for comparison
+        const startMidnight = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        const endMidnight = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        const selectedMidnight = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+        
+        // Check if selected date is within chain range (inclusive)
+        const isInRange = selectedMidnight >= startMidnight && selectedMidnight <= endMidnight;
+        
+        console.log(`Chain range: ${startMidnight.toLocaleDateString()} to ${endMidnight.toLocaleDateString()}, Selected: ${selectedMidnight.toLocaleDateString()}, In range: ${isInRange}`);
+        
+        return isInRange;
     });
     
-    const formattedDate = new Date(selectedDate).toLocaleDateString('ro-RO', {
+    const formattedDate = selected.toLocaleDateString('ro-RO', {
         day: '2-digit',
         month: 'long',
         year: 'numeric'
     });
     
     filterStatus.textContent = filtered.length > 0 
-        ? `Showing ${filtered.length} chain(s) for ${formattedDate}`
-        : `No chains found for ${formattedDate}`;
+        ? `Showing ${filtered.length} chain(s) active on ${formattedDate}`
+        : `No active chains found for ${formattedDate}`;
     
     renderChains(filtered, pair);
 }
