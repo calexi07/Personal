@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Version: V8-SEPARATE-CHAINS-CORRECT-WRONG -->
+    <!-- Version: V9-TRADE-BADGES-REVERSED-DATES-FILTER -->
     <title>A random trader</title>
     
     <style>
@@ -4023,12 +4023,88 @@ function showPairHistory(pair) {
         }
     });
     
-    // If there's an open chain, add it
     if (currentChain.length > 0) {
         chains.push(currentChain);
     }
     
-    // Render each chain separately
+    // REVERSE CHAINS - newest first (top)
+    chains.reverse();
+    
+    // Date filter dropdown
+    const filterContainer = document.createElement('div');
+    filterContainer.style.cssText = 'margin-bottom: 30px;';
+    filterContainer.innerHTML = `
+        <label style="color: #90CAF9; margin-right: 10px; font-weight: 600;">Filter by Date:</label>
+        <select id="chainDateFilter" onchange="filterChainsByDate('${pair}')" style="background: rgba(255,255,255,0.1); color: #fff; border: 2px solid rgba(33,150,243,0.4); padding: 8px 12px; border-radius: 8px; cursor: pointer;">
+            <option value="ALL">All Chains</option>
+        </select>
+    `;
+    contentEl.appendChild(filterContainer);
+    
+    const filterSelect = document.getElementById('chainDateFilter');
+    const uniqueDates = new Set();
+    chains.forEach(chain => {
+        chain.forEach(a => {
+            if (a.date) {
+                const dateOnly = new Date(a.date).toLocaleDateString('ro-RO', {day: '2-digit', month: 'short', year: 'numeric'});
+                uniqueDates.add(dateOnly);
+            }
+        });
+    });
+    uniqueDates.forEach(date => {
+        const option = document.createElement('option');
+        option.value = date;
+        option.textContent = date;
+        filterSelect.appendChild(option);
+    });
+    
+    const chainsContainer = document.createElement('div');
+    chainsContainer.id = 'chainsContainer';
+    contentEl.appendChild(chainsContainer);
+    
+    renderChains(chains, pair);
+    modalEl.style.display = 'flex';
+}
+
+function filterChainsByDate(pair) {
+    const filterValue = document.getElementById('chainDateFilter').value;
+    const allData = window.allAnalyses || analyses;
+    const pairHistory = allData.filter(a => a.pair === pair).sort((a, b) => {
+        return new Date(b.date) - new Date(a.date);
+    });
+    const chronological = [...pairHistory].reverse();
+    
+    const chains = [];
+    let currentChain = [];
+    chronological.forEach(a => {
+        currentChain.push(a);
+        if (a.analysisStatus === 'Closed') {
+            chains.push([...currentChain]);
+            currentChain = [];
+        }
+    });
+    if (currentChain.length > 0) {
+        chains.push(currentChain);
+    }
+    chains.reverse();
+    
+    if (filterValue === 'ALL') {
+        renderChains(chains, pair);
+    } else {
+        const filtered = chains.filter(chain => {
+            return chain.some(a => {
+                const dateOnly = new Date(a.date).toLocaleDateString('ro-RO', {day: '2-digit', month: 'short', year: 'numeric'});
+                return dateOnly === filterValue;
+            });
+        });
+        renderChains(filtered, pair);
+    }
+}
+
+function renderChains(chains, pair) {
+    const chainsContainer = document.getElementById('chainsContainer');
+    chainsContainer.innerHTML = '';
+    
     chains.forEach((chain, chainIndex) => {
         const firstAnalysis = chain[0];
         const lastAnalysis = chain[chain.length - 1];
@@ -4036,7 +4112,6 @@ function showPairHistory(pair) {
         const setupType = setupBias === 'Bullish' ? 'LONG' : setupBias === 'Bearish' ? 'SHORT' : 'NEUTRAL';
         const setupColor = setupBias === 'Bullish' ? '#00E676' : setupBias === 'Bearish' ? '#FF5252' : '#90CAF9';
         
-        // Check if chain is closed
         const isClosed = lastAnalysis.analysisStatus === 'Closed';
         const isCorrect = lastAnalysis.closeReason === 'Correct';
         
@@ -4049,18 +4124,27 @@ function showPairHistory(pair) {
             flowStatus = 'OPEN';
         }
         
+        const startDate = new Date(firstAnalysis.date).toLocaleDateString('ro-RO', {day: '2-digit', month: 'short', year: 'numeric'});
+        const endDate = isClosed ? new Date(lastAnalysis.date).toLocaleDateString('ro-RO', {day: '2-digit', month: 'short', year: 'numeric'}) : 'Ongoing';
+        
         const chainContainer = document.createElement('div');
         chainContainer.style.cssText = `
             display: flex; 
-            gap: 30px; 
-            align-items: stretch; 
-            position: relative;
+            flex-direction: column;
+            gap: 20px;
             margin-bottom: ${chainIndex < chains.length - 1 ? '60px' : '0'};
             padding-bottom: ${chainIndex < chains.length - 1 ? '40px' : '0'};
             border-bottom: ${chainIndex < chains.length - 1 ? '3px dashed rgba(255,255,255,0.2)' : 'none'};
         `;
         
-        // LEFT SIDE: Vertical SETUP text (centered)
+        const header = document.createElement('div');
+        header.style.cssText = 'text-align: center; color: #90CAF9; font-size: 1em; font-weight: 600; padding: 10px; background: rgba(33,150,243,0.1); border-radius: 10px;';
+        header.innerHTML = `📅 ${startDate} → ${endDate}`;
+        chainContainer.appendChild(header);
+        
+        const mainContainer = document.createElement('div');
+        mainContainer.style.cssText = 'display: flex; gap: 30px; align-items: stretch;';
+        
         const setupSide = document.createElement('div');
         setupSide.style.cssText = 'display: flex; align-items: center; justify-content: center; min-width: 60px;';
         setupSide.innerHTML = `
@@ -4069,7 +4153,6 @@ function showPairHistory(pair) {
             </div>
         `;
         
-        // MIDDLE: Timeline with cards
         const timelineContainer = document.createElement('div');
         timelineContainer.style.cssText = 'flex: 1; position: relative; padding-left: 80px;';
         
@@ -4094,6 +4177,7 @@ function showPairHistory(pair) {
             }
             
             const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
+            const hasTrade = a.tradeStatus === 'Trade Taken';
             const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date && an.weeklyAnalysis === a.weeklyAnalysis);
             
             const itemWrapper = document.createElement('div');
@@ -4131,7 +4215,7 @@ function showPairHistory(pair) {
                     <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
                         <span style="color: ${flowColor}; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
                         <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusLabel}</span>
-                        ${a.analysisStatus === 'Closed' && a.closeReason ? `<span style="background: ${a.closeReason === 'Correct' ? '#00E676' : '#FF5252'}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${a.closeReason === 'Correct' ? '✅ Correct' : '❌ Incorrect'}</span>` : ''}
+                        ${hasTrade ? `<span style="background: #FFB300; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">💰 TRADE OPEN</span>` : ''}
                     </div>
                     <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -4155,7 +4239,6 @@ function showPairHistory(pair) {
             timelineContainer.appendChild(itemWrapper);
         });
         
-        // RIGHT SIDE: Vertical ANALYSIS STATUS (centered)
         const statusSide = document.createElement('div');
         statusSide.style.cssText = 'display: flex; align-items: center; justify-content: center; min-width: 80px;';
         statusSide.innerHTML = `
@@ -4164,14 +4247,14 @@ function showPairHistory(pair) {
             </div>
         `;
         
-        chainContainer.appendChild(setupSide);
-        chainContainer.appendChild(timelineContainer);
-        chainContainer.appendChild(statusSide);
-        contentEl.appendChild(chainContainer);
+        mainContainer.appendChild(setupSide);
+        mainContainer.appendChild(timelineContainer);
+        mainContainer.appendChild(statusSide);
+        chainContainer.appendChild(mainContainer);
+        chainsContainer.appendChild(chainContainer);
     });
-    
-    modalEl.style.display = 'flex';
 }
+
 
 
 
