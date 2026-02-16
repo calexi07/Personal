@@ -1119,6 +1119,41 @@
                         </button>
                     </div>
 
+                <div style="margin-bottom: 20px;">
+                    <label style="color: #90CAF9; display: block; margin-bottom: 8px; font-weight: 600;">Filter by Pair:</label>
+                    <select id="calendarPairFilter" onchange="filterCalendarByPair()" style="width: 100%; max-width: 300px; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(33, 150, 243, 0.4); padding: 12px; border-radius: 8px; font-size: 1em; cursor: pointer;">
+                        <option value="ALL">📊 All Pairs</option>
+                        <option value="EUR/USD">EUR/USD</option>
+                        <option value="GBP/USD">GBP/USD</option>
+                        <option value="USD/JPY">USD/JPY</option>
+                        <option value="USD/CHF">USD/CHF</option>
+                        <option value="AUD/USD">AUD/USD</option>
+                        <option value="USD/CAD">USD/CAD</option>
+                        <option value="NZD/USD">NZD/USD</option>
+                        <option value="GBP/JPY">GBP/JPY</option>
+                        <option value="EUR/JPY">EUR/JPY</option>
+                        <option value="AUD/JPY">AUD/JPY</option>
+                        <option value="CHF/JPY">CHF/JPY</option>
+                        <option value="CAD/JPY">CAD/JPY</option>
+                        <option value="NZD/JPY">NZD/JPY</option>
+                        <option value="EUR/AUD">EUR/AUD</option>
+                        <option value="EUR/CHF">EUR/CHF</option>
+                        <option value="EUR/CAD">EUR/CAD</option>
+                        <option value="EUR/NZD">EUR/NZD</option>
+                        <option value="EUR/GBP">EUR/GBP</option>
+                        <option value="GBP/AUD">GBP/AUD</option>
+                        <option value="GBP/CHF">GBP/CHF</option>
+                        <option value="GBP/CAD">GBP/CAD</option>
+                        <option value="GBP/NZD">GBP/NZD</option>
+                        <option value="AUD/CHF">AUD/CHF</option>
+                        <option value="AUD/CAD">AUD/CAD</option>
+                        <option value="AUD/NZD">AUD/NZD</option>
+                        <option value="CAD/CHF">CAD/CHF</option>
+                        <option value="NZD/CHF">NZD/CHF</option>
+                        <option value="XAU/USD">XAU/USD (Gold)</option>
+                        <option value="XAG/USD">XAG/USD (Silver)</option>
+                    </select>
+                </div>
                     <!-- Calendar Grid -->
                     <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; position: relative; z-index: 1;">
                         <!-- Calendar will be rendered here -->
@@ -2751,7 +2786,7 @@ function createDayCell(day, month, year, isOtherMonth) {
     
     // Use allAnalyses to count ALL versions for this day (not just latest)
     const allData = window.allAnalyses || analyses;
-    const analysesForDay = allData.filter(a => {
+    let analysesForDay = allData.filter(a => {
         if (!a.date) return false;
         
         // Parse the ISO date string and format it in local timezone (not UTC)
@@ -2760,6 +2795,11 @@ function createDayCell(day, month, year, isOtherMonth) {
         
         return localDateStr === dateStr;
     });
+    
+    // Apply pair filter if not ALL
+    if (calendarFilterPair !== 'ALL') {
+        analysesForDay = analysesForDay.filter(a => a.pair === calendarFilterPair);
+    }
     
     if (day === 11 && !isOtherMonth) {
         console.log('Day 11 - dateStr:', dateStr, 'analyses:', analysesForDay.length);
@@ -4082,7 +4122,179 @@ function closeCustomConfirm(result) {
     }
 }
 
+
+// Global variable to track which analysis is being closed
+let pendingCloseAnalysisIndex = -1;
+
+// Show/hide observations field based on reason
+document.addEventListener('DOMContentLoaded', function() {
+    const reasonSelect = document.getElementById('closeReasonSelect');
+    const observationsContainer = document.getElementById('observationsContainer');
+    
+    if (reasonSelect && observationsContainer) {
+        reasonSelect.addEventListener('change', function() {
+            if (this.value === 'Incorrect') {
+                observationsContainer.style.display = 'block';
+            } else {
+                observationsContainer.style.display = 'none';
+                document.getElementById('closeObservations').value = '';
+            }
+        });
+    }
+});
+
+// Modified updateAnalysis to show choice modal
+let originalUpdateAnalysisIndex = -1;
+
+function updateAnalysis(i) {
+    originalUpdateAnalysisIndex = i;
+    pendingCloseAnalysisIndex = i;
+    
+    const a = analyses[i];
+    document.getElementById('closeAnalysisPairName').textContent = a.pair;
+    
+    document.getElementById('updateChoiceModal').style.display = 'flex';
+    
+    // Setup button handlers
+    document.getElementById('continueUpdateBtn').onclick = () => {
+        closeUpdateChoiceModal();
+        openEditPageForUpdate(originalUpdateAnalysisIndex);
+    };
+    
+    document.getElementById('closeAnalysisBtn').onclick = () => {
+        closeUpdateChoiceModal();
+        showCloseAnalysisModal();
+    };
+}
+
+function closeUpdateChoiceModal() {
+    document.getElementById('updateChoiceModal').style.display = 'none';
+}
+
+function showCloseAnalysisModal() {
+    const modal = document.getElementById('closeAnalysisModal');
+    const reasonSelect = document.getElementById('closeReasonSelect');
+    const observationsContainer = document.getElementById('observationsContainer');
+    const observationsField = document.getElementById('closeObservations');
+    
+    // Reset form
+    reasonSelect.value = 'Correct';
+    observationsContainer.style.display = 'none';
+    observationsField.value = '';
+    
+    modal.style.display = 'flex';
+    
+    // Setup save button
+    document.getElementById('saveCloseAnalysisBtn').onclick = saveCloseAnalysis;
+}
+
+function closeCloseAnalysisModal() {
+    document.getElementById('closeAnalysisModal').style.display = 'none';
+}
+
+async function saveCloseAnalysis() {
+    if (pendingCloseAnalysisIndex < 0) return;
+    
+    const a = analyses[pendingCloseAnalysisIndex];
+    const reason = document.getElementById('closeReasonSelect').value;
+    const observations = document.getElementById('closeObservations').value;
+    
+    // Validate: if Incorrect, observations required
+    if (reason === 'Incorrect' && !observations.trim()) {
+        customAlert('Please provide observations for incorrect analysis', 'Missing Information', '⚠️');
+        return;
+    }
+    
+    const closeData = {
+        action: 'close',
+        month: a.month,
+        day: a.day,
+        date: a.date,
+        year: a.year,
+        pair: a.pair,
+        closeReason: reason,
+        closeObservations: observations || ''
+    };
+    
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(closeData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            closeCloseAnalysisModal();
+            customAlert(`${a.pair} analysis closed as ${reason}`, 'Analysis Closed', '🔒');
+            loadAnalyses();
+        } else {
+            customAlert('Failed to close analysis. Please try again.', 'Error', '❌');
+        }
+    } catch (err) {
+        console.error('Close error:', err);
+        customAlert('Error closing analysis. Please try again.', 'Error', '❌');
+    }
+}
+
+
+// Global calendar filter
+let calendarFilterPair = 'ALL';
+
+function filterCalendarByPair() {
+    const select = document.getElementById('calendarPairFilter');
+    calendarFilterPair = select.value;
+    renderCalendar(); // Re-render calendar with filter
+}
+
     </script>
+<!-- Update Choice Modal -->
+<div id="updateChoiceModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 20000; align-items: center; justify-content: center;">
+    <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 500px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: modalSlideIn 0.3s ease;">
+        <h2 style="color: #fff; margin: 0 0 20px 0; font-size: 1.5em;">🔄 Update Analysis</h2>
+        <p style="color: #90CAF9; margin: 0 0 25px 0;">What would you like to do?</p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button id="continueUpdateBtn" style="width: 100%; background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 15px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 700; transition: all 0.3s ease;">
+                ➕ Continue with Update
+            </button>
+            <button id="closeAnalysisBtn" style="width: 100%; background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 15px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
+                🔒 Close Analysis
+            </button>
+            <button onclick="closeUpdateChoiceModal()" style="width: 100%; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(255, 255, 255, 0.3); padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600;">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Close Analysis Modal -->
+<div id="closeAnalysisModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 20001; align-items: center; justify-content: center;">
+    <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: modalSlideIn 0.3s ease;">
+        <h2 style="color: #fff; margin: 0 0 20px 0; font-size: 1.5em;">🔒 Close Analysis</h2>
+        <p id="closeAnalysisPairName" style="color: #2196F3; margin: 0 0 20px 0; font-size: 1.2em; font-weight: 700;"></p>
+        
+        <label style="color: #90CAF9; display: block; margin-bottom: 8px; font-weight: 600;">Was the analysis correct?</label>
+        <select id="closeReasonSelect" style="width: 100%; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(33, 150, 243, 0.4); padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 1em;">
+            <option value="Correct">✅ Correct - Analysis was accurate</option>
+            <option value="Incorrect">❌ Incorrect - Analysis was wrong</option>
+        </select>
+        
+        <div id="observationsContainer" style="display: none;">
+            <label style="color: #90CAF9; display: block; margin-bottom: 8px; font-weight: 600;">Observations (What went wrong?):</label>
+            <textarea id="closeObservations" placeholder="Describe what went wrong with this analysis..." style="width: 100%; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(33, 150, 243, 0.4); padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 1em; min-height: 100px; resize: vertical;"></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeCloseAnalysisModal()" style="flex: 1; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(255, 255, 255, 0.3); padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600;">
+                Cancel
+            </button>
+            <button id="saveCloseAnalysisBtn" style="flex: 1; background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 700;">
+                🔒 Close Analysis
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Custom Alert Modal -->
 <div id="customAlertModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 20000; align-items: center; justify-content: center;">
     <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 400px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: modalSlideIn 0.3s ease;">
