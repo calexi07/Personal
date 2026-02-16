@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Version: V3-AERISIT-STALE-DETECTION -->
+    <!-- Version: V7-CENTERED-LABELS-CORRECT-FLOW -->
     <title>A random trader</title>
     
     <style>
@@ -4008,29 +4008,40 @@ function showPairHistory(pair) {
     titleEl.textContent = `📊 ${pair} - Analysis History (${pairHistory.length} versions)`;
     contentEl.innerHTML = '';
     
-    const firstAnalysis = pairHistory[pairHistory.length - 1];
+    // Reverse to chronological order (oldest first)
+    const chronological = [...pairHistory].reverse();
+    
+    const firstAnalysis = chronological[0];
+    const lastAnalysis = chronological[chronological.length - 1];
     const setupBias = firstAnalysis.marketBias;
     const setupType = setupBias === 'Bullish' ? 'LONG' : setupBias === 'Bearish' ? 'SHORT' : 'NEUTRAL';
     const setupColor = setupBias === 'Bullish' ? '#00E676' : setupBias === 'Bearish' ? '#FF5252' : '#90CAF9';
     
-    const mainContainer = document.createElement('div');
-    mainContainer.style.cssText = 'display: flex; gap: 30px; align-items: flex-start;';
+    // Check if analysis is closed
+    const isClosed = lastAnalysis.analysisStatus === 'Closed';
+    const flowColor = isClosed ? '#FF5252' : '#00E676';
+    const flowStatus = isClosed ? 'CLOSED' : 'OPEN';
     
+    const mainContainer = document.createElement('div');
+    mainContainer.style.cssText = 'display: flex; gap: 30px; align-items: stretch; position: relative;';
+    
+    // LEFT SIDE: Vertical SETUP text (centered)
     const setupSide = document.createElement('div');
-    setupSide.style.cssText = 'display: flex; align-items: center; justify-content: center; min-width: 60px;';
+    setupSide.style.cssText = 'display: flex; align-items: center; justify-content: center; min-width: 60px; position: relative;';
     setupSide.innerHTML = `
         <div style="writing-mode: vertical-rl; transform: rotate(180deg); background: ${setupColor}; color: #000; padding: 20px 10px; border-radius: 25px; font-size: 1.1em; font-weight: 700; letter-spacing: 3px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
             ${setupType} SETUP
         </div>
     `;
     
+    // MIDDLE: Timeline with cards
     const timelineContainer = document.createElement('div');
     timelineContainer.style.cssText = 'flex: 1; position: relative; padding-left: 80px;';
     
-    pairHistory.forEach((a, index) => {
+    chronological.forEach((a, index) => {
         const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
-        const isFirst = (index === pairHistory.length - 1);
-        const isLast = (index === 0);
+        const isFirst = (index === 0);
+        const isLast = (index === chronological.length - 1);
         
         let versionLabel, versionIcon, statusLabel;
         if (isFirst) {
@@ -4042,8 +4053,7 @@ function showPairHistory(pair) {
             versionIcon = '🔒';
             statusLabel = 'FINISH';
         } else {
-            const updateNum = pairHistory.length - index - 1;
-            versionLabel = `📝 Update ${updateNum}`;
+            versionLabel = `📝 Update ${index}`;
             versionIcon = '🔄';
             statusLabel = 'UPDATE';
         }
@@ -4055,28 +4065,28 @@ function showPairHistory(pair) {
         itemWrapper.style.cssText = 'position: relative; margin-bottom: 20px;';
         
         const node = document.createElement('div');
-        node.style.cssText = `position: absolute; left: -80px; top: 20px; width: 50px; height: 50px; background: ${setupColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5em; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 3;`;
+        node.style.cssText = `position: absolute; left: -80px; top: 20px; width: 50px; height: 50px; background: ${flowColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5em; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 3;`;
         node.textContent = versionIcon;
         
         if (!isLast) {
             const line = document.createElement('div');
-            line.style.cssText = `position: absolute; left: -57px; top: 70px; width: 4px; height: 60px; background: ${setupColor}; z-index: 1;`;
+            line.style.cssText = `position: absolute; left: -57px; top: 70px; width: 4px; height: 60px; background: ${flowColor}; z-index: 1;`;
             itemWrapper.appendChild(line);
             
             const arrow = document.createElement('div');
-            arrow.style.cssText = `position: absolute; left: -57px; top: 125px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 12px solid ${setupColor}; z-index: 2; transform: translateX(-6px);`;
+            arrow.style.cssText = `position: absolute; left: -65px; top: 125px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 12px solid ${flowColor}; z-index: 2;`;
             itemWrapper.appendChild(arrow);
         }
         
         const card = document.createElement('div');
-        card.style.cssText = `background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid ${setupColor}; border-radius: 15px; padding: 20px; transition: all 0.3s ease; cursor: pointer;`;
+        card.style.cssText = `background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid ${flowColor}; border-radius: 15px; padding: 20px; transition: all 0.3s ease; cursor: pointer;`;
         card.onmouseover = () => {
             card.style.borderColor = '#2196F3';
             card.style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(33, 150, 243, 0.1))';
             card.style.transform = 'translateX(5px)';
         };
         card.onmouseout = () => {
-            card.style.borderColor = setupColor;
+            card.style.borderColor = flowColor;
             card.style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))';
             card.style.transform = 'translateX(0)';
         };
@@ -4084,7 +4094,7 @@ function showPairHistory(pair) {
         card.innerHTML = `
             <div>
                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
-                    <span style="color: ${setupColor}; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
+                    <span style="color: ${flowColor}; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
                     <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusLabel}</span>
                     ${a.analysisStatus === 'Closed' && a.closeReason ? `<span style="background: ${a.closeReason === 'Correct' ? '#00E676' : '#FF5252'}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${a.closeReason === 'Correct' ? '✅ Correct' : '❌ Incorrect'}</span>` : ''}
                 </div>
@@ -4110,11 +4120,22 @@ function showPairHistory(pair) {
         timelineContainer.appendChild(itemWrapper);
     });
     
+    // RIGHT SIDE: Vertical ANALYSIS STATUS (centered)
+    const statusSide = document.createElement('div');
+    statusSide.style.cssText = 'display: flex; align-items: center; justify-content: center; min-width: 60px;';
+    statusSide.innerHTML = `
+        <div style="writing-mode: vertical-rl; transform: rotate(180deg); background: ${flowColor}; color: #000; padding: 20px 10px; border-radius: 25px; font-size: 1.1em; font-weight: 700; letter-spacing: 3px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            ANALYSIS ${flowStatus}
+        </div>
+    `;
+    
     mainContainer.appendChild(setupSide);
     mainContainer.appendChild(timelineContainer);
+    mainContainer.appendChild(statusSide);
     contentEl.appendChild(mainContainer);
     modalEl.style.display = 'flex';
 }
+
 
 function closeHistoryModal() {
     document.getElementById('historyModal').style.display = 'none';
