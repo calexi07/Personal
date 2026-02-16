@@ -4888,16 +4888,24 @@ function viewAnalysisByData(analysisData) {
         return;
     }
     
-    // Temporarily add to analyses array for viewAnalysis to work
-    const tempIndex = analyses.length;
-    analyses.push(fullAnalysis);
+    // Check if already in analyses array
+    const existingIndex = analyses.findIndex(a => a.deleteId === fullAnalysis.deleteId);
     
-    // Use standard viewAnalysis modal
-    viewAnalysis(tempIndex);
-    
-    // Remove temp entry after modal opens
-    setTimeout(() => {
-        analyses.pop();
+    if (existingIndex >= 0) {
+        // Already exists, use it
+        viewAnalysis(existingIndex);
+    } else {
+        // Temporarily add to analyses array for viewAnalysis to work
+        const tempIndex = analyses.length;
+        analyses.push(fullAnalysis);
+        
+        // Use standard viewAnalysis modal
+        viewAnalysis(tempIndex);
+        
+        // DON'T remove - let it stay so copy/download buttons work
+        // It will be cleaned up on next loadAnalyses()
+    }
+}
     }, 100);
 }
 
