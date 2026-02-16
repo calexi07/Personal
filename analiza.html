@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Version: V3-AERISIT-STALE-DETECTION -->
+    <!-- Version: V5-TIMELINE-CLEAN-FINAL -->
     <title>A random trader</title>
     
     <style>
@@ -4196,38 +4196,6 @@ function showPairHistory(pair) {
         timelineContainer.appendChild(itemWrapper);
     });
     
-    contentEl.appendChild(timelineContainer);
-                </div>
-                <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-start;">
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">
-                        👁️ View
-                    </button>
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">
-                        ✏️ Edit
-                    </button>
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">
-                        🔄 Update
-                    </button>
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysis(${mainIndex >= 0 ? mainIndex : 0})" 
-                            style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">
-                        🗑️ Delete
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        // Click on card opens View modal
-        card.onclick = () => {
-            if (mainIndex >= 0) {
-                closeHistoryModal();
-                viewAnalysis(mainIndex);
-            }
-        };
-        
     contentEl.appendChild(timelineContainer);
     
     modalEl.style.display = 'flex';
