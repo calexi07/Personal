@@ -1775,6 +1775,30 @@ function viewAnalysis(index) {
         `;
     }
     
+    // Close Information (if analysis is closed)
+    if (a.analysisStatus === 'Closed' && (a.closeReason || a.closeObservations)) {
+        const reasonBadge = a.closeReason === 'Correct' ? 
+            '<span style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; padding: 6px 16px; border-radius: 12px; font-size: 1em; font-weight: 700;">✅ Correct</span>' :
+            '<span style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; padding: 6px 16px; border-radius: 12px; font-size: 1em; font-weight: 700;">❌ Incorrect</span>';
+        
+        content += `
+            <div style="background: rgba(255, 82, 82, 0.15); border: 2px solid #FF5252; padding: 25px; border-radius: 15px; margin-top: 20px;">
+                <h3 style="color: #FF5252; margin-bottom: 15px; font-size: 1.5em; display: flex; align-items: center; gap: 10px;">
+                    <span>🔒</span> Analysis Closed
+                </h3>
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #90CAF9;">Result:</strong> ${reasonBadge}
+                </div>
+                ${a.closeObservations ? `
+                    <div>
+                        <strong style="color: #90CAF9; display: block; margin-bottom: 8px;">Observations:</strong>
+                        <p style="background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 8px; white-space: pre-wrap; line-height: 1.6;">${a.closeObservations}</p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+    
     if (!content) {
         content = '<p style="text-align: center; color: #888;">No analysis data available</p>';
     }
@@ -4032,6 +4056,11 @@ function showPairHistory(pair) {
                     <span style="color: #2196F3; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
                     <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusText}</span>
                     <span style="background: ${biasColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${a.marketBias || 'N/A'}</span>
+                    ${a.analysisStatus === 'Closed' && a.closeReason ? `
+                        <span style="background: ${a.closeReason === 'Correct' ? '#00E676' : '#FF5252'}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">
+                            ${a.closeReason === 'Correct' ? '✅ Correct' : '❌ Incorrect'}
+                        </span>
+                    ` : ''}
                 </div>
                 <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-start;">
@@ -4205,13 +4234,31 @@ async function saveCloseAnalysis() {
         return;
     }
     
+    // Get TODAY's date for the close action (like update)
+    const today = new Date();
+    const todayStr = formatDateLocal(today);
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    // Create NEW row with today's date + Closed status + reason/observations
     const closeData = {
-        action: 'close',
-        month: a.month,
-        day: a.day,
-        date: a.date,
-        year: a.year,
+        action: 'add', // Add new row like an update
+        month: monthNames[today.getMonth()],
+        day: dayNames[today.getDay()],
+        date: todayStr,
+        year: today.getFullYear(),
         pair: a.pair,
+        tradeStatus: a.tradeStatus || 'Analysis Only',
+        marketBias: a.marketBias || 'Bullish',
+        analysisStatus: 'Closed', // Set to Closed
+        weeklyAnalysis: a.weeklyAnalysis || '',
+        weeklyPhoto: a.weeklyPhoto || '',
+        dailyAnalysis: a.dailyAnalysis || '',
+        dailyPhoto: a.dailyPhoto || '',
+        fourHAnalysis: a.fourHAnalysis || '',
+        fourHPhoto: a.fourHPhoto || '',
+        oneHAnalysis: a.oneHAnalysis || '',
+        oneHPhoto: a.oneHPhoto || '',
         closeReason: reason,
         closeObservations: observations || ''
     };
