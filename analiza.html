@@ -3678,120 +3678,335 @@ function saveEdit() {
 
 // Render Active Analyses Dashboard
 function renderActiveDashboard() {
-    const grid = document.getElementById('activeDashboardGrid');
-    const empty = document.getElementById('activeDashboardEmpty');
+    const container = document.getElementById('activeDashboardContainer');
+    if (!container) return;
     
-    // ALL predefined pairs (29 total)
-    const allPairs = [
-        'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD',
-        'GBP/JPY', 'EUR/JPY', 'AUD/JPY', 'CHF/JPY', 'CAD/JPY', 'NZD/JPY',
-        'EUR/AUD', 'EUR/CHF', 'EUR/CAD', 'EUR/NZD', 'EUR/GBP',
-        'GBP/AUD', 'GBP/CHF', 'GBP/CAD', 'GBP/NZD',
-        'AUD/CHF', 'AUD/CAD', 'AUD/NZD', 'CAD/CHF', 'NZD/CHF',
-        'XAU/USD', 'XAG/USD'
-    ];
+    // Group pairs by category
+    const categories = {
+        'Major Pairs': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF'],
+        'EUR Crosses': ['EUR/GBP', 'EUR/JPY', 'EUR/CHF', 'EUR/CAD', 'EUR/AUD', 'EUR/NZD'],
+        'GBP Crosses': ['GBP/JPY', 'GBP/CHF', 'GBP/CAD', 'GBP/AUD', 'GBP/NZD'],
+        'JPY Crosses': ['CAD/JPY', 'CHF/JPY', 'AUD/JPY', 'NZD/JPY'],
+        'Commodity Pairs': ['AUD/USD', 'NZD/USD', 'USD/CAD', 'AUD/CAD', 'AUD/NZD', 'NZD/CAD'],
+        'Metals & Indices': ['XAU/USD', 'XAG/USD', 'US100', 'US30', 'GER40', 'UK100']
+    };
     
-    // Map each pair to its latest analysis (or null if no analysis)
-    const pairData = allPairs.map(pair => {
-        const pairAnalyses = analyses.filter(a => a.pair === pair);
-        return {
-            pair: pair,
-            analysis: pairAnalyses.length > 0 ? pairAnalyses[0] : null
-        };
+    // Get active analyses
+    const activeAnalyses = analyses.filter(a => a.analysisStatus === 'Active');
+    
+    // Group by category
+    const grouped = {};
+    Object.keys(categories).forEach(category => {
+        grouped[category] = activeAnalyses.filter(a => categories[category].includes(a.pair));
     });
     
-    console.log('Dashboard: Showing', pairData.length, 'pairs');
+    console.log('Dashboard: Showing', activeAnalyses.length, 'active analyses');
     
-    grid.style.display = 'grid';
-    empty.style.display = 'none';
-    
-    grid.innerHTML = pairData.map(({pair, analysis}) => {
-        // If no analysis, show placeholder
-        if (!analysis) {
-            return `
-                <div style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.05), rgba(33, 150, 243, 0.02)); border: 2px dashed rgba(33, 150, 243, 0.2); border-radius: 12px; padding: 15px; transition: all 0.3s ease; opacity: 0.6;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                        <h4 style="color: #64B5F6; margin: 0; font-size: 1.2em; font-weight: 700;">${pair}</h4>
-                        <span style="background: rgba(144, 202, 249, 0.2); color: #90CAF9; padding: 3px 10px; border-radius: 10px; font-size: 0.7em; font-weight: 700;">NO DATA</span>
-                    </div>
-                    <div style="color: #64B5F6; font-size: 0.85em; opacity: 0.7;">
-                        No analysis yet
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Has analysis - show data
-        const biasColor = analysis.marketBias === 'Bullish' ? '#00E676' : 
-                         analysis.marketBias === 'Bearish' ? '#FF5252' : '#90CAF9';
-        const biasIcon = analysis.marketBias === 'Bullish' ? '🟢' : 
-                        analysis.marketBias === 'Bearish' ? '🔴' : '⚪';
-        
-        let dateStr = '';
-        if (analysis.date) {
-            try {
-                dateStr = new Date(analysis.date).toLocaleDateString('ro-RO', { 
-                    day: '2-digit', 
-                    month: 'short', 
-                    year: 'numeric' 
-                });
-            } catch(e) {
-                dateStr = analysis.day + ', ' + analysis.month + ' ' + analysis.year;
+    // Create tabs + content
+    container.innerHTML = `
+        <style>
+            .dashboard-tabs {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 25px;
+                overflow-x: auto;
+                padding-bottom: 10px;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(33, 150, 243, 0.5) rgba(255, 255, 255, 0.1);
             }
-        } else {
-            dateStr = analysis.day + ', ' + analysis.month + ' ' + analysis.year;
-        }
+            
+            .dashboard-tabs::-webkit-scrollbar {
+                height: 6px;
+            }
+            
+            .dashboard-tabs::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 3px;
+            }
+            
+            .dashboard-tabs::-webkit-scrollbar-thumb {
+                background: rgba(33, 150, 243, 0.5);
+                border-radius: 3px;
+            }
+            
+            .tab-btn {
+                background: rgba(33, 150, 243, 0.1);
+                color: #90CAF9;
+                border: 2px solid rgba(33, 150, 243, 0.3);
+                padding: 12px 24px;
+                border-radius: 25px;
+                cursor: pointer;
+                font-size: 0.95em;
+                font-weight: 600;
+                white-space: nowrap;
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .tab-btn:hover {
+                background: rgba(33, 150, 243, 0.2);
+                border-color: rgba(33, 150, 243, 0.5);
+                transform: translateY(-2px);
+            }
+            
+            .tab-btn.active {
+                background: linear-gradient(135deg, #2196F3, #1976D2);
+                color: #fff;
+                border-color: #2196F3;
+                box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+            }
+            
+            .tab-badge {
+                display: inline-block;
+                background: rgba(255, 255, 255, 0.2);
+                padding: 2px 8px;
+                border-radius: 10px;
+                font-size: 0.8em;
+                margin-left: 8px;
+            }
+            
+            .tab-btn.active .tab-badge {
+                background: rgba(255, 255, 255, 0.3);
+            }
+            
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
+                animation: fadeInGrid 0.5s ease;
+            }
+            
+            @keyframes fadeInGrid {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .pair-card {
+                background: linear-gradient(135deg, rgba(26, 26, 42, 0.95), rgba(30, 30, 50, 0.95));
+                border: 2px solid rgba(33, 150, 243, 0.3);
+                border-radius: 15px;
+                padding: 20px;
+                cursor: pointer;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;
+                animation: cardSlideIn 0.4s ease backwards;
+            }
+            
+            @keyframes cardSlideIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.9) translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                }
+            }
+            
+            .pair-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(33, 150, 243, 0.1), transparent);
+                transition: left 0.5s ease;
+            }
+            
+            .pair-card:hover::before {
+                left: 100%;
+            }
+            
+            .pair-card:hover {
+                border-color: #2196F3;
+                transform: translateY(-5px) scale(1.02);
+                box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
+            }
+            
+            .pair-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+            
+            .pair-name {
+                font-size: 1.3em;
+                font-weight: 700;
+                color: #2196F3;
+            }
+            
+            .bias-badge {
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 0.8em;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
+            
+            .bias-bullish {
+                background: linear-gradient(135deg, #00E676, #00C853);
+                color: #000;
+            }
+            
+            .bias-bearish {
+                background: linear-gradient(135deg, #FF5252, #E53935);
+                color: #fff;
+            }
+            
+            .bias-neutral {
+                background: linear-gradient(135deg, #90CAF9, #64B5F6);
+                color: #000;
+            }
+            
+            .pair-date {
+                color: #90CAF9;
+                font-size: 0.85em;
+                margin-bottom: 10px;
+                opacity: 0.8;
+            }
+            
+            .trade-badge {
+                display: inline-block;
+                background: linear-gradient(135deg, #FF9500, #FF7B00);
+                color: #fff;
+                padding: 4px 10px;
+                border-radius: 15px;
+                font-size: 0.75em;
+                font-weight: 700;
+                margin-top: 10px;
+            }
+            
+            .card-actions {
+                display: flex;
+                gap: 8px;
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .card-btn {
+                flex: 1;
+                padding: 8px 12px;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 0.85em;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            }
+            
+            .btn-view {
+                background: linear-gradient(135deg, #2196F3, #1976D2);
+                color: #fff;
+            }
+            
+            .btn-view:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+            }
+            
+            .btn-history {
+                background: rgba(255, 255, 255, 0.1);
+                color: #90CAF9;
+                border: 1px solid rgba(33, 150, 243, 0.3);
+            }
+            
+            .btn-history:hover {
+                background: rgba(33, 150, 243, 0.2);
+                border-color: #2196F3;
+            }
+            
+            .empty-state {
+                text-align: center;
+                padding: 60px 20px;
+                color: #90CAF9;
+                font-size: 1.1em;
+            }
+            
+            .empty-icon {
+                font-size: 4em;
+                margin-bottom: 20px;
+                opacity: 0.5;
+            }
+        </style>
         
-        // Check if analysis needs update (2+ days old)
-        const now = new Date();
-        const analysisDate = new Date(analysis.date);
-        const daysSinceUpdate = Math.floor((now - analysisDate) / (1000 * 60 * 60 * 24));
+        <div class="dashboard-tabs">
+            ${Object.keys(categories).map((category, index) => {
+                const count = grouped[category].length;
+                return `
+                    <button class="tab-btn ${index === 0 ? 'active' : ''}" onclick="switchDashboardTab('${category}')" data-category="${category}">
+                        ${category}
+                        <span class="tab-badge">${count}</span>
+                    </button>
+                `;
+            }).join('')}
+        </div>
         
-        // Status badge with stale detection
-        let status = analysis.analysisStatus || 'Active';
-        let statusColor, statusTextColor, statusText;
-        
-        if (status === 'Closed') {
-            statusColor = 'linear-gradient(135deg, #FF5252, #E53935)';
-            statusTextColor = '#fff';
-            statusText = 'CLOSED';
-        } else if (daysSinceUpdate >= 2) {
-            // Stale analysis - needs update!
-            statusColor = 'linear-gradient(135deg, #FFB300, #FF8F00)';
-            statusTextColor = '#000';
-            statusText = '⚠️ NOT UPDATED';
-        } else {
-            // Active and fresh
-            statusColor = 'linear-gradient(135deg, #00E676, #00C853)';
-            statusTextColor = '#000';
-            statusText = 'ACTIVE';
-        }
-        
-        return `
-            <div style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 12px; padding: 15px; transition: all 0.3s ease; cursor: pointer;"
-                 onclick="showPairHistory('${pair}')"
-                 onmouseover="this.style.borderColor='#2196F3'; this.style.transform='translateY(-2px)'"
-                 onmouseout="this.style.borderColor='rgba(33, 150, 243, 0.3)'; this.style.transform='translateY(0)'">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                    <h4 style="color: #2196F3; margin: 0; font-size: 1.2em; font-weight: 700;">${pair}</h4>
-                    <span style="background: ${statusColor}; color: ${statusTextColor}; padding: 3px 10px; border-radius: 10px; font-size: 0.7em; font-weight: 700;">${statusText}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span style="font-size: 1.2em;">${biasIcon}</span>
-                    <span style="color: ${biasColor}; font-weight: 600; font-size: 0.95em;">${analysis.marketBias}</span>
-                </div>
-                <div style="color: #90CAF9; font-size: 0.85em;">
-                    <span style="opacity: 0.7;">Last update:</span> ${dateStr}
-                </div>
+        ${Object.keys(categories).map((category, catIndex) => `
+            <div class="dashboard-content" data-category="${category}" style="display: ${catIndex === 0 ? 'block' : 'none'};">
+                ${grouped[category].length > 0 ? `
+                    <div class="dashboard-grid">
+                        ${grouped[category].map((a, index) => {
+                            const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short', year: 'numeric' }) : `${a.day}, ${a.month}`;
+                            const biasClass = a.marketBias === 'Bullish' ? 'bias-bullish' : a.marketBias === 'Bearish' ? 'bias-bearish' : 'bias-neutral';
+                            const biasIcon = a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪';
+                            
+                            return `
+                                <div class="pair-card" style="animation-delay: ${index * 0.05}s;">
+                                    <div class="pair-header">
+                                        <div class="pair-name">${a.pair}</div>
+                                        <div class="bias-badge ${biasClass}">${biasIcon} ${a.marketBias}</div>
+                                    </div>
+                                    <div class="pair-date">📅 ${dateStr}</div>
+                                    ${a.tradeStatus === 'Trade Taken' ? '<div class="trade-badge">💰 Trade Active</div>' : ''}
+                                    <div class="card-actions">
+                                        <button class="card-btn btn-view" onclick="event.stopPropagation(); viewAnalysis(${analyses.indexOf(a)})">
+                                            👁️ View
+                                        </button>
+                                        <button class="card-btn btn-history" onclick="event.stopPropagation(); showPairHistory('${a.pair}')">
+                                            📊 History
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                ` : `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div>No active analyses in this category</div>
+                    </div>
+                `}
             </div>
-        `;
-    }).join('');
+        `).join('')}
+    `;
 }
 
-
-// ============================================
-// UPDATE MODE FUNCTION (Today's date, new version)
-// ============================================
+function switchDashboardTab(category) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.category === category) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Show/hide content
+    document.querySelectorAll('.dashboard-content').forEach(content => {
+        content.style.display = content.dataset.category === category ? 'block' : 'none';
+    });
+}
 
 function openEditPageForUpdate(i) {
     isUpdateMode = true;
@@ -4505,37 +4720,27 @@ async function deleteAnalysisByDeleteId(deleteId, pair) {
 
 function viewAnalysisByData(analysisData) {
     closeHistoryModal();
-    // Show in a modal
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        padding: 20px;
-    `;
     
-    modal.innerHTML = `
-        <div style="background: #1a1a2e; padding: 30px; border-radius: 15px; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative;">
-            <button onclick="this.closest('div').parentElement.remove()" style="position: absolute; top: 10px; right: 10px; background: #FF5252; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">✕ Close</button>
-            <h2 style="color: #2196F3; margin-bottom: 20px;">${analysisData.pair} Analysis</h2>
-            <p style="color: #90CAF9;"><strong>Date:</strong> ${new Date(analysisData.date).toLocaleDateString('ro-RO')}</p>
-            <p style="color: #90CAF9;"><strong>Status:</strong> ${analysisData.analysisStatus}</p>
-            <p style="color: #90CAF9;"><strong>Trade:</strong> ${analysisData.tradeStatus}</p>
-            <p style="color: #90CAF9;"><strong>Bias:</strong> ${analysisData.marketBias}</p>
-            ${analysisData.weeklyAnalysis ? `<div style="margin-top: 20px;"><h3 style="color: #FF9500;">Weekly Analysis:</h3><p style="color: #fff; white-space: pre-wrap;">${analysisData.weeklyAnalysis}</p></div>` : ''}
-            ${analysisData.dailyAnalysis ? `<div style="margin-top: 20px;"><h3 style="color: #FF9500;">Daily Analysis:</h3><p style="color: #fff; white-space: pre-wrap;">${analysisData.dailyAnalysis}</p></div>` : ''}
-            ${analysisData.fourHAnalysis ? `<div style="margin-top: 20px;"><h3 style="color: #FF9500;">4H Analysis:</h3><p style="color: #fff; white-space: pre-wrap;">${analysisData.fourHAnalysis}</p></div>` : ''}
-        </div>
-    `;
+    // Find in allAnalyses by deleteId to get complete data
+    const allData = window.allAnalyses || analyses;
+    const fullAnalysis = allData.find(a => a.deleteId === analysisData.deleteId);
     
-    document.body.appendChild(modal);
+    if (!fullAnalysis) {
+        customAlert('Analysis not found', 'Error', '❌');
+        return;
+    }
+    
+    // Temporarily add to analyses array for viewAnalysis to work
+    const tempIndex = analyses.length;
+    analyses.push(fullAnalysis);
+    
+    // Use standard viewAnalysis modal
+    viewAnalysis(tempIndex);
+    
+    // Remove temp entry after modal opens
+    setTimeout(() => {
+        analyses.pop();
+    }, 100);
 }
 
     </script>
