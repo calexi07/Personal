@@ -464,7 +464,7 @@
             <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
                 <div style="font-size: 4em; line-height: 1;">📊</div>
                 <div style="text-align: center;">
-                    <h1>Ass random trader</h1>
+                    <h1>A random trader</h1>
                     <p style="margin: 10px 0 0 0; font-size: 1.1em; color: #90CAF9; font-weight: 500; font-style: italic;">Market analysis made easy</p>
                 </div>
             </div>
@@ -1300,15 +1300,28 @@ function formatDateLocal(date) {
     return `${year}-${month}-${day}`;
 }
 
-// DOM
-const formPage = document.getElementById('formPage');
-const listPage = document.getElementById('listPage');
-const btnForm = document.getElementById('btnForm');
-const btnList = document.getElementById('btnList');
-// OLD SAVE BUTTON - Now handled by wizard
-// const saveBtn = document.getElementById('saveBtn');
-const analysisBody = document.getElementById('analysisBody');
-const loadingOverlay = document.getElementById('loadingOverlay');
+// DOM elements - will be initialized after DOM is ready
+let formPage, listPage, btnForm, btnList, analysisBody, loadingOverlay;
+
+// Initialize DOM elements when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('=== DOM Content Loaded ===');
+    formPage = document.getElementById('formPage');
+    listPage = document.getElementById('listPage');
+    btnForm = document.getElementById('btnForm');
+    btnList = document.getElementById('btnList');
+    analysisBody = document.getElementById('analysisBody');
+    loadingOverlay = document.getElementById('loadingOverlay');
+    
+    console.log('loadingOverlay element:', loadingOverlay);
+    
+    // Set up navigation
+    btnForm.onclick = () => showPage('form');
+    btnList.onclick = () => {
+        showPage('list');
+        loadAnalyses();
+    };
+});
 
 // Show/Hide Loading
 function showLoading() {
@@ -1320,11 +1333,6 @@ function hideLoading() {
 }
 
 // Navigation
-btnForm.onclick = () => showPage('form');
-btnList.onclick = () => {
-    showPage('list');
-    loadAnalyses();
-};
 
 function handlePairChange() {
     const pairSelect = document.getElementById('pair');
