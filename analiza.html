@@ -464,7 +464,7 @@
             <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
                 <div style="font-size: 4em; line-height: 1;">📊</div>
                 <div style="text-align: center;">
-                    <h1>Cristian - A stranger trader</h1>
+                    <h1>Cristian - A random trader</h1>
                     <p style="margin: 10px 0 0 0; font-size: 1.1em; color: #90CAF9; font-weight: 500; font-style: italic;">Market analysis made easy</p>
                 </div>
             </div>
@@ -4156,9 +4156,9 @@ function showPairHistory(pair) {
                     </div>
                     <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysisByData(a)" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">👁️ View</button>
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysisByData(a)" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">✏️ Edit</button>
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysisByData(a)" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">🔄 Update</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysisByDeleteId('${a.deleteId}', '${a.pair}')" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">👁️ View</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysisByDeleteId('${a.deleteId}', '${a.pair}')" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">✏️ Edit</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysisByDeleteId('${a.deleteId}', '${a.pair}')" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">🔄 Update</button>
                         <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysisByDeleteId('${a.deleteId}', '${a.pair}')" style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">🗑️ Delete</button>
                     </div>
                 </div>
@@ -4415,6 +4415,49 @@ function editAnalysisByData(analysisData) {
     
     // Use existing editAnalysis function with found index
     editAnalysis(index);
+}
+
+function viewAnalysisByDeleteId(deleteId, pair) {
+    closeHistoryModal();
+    
+    // Find in allAnalyses (full history) by deleteId
+    const allData = window.allAnalyses || analyses;
+    const analysis = allData.find(a => a.deleteId === deleteId);
+    
+    if (!analysis) {
+        customAlert('Analysis not found', 'Error', '❌');
+        return;
+    }
+    
+    viewAnalysisByData(analysis);
+}
+
+function editAnalysisByDeleteId(deleteId, pair) {
+    closeHistoryModal();
+    
+    // Find in MAIN analyses array (only latest versions)
+    const index = analyses.findIndex(a => a.deleteId === deleteId);
+    
+    if (index === -1) {
+        customAlert('Cannot edit: This is a historical version.\n\nYou can only edit the latest version from the main list.', 'Cannot Edit', '⚠️');
+        return;
+    }
+    
+    editAnalysis(index);
+}
+
+function updateAnalysisByDeleteId(deleteId, pair) {
+    closeHistoryModal();
+    
+    // Find in MAIN analyses array
+    const index = analyses.findIndex(a => a.deleteId === deleteId);
+    
+    if (index === -1) {
+        customAlert('Cannot update: This is a historical version.\n\nYou can only update the latest version from the main list.', 'Cannot Update', '⚠️');
+        return;
+    }
+    
+    updateAnalysis(index);
 }
 
 async function deleteAnalysisByDeleteId(deleteId, pair) {
