@@ -464,7 +464,7 @@
             <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
                 <div style="font-size: 4em; line-height: 1;">📊</div>
                 <div style="text-align: center;">
-                    <h1>As random trader</h1>
+                    <h1>A random trader</h1>
                     <p style="margin: 10px 0 0 0; font-size: 1.1em; color: #90CAF9; font-weight: 500; font-style: italic;">Market analysis made easy</p>
                 </div>
             </div>
@@ -4001,21 +4001,37 @@ function showPairHistory(pair) {
     }
     
     const allData = window.allAnalyses || analyses;
+    
+    // Sort by createdAt (when you wrote it) for TRUE chronological order
     const pairHistory = allData.filter(a => a.pair === pair).sort((a, b) => {
-        return new Date(b.date) - new Date(a.date);
+        // Primary sort: createdAt timestamp
+        if (a.createdAt && b.createdAt) {
+            return new Date(a.createdAt) - new Date(b.createdAt);
+        }
+        // Fallback: rowNumber
+        if (a.rowNumber !== undefined && b.rowNumber !== undefined) {
+            return a.rowNumber - b.rowNumber;
+        }
+        // Final fallback: date
+        return new Date(a.date) - new Date(b.date);
     });
     
     titleEl.textContent = `📊 ${pair} - Analysis History (${pairHistory.length} versions)`;
     contentEl.innerHTML = '';
     
-    // Reverse to chronological order (oldest first)
-    const chronological = [...pairHistory].reverse();
+    console.log('=== CHAIN SPLITTING (by createdAt) ===');
+    console.log('Sorted:', pairHistory.map(a => ({
+        createdAt: a.createdAt,
+        date: a.date,
+        status: a.analysisStatus
+    })));
     
     // Split into separate chains (each chain ends with Closed)
+    // pairHistory is already sorted oldest→newest by createdAt
     const chains = [];
     let currentChain = [];
     
-    chronological.forEach(a => {
+    pairHistory.forEach(a => {
         currentChain.push(a);
         if (a.analysisStatus === 'Closed') {
             chains.push([...currentChain]);
@@ -4027,6 +4043,11 @@ function showPairHistory(pair) {
     if (currentChain.length > 0) {
         chains.push(currentChain);
     }
+    
+    // Reverse chains so NEWEST chain is FIRST (top)
+    chains.reverse();
+    
+    console.log(`Total chains: ${chains.length}`);
     
     // Render each chain separately
     chains.forEach((chain, chainIndex) => {
