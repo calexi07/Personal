@@ -4139,11 +4139,15 @@ function switchDashboardTab(category) {
     });
 }
 
-function createAnalysisForPair(pair) {
-    // Pre-select pair using button selection
-    selectPair(pair);
-    // Switch to form page
+async function createAnalysisForPair(pair) {
+    // Switch to form page FIRST
     showPage('form');
+    
+    // Wait a bit for DOM to update
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // THEN select pair (which will advance to step 2)
+    await selectPair(pair);
 }
 
 function switchDashboardTab(category) {
