@@ -3689,8 +3689,13 @@ function saveEdit() {
 
 // Render Active Analyses Dashboard
 function renderActiveDashboard() {
+    console.log('=== renderActiveDashboard() CALLED ===');
     const container = document.getElementById('activeDashboardContainer');
-    if (!container) return;
+    console.log('Container element:', container);
+    if (!container) {
+        console.error('ERROR: activeDashboardContainer not found!');
+        return;
+    }
     
     // ALL pairs organized by category
     const categories = {
