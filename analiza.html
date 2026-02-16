@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Version: V7-CENTERED-LABELS-CORRECT-FLOW -->
+    <!-- Version: V8-SEPARATE-CHAINS-CORRECT-WRONG -->
     <title>A random trader</title>
     
     <style>
@@ -4011,130 +4011,168 @@ function showPairHistory(pair) {
     // Reverse to chronological order (oldest first)
     const chronological = [...pairHistory].reverse();
     
-    const firstAnalysis = chronological[0];
-    const lastAnalysis = chronological[chronological.length - 1];
-    const setupBias = firstAnalysis.marketBias;
-    const setupType = setupBias === 'Bullish' ? 'LONG' : setupBias === 'Bearish' ? 'SHORT' : 'NEUTRAL';
-    const setupColor = setupBias === 'Bullish' ? '#00E676' : setupBias === 'Bearish' ? '#FF5252' : '#90CAF9';
+    // Split into separate chains (each chain ends with Closed)
+    const chains = [];
+    let currentChain = [];
     
-    // Check if analysis is closed
-    const isClosed = lastAnalysis.analysisStatus === 'Closed';
-    const flowColor = isClosed ? '#FF5252' : '#00E676';
-    const flowStatus = isClosed ? 'CLOSED' : 'OPEN';
+    chronological.forEach(a => {
+        currentChain.push(a);
+        if (a.analysisStatus === 'Closed') {
+            chains.push([...currentChain]);
+            currentChain = [];
+        }
+    });
     
-    const mainContainer = document.createElement('div');
-    mainContainer.style.cssText = 'display: flex; gap: 30px; align-items: stretch; position: relative;';
+    // If there's an open chain, add it
+    if (currentChain.length > 0) {
+        chains.push(currentChain);
+    }
     
-    // LEFT SIDE: Vertical SETUP text (centered)
-    const setupSide = document.createElement('div');
-    setupSide.style.cssText = 'display: flex; align-items: center; justify-content: center; min-width: 60px; position: relative;';
-    setupSide.innerHTML = `
-        <div style="writing-mode: vertical-rl; transform: rotate(180deg); background: ${setupColor}; color: #000; padding: 20px 10px; border-radius: 25px; font-size: 1.1em; font-weight: 700; letter-spacing: 3px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-            ${setupType} SETUP
-        </div>
-    `;
-    
-    // MIDDLE: Timeline with cards
-    const timelineContainer = document.createElement('div');
-    timelineContainer.style.cssText = 'flex: 1; position: relative; padding-left: 80px;';
-    
-    chronological.forEach((a, index) => {
-        const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
-        const isFirst = (index === 0);
-        const isLast = (index === chronological.length - 1);
+    // Render each chain separately
+    chains.forEach((chain, chainIndex) => {
+        const firstAnalysis = chain[0];
+        const lastAnalysis = chain[chain.length - 1];
+        const setupBias = firstAnalysis.marketBias;
+        const setupType = setupBias === 'Bullish' ? 'LONG' : setupBias === 'Bearish' ? 'SHORT' : 'NEUTRAL';
+        const setupColor = setupBias === 'Bullish' ? '#00E676' : setupBias === 'Bearish' ? '#FF5252' : '#90CAF9';
         
-        let versionLabel, versionIcon, statusLabel;
-        if (isFirst) {
-            versionLabel = '📝 Initial Analysis';
-            versionIcon = '🎯';
-            statusLabel = 'START';
-        } else if (a.analysisStatus === 'Closed') {
-            versionLabel = '🔒 Closed';
-            versionIcon = '🔒';
-            statusLabel = 'FINISH';
+        // Check if chain is closed
+        const isClosed = lastAnalysis.analysisStatus === 'Closed';
+        const isCorrect = lastAnalysis.closeReason === 'Correct';
+        
+        let flowColor, flowStatus;
+        if (isClosed) {
+            flowColor = isCorrect ? '#00E676' : '#FF5252';
+            flowStatus = isCorrect ? 'CLOSED - CORRECT' : 'CLOSED - WRONG';
         } else {
-            versionLabel = `📝 Update ${index}`;
-            versionIcon = '🔄';
-            statusLabel = 'UPDATE';
+            flowColor = '#00E676';
+            flowStatus = 'OPEN';
         }
         
-        const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
-        const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date && an.weeklyAnalysis === a.weeklyAnalysis);
+        const chainContainer = document.createElement('div');
+        chainContainer.style.cssText = `
+            display: flex; 
+            gap: 30px; 
+            align-items: stretch; 
+            position: relative;
+            margin-bottom: ${chainIndex < chains.length - 1 ? '60px' : '0'};
+            padding-bottom: ${chainIndex < chains.length - 1 ? '40px' : '0'};
+            border-bottom: ${chainIndex < chains.length - 1 ? '3px dashed rgba(255,255,255,0.2)' : 'none'};
+        `;
         
-        const itemWrapper = document.createElement('div');
-        itemWrapper.style.cssText = 'position: relative; margin-bottom: 20px;';
-        
-        const node = document.createElement('div');
-        node.style.cssText = `position: absolute; left: -80px; top: 20px; width: 50px; height: 50px; background: ${flowColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5em; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 3;`;
-        node.textContent = versionIcon;
-        
-        if (!isLast) {
-            const line = document.createElement('div');
-            line.style.cssText = `position: absolute; left: -57px; top: 70px; width: 4px; height: 60px; background: ${flowColor}; z-index: 1;`;
-            itemWrapper.appendChild(line);
-            
-            const arrow = document.createElement('div');
-            arrow.style.cssText = `position: absolute; left: -65px; top: 125px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 12px solid ${flowColor}; z-index: 2;`;
-            itemWrapper.appendChild(arrow);
-        }
-        
-        const card = document.createElement('div');
-        card.style.cssText = `background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid ${flowColor}; border-radius: 15px; padding: 20px; transition: all 0.3s ease; cursor: pointer;`;
-        card.onmouseover = () => {
-            card.style.borderColor = '#2196F3';
-            card.style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(33, 150, 243, 0.1))';
-            card.style.transform = 'translateX(5px)';
-        };
-        card.onmouseout = () => {
-            card.style.borderColor = flowColor;
-            card.style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))';
-            card.style.transform = 'translateX(0)';
-        };
-        
-        card.innerHTML = `
-            <div>
-                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
-                    <span style="color: ${flowColor}; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
-                    <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusLabel}</span>
-                    ${a.analysisStatus === 'Closed' && a.closeReason ? `<span style="background: ${a.closeReason === 'Correct' ? '#00E676' : '#FF5252'}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${a.closeReason === 'Correct' ? '✅ Correct' : '❌ Incorrect'}</span>` : ''}
-                </div>
-                <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">👁️ View</button>
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">✏️ Edit</button>
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">🔄 Update</button>
-                    <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">🗑️ Delete</button>
-                </div>
+        // LEFT SIDE: Vertical SETUP text (centered)
+        const setupSide = document.createElement('div');
+        setupSide.style.cssText = 'display: flex; align-items: center; justify-content: center; min-width: 60px;';
+        setupSide.innerHTML = `
+            <div style="writing-mode: vertical-rl; transform: rotate(180deg); background: ${setupColor}; color: #000; padding: 20px 10px; border-radius: 25px; font-size: 1.1em; font-weight: 700; letter-spacing: 3px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                ${setupType} SETUP
             </div>
         `;
         
-        card.onclick = () => {
-            if (mainIndex >= 0) {
-                closeHistoryModal();
-                viewAnalysis(mainIndex);
-            }
-        };
+        // MIDDLE: Timeline with cards
+        const timelineContainer = document.createElement('div');
+        timelineContainer.style.cssText = 'flex: 1; position: relative; padding-left: 80px;';
         
-        itemWrapper.appendChild(node);
-        itemWrapper.appendChild(card);
-        timelineContainer.appendChild(itemWrapper);
+        chain.forEach((a, index) => {
+            const dateStr = a.date ? new Date(a.date).toLocaleDateString('ro-RO', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) : `${a.day}, ${a.month} ${a.year}`;
+            const isFirst = (index === 0);
+            const isLast = (index === chain.length - 1);
+            
+            let versionLabel, versionIcon, statusLabel;
+            if (isFirst) {
+                versionLabel = '📝 Initial Analysis';
+                versionIcon = '🎯';
+                statusLabel = 'START';
+            } else if (a.analysisStatus === 'Closed') {
+                versionLabel = '🔒 Closed';
+                versionIcon = '🔒';
+                statusLabel = 'FINISH';
+            } else {
+                versionLabel = `📝 Update ${index}`;
+                versionIcon = '🔄';
+                statusLabel = 'UPDATE';
+            }
+            
+            const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
+            const mainIndex = analyses.findIndex(an => an.pair === a.pair && an.date === a.date && an.weeklyAnalysis === a.weeklyAnalysis);
+            
+            const itemWrapper = document.createElement('div');
+            itemWrapper.style.cssText = 'position: relative; margin-bottom: 20px;';
+            
+            const node = document.createElement('div');
+            node.style.cssText = `position: absolute; left: -80px; top: 20px; width: 50px; height: 50px; background: ${flowColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5em; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 3;`;
+            node.textContent = versionIcon;
+            
+            if (!isLast) {
+                const line = document.createElement('div');
+                line.style.cssText = `position: absolute; left: -57px; top: 70px; width: 4px; height: 60px; background: ${flowColor}; z-index: 1;`;
+                itemWrapper.appendChild(line);
+                
+                const arrow = document.createElement('div');
+                arrow.style.cssText = `position: absolute; left: -65px; top: 125px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 12px solid ${flowColor}; z-index: 2;`;
+                itemWrapper.appendChild(arrow);
+            }
+            
+            const card = document.createElement('div');
+            card.style.cssText = `background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); border: 2px solid ${flowColor}; border-radius: 15px; padding: 20px; transition: all 0.3s ease; cursor: pointer;`;
+            card.onmouseover = () => {
+                card.style.borderColor = '#2196F3';
+                card.style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(33, 150, 243, 0.1))';
+                card.style.transform = 'translateX(5px)';
+            };
+            card.onmouseout = () => {
+                card.style.borderColor = flowColor;
+                card.style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))';
+                card.style.transform = 'translateX(0)';
+            };
+            
+            card.innerHTML = `
+                <div>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
+                        <span style="color: ${flowColor}; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
+                        <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusLabel}</span>
+                        ${a.analysisStatus === 'Closed' && a.closeReason ? `<span style="background: ${a.closeReason === 'Correct' ? '#00E676' : '#FF5252'}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${a.closeReason === 'Correct' ? '✅ Correct' : '❌ Incorrect'}</span>` : ''}
+                    </div>
+                    <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">👁️ View</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">✏️ Edit</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">🔄 Update</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+            
+            card.onclick = () => {
+                if (mainIndex >= 0) {
+                    closeHistoryModal();
+                    viewAnalysis(mainIndex);
+                }
+            };
+            
+            itemWrapper.appendChild(node);
+            itemWrapper.appendChild(card);
+            timelineContainer.appendChild(itemWrapper);
+        });
+        
+        // RIGHT SIDE: Vertical ANALYSIS STATUS (centered)
+        const statusSide = document.createElement('div');
+        statusSide.style.cssText = 'display: flex; align-items: center; justify-content: center; min-width: 80px;';
+        statusSide.innerHTML = `
+            <div style="writing-mode: vertical-rl; transform: rotate(180deg); background: ${flowColor}; color: #000; padding: 20px 10px; border-radius: 25px; font-size: 0.95em; font-weight: 700; letter-spacing: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-align: center;">
+                ANALYSIS ${flowStatus}
+            </div>
+        `;
+        
+        chainContainer.appendChild(setupSide);
+        chainContainer.appendChild(timelineContainer);
+        chainContainer.appendChild(statusSide);
+        contentEl.appendChild(chainContainer);
     });
     
-    // RIGHT SIDE: Vertical ANALYSIS STATUS (centered)
-    const statusSide = document.createElement('div');
-    statusSide.style.cssText = 'display: flex; align-items: center; justify-content: center; min-width: 60px;';
-    statusSide.innerHTML = `
-        <div style="writing-mode: vertical-rl; transform: rotate(180deg); background: ${flowColor}; color: #000; padding: 20px 10px; border-radius: 25px; font-size: 1.1em; font-weight: 700; letter-spacing: 3px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-            ANALYSIS ${flowStatus}
-        </div>
-    `;
-    
-    mainContainer.appendChild(setupSide);
-    mainContainer.appendChild(timelineContainer);
-    mainContainer.appendChild(statusSide);
-    contentEl.appendChild(mainContainer);
     modalEl.style.display = 'flex';
 }
+
 
 
 function closeHistoryModal() {
