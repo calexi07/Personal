@@ -4020,16 +4020,27 @@ function showPairHistory(pair) {
         
         const statusColor = a.analysisStatus === 'Closed' ? '#FF5252' : '#00E676';
         const statusText = a.analysisStatus === 'Closed' ? 'CLOSED' : 'ACTIVE';
-        const biasColor = a.marketBias === 'Bullish' ? '#00E676' : 
-                         a.marketBias === 'Bearish' ? '#FF5252' : '#90CAF9';
         
-        let versionLabel;
-        if (index === 0) {
-            versionLabel = a.analysisStatus === 'Closed' ? '🔴 Latest (Closed)' : '🟢 Latest';
-        } else if (index === pairHistory.length - 1) {
-            versionLabel = '📝 Initial';
+        // Determine setup type from FIRST analysis (initial bias)
+        const initialBias = pairHistory[pairHistory.length - 1].marketBias; // First item chronologically
+        const setupType = initialBias === 'Bullish' ? 'LONG' : initialBias === 'Bearish' ? 'SHORT' : 'NEUTRAL';
+        const setupColor = initialBias === 'Bullish' ? '#00E676' : initialBias === 'Bearish' ? '#FF5252' : '#90CAF9';
+        
+        // Determine version label
+        let versionLabel, versionIcon, isFirst, isLast;
+        isFirst = (index === pairHistory.length - 1); // Last in array = first chronologically
+        isLast = (index === 0); // First in array = last chronologically
+        
+        if (isFirst) {
+            versionLabel = '📝 Initial Analysis';
+            versionIcon = '🎯';
+        } else if (a.analysisStatus === 'Closed') {
+            versionLabel = '🔒 Closed';
+            versionIcon = '🔒';
         } else {
-            versionLabel = `📝 Update ${pairHistory.length - index - 1}`;
+            const updateNum = pairHistory.length - index - 1;
+            versionLabel = `📝 Update ${updateNum}`;
+            versionIcon = '🔄';
         }
         
         // Find this analysis in main analyses array for proper index
@@ -4039,23 +4050,71 @@ function showPairHistory(pair) {
             an.weeklyAnalysis === a.weeklyAnalysis
         );
         
+        // Create wrapper with left timeline + right card
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display: flex; gap: 20px; margin-bottom: 0; position: relative;';
+        
+        // LEFT SIDE: Timeline with setup label
+        const timeline = document.createElement('div');
+        timeline.style.cssText = `
+            width: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        `;
+        
+        timeline.innerHTML = `
+            <!-- Setup Label (only on first item) -->
+            ${isFirst ? `
+                <div style="background: ${setupColor}; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 0.85em; font-weight: 700; margin-bottom: 15px; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                    ${setupType} SETUP
+                </div>
+            ` : `<div style="height: 20px;"></div>`}
+            
+            <!-- Node -->
+            <div style="width: 50px; height: 50px; background: ${setupColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8em; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 2; position: relative;">
+                ${versionIcon}
+            </div>
+            
+            <!-- Vertical Line + Arrow (if not last) -->
+            ${!isLast ? `
+                <div style="width: 4px; height: 80px; background: linear-gradient(to bottom, ${setupColor}, ${setupColor}80); margin: 5px 0; position: relative;">
+                    <div style="position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); font-size: 2em; color: ${setupColor}; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                        ↓
+                    </div>
+                </div>
+            ` : ''}
+        `;
+        
+        // RIGHT SIDE: Card content
         const card = document.createElement('div');
-        card.style.cssText = 'background: rgba(33, 150, 243, 0.1); border: 2px solid rgba(33, 150, 243, 0.3); border-radius: 15px; padding: 20px; margin-bottom: 15px; transition: all 0.3s ease; cursor: pointer;';
+        card.style.cssText = `
+            flex: 1;
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05));
+            border: 2px solid ${setupColor};
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-top: ${isFirst ? '40px' : '20px'};
+        `;
         card.onmouseover = () => {
             card.style.borderColor = '#2196F3';
-            card.style.background = 'rgba(33, 150, 243, 0.15)';
+            card.style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(33, 150, 243, 0.1))';
+            card.style.transform = 'translateX(5px)';
         };
         card.onmouseout = () => {
-            card.style.borderColor = 'rgba(33, 150, 243, 0.3)';
-            card.style.background = 'rgba(33, 150, 243, 0.1)';
+            card.style.borderColor = setupColor;
+            card.style.background = 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))';
+            card.style.transform = 'translateX(0)';
         };
         
         card.innerHTML = `
             <div style="margin-bottom: 15px;">
                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
-                    <span style="color: #2196F3; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
+                    <span style="color: ${setupColor}; font-size: 1.3em; font-weight: 700;">${versionLabel}</span>
                     <span style="background: ${statusColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${statusText}</span>
-                    <span style="background: ${biasColor}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">${a.marketBias || 'N/A'}</span>
                     ${a.analysisStatus === 'Closed' && a.closeReason ? `
                         <span style="background: ${a.closeReason === 'Correct' ? '#00E676' : '#FF5252'}; color: #000; padding: 3px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 700;">
                             ${a.closeReason === 'Correct' ? '✅ Correct' : '❌ Incorrect'}
@@ -4092,7 +4151,10 @@ function showPairHistory(pair) {
             }
         };
         
-        contentEl.appendChild(card);
+        wrapper.appendChild(timeline);
+        wrapper.appendChild(card);
+        
+        contentEl.appendChild(wrapper);
     });
     
     modalEl.style.display = 'flex';
