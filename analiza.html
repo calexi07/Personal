@@ -464,7 +464,7 @@
             <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
                 <div style="font-size: 4em; line-height: 1;">📊</div>
                 <div style="text-align: center;">
-                    <h1>Cristian - A random trader</h1>
+                    <h1>Cristian - A stranger trader</h1>
                     <p style="margin: 10px 0 0 0; font-size: 1.1em; color: #90CAF9; font-weight: 500; font-style: italic;">Market analysis made easy</p>
                 </div>
             </div>
@@ -1185,7 +1185,7 @@
 
     <!-- View Analysis Modal -->
     <div class="loading-overlay" id="viewModal" style="display: none;">
-        <div style="background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); padding: 50px; border-radius: 25px; max-width: 95vw; width: 95%; max-height: 95vh; overflow-y: auto; border: 2px solid rgba(33, 150, 243, 0.5); position: relative; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
+        <div style="background: linear-gradient(135deg, rgba(26, 26, 42, 0.98), rgba(15, 30, 58, 0.98)); padding: 40px; border-radius: 25px; max-width: 80vw; width: 80%; max-height: 85vh; overflow-y: auto; border: 2px solid rgba(33, 150, 243, 0.5); position: relative; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
             <!-- Back button (top-left) -->
             <button id="backToDayBtn" onclick="backToDayModal()" style="display: none; position: absolute; top: 20px; left: 20px; background: rgba(33, 150, 243, 0.2); color: #2196F3; border: 2px solid #2196F3; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.3em; font-weight: bold; transition: all 0.3s ease; z-index: 10;">◄</button>
             
@@ -1716,8 +1716,8 @@ function viewAnalysis(index) {
                 </h3>
                 ${a.weeklyAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.weeklyAnalysis}</p>` : ''}
                 ${a.weeklyPhoto ? `
-                    <div style="margin-top: 15px;">
-                        <img src="${a.weeklyPhoto}" alt="Weekly Chart" style="width: 100%; max-width: 100%; border-radius: 10px; border: 2px solid #2196F3; cursor: pointer;" onclick="window.open('${a.weeklyPhoto}', '_blank')" title="Click to open in new tab">
+                    <div style="margin-top: 15px; text-align: center;">
+                        <img src="${a.weeklyPhoto}" alt="Weekly Chart" style="width: 70%; max-width: 70%; border-radius: 10px; border: 2px solid #2196F3; cursor: pointer;" onclick="window.open('${a.weeklyPhoto}', '_blank')" title="Click to open in new tab">
                     </div>
                 ` : ''}
             </div>
@@ -1733,8 +1733,8 @@ function viewAnalysis(index) {
                 </h3>
                 ${a.dailyAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.dailyAnalysis}</p>` : ''}
                 ${a.dailyPhoto ? `
-                    <div style="margin-top: 15px;">
-                        <img src="${a.dailyPhoto}" alt="Daily Chart" style="width: 100%; max-width: 100%; border-radius: 10px; border: 2px solid #4d9fff; cursor: pointer;" onclick="window.open('${a.dailyPhoto}', '_blank')" title="Click to open in new tab">
+                    <div style="margin-top: 15px; text-align: center;">
+                        <img src="${a.dailyPhoto}" alt="Daily Chart" style="width: 70%; max-width: 70%; border-radius: 10px; border: 2px solid #4d9fff; cursor: pointer;" onclick="window.open('${a.dailyPhoto}', '_blank')" title="Click to open in new tab">
                     </div>
                 ` : ''}
             </div>
@@ -1750,8 +1750,8 @@ function viewAnalysis(index) {
                 </h3>
                 ${a.fourHAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.fourHAnalysis}</p>` : ''}
                 ${a.fourHPhoto ? `
-                    <div style="margin-top: 15px;">
-                        <img src="${a.fourHPhoto}" alt="4H Chart" style="width: 100%; max-width: 100%; border-radius: 10px; border: 2px solid #9c27b0; cursor: pointer;" onclick="window.open('${a.fourHPhoto}', '_blank')" title="Click to open in new tab">
+                    <div style="margin-top: 15px; text-align: center;">
+                        <img src="${a.fourHPhoto}" alt="4H Chart" style="width: 70%; max-width: 70%; border-radius: 10px; border: 2px solid #9c27b0; cursor: pointer;" onclick="window.open('${a.fourHPhoto}', '_blank')" title="Click to open in new tab">
                     </div>
                 ` : ''}
             </div>
@@ -1767,8 +1767,8 @@ function viewAnalysis(index) {
                 </h3>
                 ${a.oneHAnalysis ? `<p style="margin-bottom: 15px; white-space: pre-wrap;">${a.oneHAnalysis}</p>` : ''}
                 ${a.oneHPhoto ? `
-                    <div style="margin-top: 15px;">
-                        <img src="${a.oneHPhoto}" alt="1H Chart" style="width: 100%; max-width: 100%; border-radius: 10px; border: 2px solid #00cc88; cursor: pointer;" onclick="window.open('${a.oneHPhoto}', '_blank')" title="Click to open in new tab">
+                    <div style="margin-top: 15px; text-align: center;">
+                        <img src="${a.oneHPhoto}" alt="1H Chart" style="width: 70%; max-width: 70%; border-radius: 10px; border: 2px solid #00cc88; cursor: pointer;" onclick="window.open('${a.oneHPhoto}', '_blank')" title="Click to open in new tab">
                     </div>
                 ` : ''}
             </div>
