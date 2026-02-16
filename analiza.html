@@ -4008,10 +4008,8 @@ function showPairHistory(pair) {
     titleEl.textContent = `📊 ${pair} - Analysis History (${pairHistory.length} versions)`;
     contentEl.innerHTML = '';
     
-    // Reverse to chronological order (oldest first)
     const chronological = [...pairHistory].reverse();
     
-    // Split into separate chains (each chain ends with Closed)
     const chains = [];
     let currentChain = [];
     
@@ -4027,78 +4025,73 @@ function showPairHistory(pair) {
         chains.push(currentChain);
     }
     
-    // REVERSE CHAINS - newest first (top)
     chains.reverse();
     
-    // Date filter dropdown
+    // Date picker filter
     const filterContainer = document.createElement('div');
-    filterContainer.style.cssText = 'margin-bottom: 30px;';
+    filterContainer.style.cssText = 'margin-bottom: 30px; display: flex; align-items: center; gap: 15px;';
     filterContainer.innerHTML = `
-        <label style="color: #90CAF9; margin-right: 10px; font-weight: 600;">Filter by Date:</label>
-        <select id="chainDateFilter" onchange="filterChainsByDate('${pair}')" style="background: rgba(255,255,255,0.1); color: #fff; border: 2px solid rgba(33,150,243,0.4); padding: 8px 12px; border-radius: 8px; cursor: pointer;">
-            <option value="ALL">All Chains</option>
-        </select>
+        <label style="color: #90CAF9; font-weight: 600;">Filter by Date:</label>
+        <input type="date" id="chainDatePicker" onchange="filterChainsByDate('${pair}')" 
+               style="background: rgba(255,255,255,0.1); color: #fff; border: 2px solid rgba(33,150,243,0.4); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.95em;">
+        <button onclick="clearDateFilter('${pair}')" 
+                style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9em; font-weight: 600;">
+            Clear Filter
+        </button>
+        <span id="filterStatus" style="color: #FFB300; font-size: 0.9em; font-weight: 600;"></span>
     `;
     contentEl.appendChild(filterContainer);
-    
-    const filterSelect = document.getElementById('chainDateFilter');
-    const uniqueDates = new Set();
-    chains.forEach(chain => {
-        chain.forEach(a => {
-            if (a.date) {
-                const dateOnly = new Date(a.date).toLocaleDateString('ro-RO', {day: '2-digit', month: 'short', year: 'numeric'});
-                uniqueDates.add(dateOnly);
-            }
-        });
-    });
-    uniqueDates.forEach(date => {
-        const option = document.createElement('option');
-        option.value = date;
-        option.textContent = date;
-        filterSelect.appendChild(option);
-    });
     
     const chainsContainer = document.createElement('div');
     chainsContainer.id = 'chainsContainer';
     contentEl.appendChild(chainsContainer);
     
+    window.currentPairChains = chains; // Store for filtering
+    window.currentPair = pair;
     renderChains(chains, pair);
     modalEl.style.display = 'flex';
 }
 
 function filterChainsByDate(pair) {
-    const filterValue = document.getElementById('chainDateFilter').value;
-    const allData = window.allAnalyses || analyses;
-    const pairHistory = allData.filter(a => a.pair === pair).sort((a, b) => {
-        return new Date(b.date) - new Date(a.date);
-    });
-    const chronological = [...pairHistory].reverse();
+    const dateInput = document.getElementById('chainDatePicker');
+    const selectedDate = dateInput.value; // Format: YYYY-MM-DD
+    const filterStatus = document.getElementById('filterStatus');
     
-    const chains = [];
-    let currentChain = [];
-    chronological.forEach(a => {
-        currentChain.push(a);
-        if (a.analysisStatus === 'Closed') {
-            chains.push([...currentChain]);
-            currentChain = [];
-        }
-    });
-    if (currentChain.length > 0) {
-        chains.push(currentChain);
+    if (!selectedDate) {
+        filterStatus.textContent = '';
+        renderChains(window.currentPairChains, pair);
+        return;
     }
-    chains.reverse();
     
-    if (filterValue === 'ALL') {
-        renderChains(chains, pair);
-    } else {
-        const filtered = chains.filter(chain => {
-            return chain.some(a => {
-                const dateOnly = new Date(a.date).toLocaleDateString('ro-RO', {day: '2-digit', month: 'short', year: 'numeric'});
-                return dateOnly === filterValue;
-            });
+    // Filter chains that contain an analysis matching the selected date
+    const filtered = window.currentPairChains.filter(chain => {
+        return chain.some(a => {
+            if (!a.date) return false;
+            const analysisDate = new Date(a.date);
+            const analysisDateStr = analysisDate.toISOString().split('T')[0]; // YYYY-MM-DD
+            return analysisDateStr === selectedDate;
         });
-        renderChains(filtered, pair);
-    }
+    });
+    
+    const formattedDate = new Date(selectedDate).toLocaleDateString('ro-RO', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+    });
+    
+    filterStatus.textContent = filtered.length > 0 
+        ? `Showing ${filtered.length} chain(s) for ${formattedDate}`
+        : `No chains found for ${formattedDate}`;
+    
+    renderChains(filtered, pair);
+}
+
+function clearDateFilter(pair) {
+    const dateInput = document.getElementById('chainDatePicker');
+    const filterStatus = document.getElementById('filterStatus');
+    dateInput.value = '';
+    filterStatus.textContent = '';
+    renderChains(window.currentPairChains, pair);
 }
 
 function renderChains(chains, pair) {
