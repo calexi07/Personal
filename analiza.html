@@ -4204,19 +4204,20 @@ function renderChains(chains, pair) {
             }
             
             const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
+            console.log(`Chain ${chainIndex}, Item ${index}: ${versionLabel} - mainIndex: ${mainIndex}, pair: ${a.pair}, date: ${a.date}`);
+            const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
             const hasTrade = a.tradeStatus === 'Trade Taken';
-            console.log(`Analysis ${versionLabel}: tradeStatus="${a.tradeStatus}", hasTrade=${hasTrade}, pair=${a.pair}, date=${a.date}`);
             
-            // FIX: Find correct index in MAIN analyses array using unique identifiers
+            // CRITICAL FIX: Match with MORE specific fields to avoid wrong index
             const mainIndex = analyses.findIndex(an => 
                 an.pair === a.pair && 
-                an.date === a.date && 
-                an.month === a.month &&
-                an.day === a.day &&
-                an.year === a.year
+                an.date === a.date &&
+                an.analysisStatus === a.analysisStatus &&
+                an.tradeStatus === a.tradeStatus &&
+                an.weeklyAnalysis === a.weeklyAnalysis
             );
             
-            console.log(`Chain ${chainIndex}, Item ${index}: ${versionLabel} - mainIndex: ${mainIndex}, pair: ${a.pair}, date: ${a.date}`);
+            console.log(`${versionLabel}: date=${a.date}, mainIndex=${mainIndex}, status=${a.analysisStatus}, trade=${a.tradeStatus}`);
             
             const itemWrapper = document.createElement('div');
             itemWrapper.style.cssText = 'position: relative; margin-bottom: 20px;';
