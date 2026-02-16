@@ -4156,10 +4156,10 @@ function showPairHistory(pair) {
                     </div>
                     <p style="color: #90CAF9; margin: 0 0 15px 0; font-size: 0.9em;">${dateStr}</p>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">👁️ View</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); viewAnalysisByData(a)" style="background: linear-gradient(135deg, #4d9fff, #3d7fff); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">👁️ View</button>
                         <button onclick="event.stopPropagation(); closeHistoryModal(); editAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF9500, #FF7B00); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">✏️ Edit</button>
                         <button onclick="event.stopPropagation(); closeHistoryModal(); updateAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 700; white-space: nowrap;">🔄 Update</button>
-                        <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysis(${mainIndex >= 0 ? mainIndex : 0})" style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">🗑️ Delete</button>
+                        <button onclick="event.stopPropagation(); closeHistoryModal(); deleteAnalysisByDeleteId('${a.deleteId}', '${a.pair}')" style="background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 600; white-space: nowrap;">🗑️ Delete</button>
                     </div>
                 </div>
             `;
@@ -4383,6 +4383,79 @@ function filterCalendarByPair() {
     const select = document.getElementById('calendarPairFilter');
     calendarFilterPair = select.value;
     renderCalendar(); // Re-render calendar with filter
+}
+
+async function deleteAnalysisByDeleteId(deleteId, pair) {
+    const confirmed = await customConfirm(`Delete this ${pair} analysis?`, 'Confirm Delete');
+    if (!confirmed) return;
+    
+    if (!deleteId) {
+        customAlert('Cannot delete: missing deleteId', 'Error', '❌');
+        return;
+    }
+    
+    console.log('Deleting by deleteId:', deleteId);
+    
+    showLoading();
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'delete',
+            deleteId: deleteId
+        })
+    })
+        .then(r => r.json())
+        .then(response => {
+            hideLoading();
+            console.log('Delete response:', response);
+            
+            if (response.success) {
+                customAlert('Analysis deleted successfully!', 'Deleted', '✅');
+                loadAnalyses();
+            } else {
+                customAlert(`Delete failed: ${response.message}\n\nPlease refresh and try again.`, 'Error', '❌');
+            }
+        })
+        .catch(err => {
+            console.error('Delete error:', err);
+            hideLoading();
+            customAlert('Delete error. Please try again.', 'Notice', 'ℹ️');
+        });
+}
+
+function viewAnalysisByData(analysisData) {
+    closeHistoryModal();
+    // Show in a modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 20px;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: #1a1a2e; padding: 30px; border-radius: 15px; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative;">
+            <button onclick="this.closest('div').parentElement.remove()" style="position: absolute; top: 10px; right: 10px; background: #FF5252; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">✕ Close</button>
+            <h2 style="color: #2196F3; margin-bottom: 20px;">${analysisData.pair} Analysis</h2>
+            <p style="color: #90CAF9;"><strong>Date:</strong> ${new Date(analysisData.date).toLocaleDateString('ro-RO')}</p>
+            <p style="color: #90CAF9;"><strong>Status:</strong> ${analysisData.analysisStatus}</p>
+            <p style="color: #90CAF9;"><strong>Trade:</strong> ${analysisData.tradeStatus}</p>
+            <p style="color: #90CAF9;"><strong>Bias:</strong> ${analysisData.marketBias}</p>
+            ${analysisData.weeklyAnalysis ? `<div style="margin-top: 20px;"><h3 style="color: #FF9500;">Weekly Analysis:</h3><p style="color: #fff; white-space: pre-wrap;">${analysisData.weeklyAnalysis}</p></div>` : ''}
+            ${analysisData.dailyAnalysis ? `<div style="margin-top: 20px;"><h3 style="color: #FF9500;">Daily Analysis:</h3><p style="color: #fff; white-space: pre-wrap;">${analysisData.dailyAnalysis}</p></div>` : ''}
+            ${analysisData.fourHAnalysis ? `<div style="margin-top: 20px;"><h3 style="color: #FF9500;">4H Analysis:</h3><p style="color: #fff; white-space: pre-wrap;">${analysisData.fourHAnalysis}</p></div>` : ''}
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
 }
 
     </script>
