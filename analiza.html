@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Version: V9-TRADE-BADGES-REVERSED-DATES-FILTER -->
+    <!-- Version: V10-ROWNUMBER-SORTING-COMPLETE -->
     <title>A random trader</title>
     
     <style>
@@ -4002,40 +4002,36 @@ function showPairHistory(pair) {
     
     const allData = window.allAnalyses || analyses;
     
-    // CRITICAL: Sort by ID (UUID timestamp) to get TRUE chronological order
-    // NOT by date, because multiple entries can have same date!
+    // Sort by rowNumber (spreadsheet order) for TRUE chronological order
     const pairHistory = allData
         .filter(a => a.pair === pair)
         .sort((a, b) => {
-            // If both have ID, compare IDs (UUIDs contain timestamps)
-            if (a.id && b.id) {
-                return a.id.localeCompare(b.id);
+            if (a.rowNumber !== undefined && b.rowNumber !== undefined) {
+                return a.rowNumber - b.rowNumber;
             }
-            // Fallback to date if no ID
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            return dateA - dateB;
+            // Fallback to date
+            return new Date(a.date) - new Date(b.date);
         });
     
     titleEl.textContent = `📊 ${pair} - Analysis History (${pairHistory.length} versions)`;
     contentEl.innerHTML = '';
     
     console.log('=== CHAIN SPLITTING DEBUG ===');
-    console.log('Sorted by ID:', pairHistory.map(a => ({
+    console.log('Sorted by rowNumber:', pairHistory.map(a => ({
+        row: a.rowNumber,
         date: a.date,
         status: a.analysisStatus,
         trade: a.tradeStatus,
-        bias: a.marketBias,
-        id: a.id ? a.id.substring(0, 8) : 'NO-ID'
+        bias: a.marketBias
     })));
     
-    // Split into separate chains (each chain ends with Closed)
+    // Split into chains (each ends with Closed)
     const chains = [];
     let currentChain = [];
     
     pairHistory.forEach((a, idx) => {
         currentChain.push(a);
-        console.log(`Analysis ${idx}: date=${a.date}, status=${a.analysisStatus}, bias=${a.marketBias}, id=${a.id ? a.id.substring(0, 8) : 'NO-ID'}`);
+        console.log(`Row ${a.rowNumber}: date=${a.date}, status=${a.analysisStatus}`);
         
         if (a.analysisStatus === 'Closed') {
             chains.push([...currentChain]);
@@ -4044,25 +4040,16 @@ function showPairHistory(pair) {
         }
     });
     
-    // If there's an open chain remaining, add it
     if (currentChain.length > 0) {
         chains.push(currentChain);
-        console.log(`⚠️ Open chain with ${currentChain.length} items added`);
+        console.log(`⚠️ Open chain with ${currentChain.length} items`);
     }
     
-    // Reverse chains so newest is first
-    chains.reverse();
+    chains.reverse(); // Newest first
     
     console.log(`📊 Total chains: ${chains.length}`);
-    chains.forEach((chain, idx) => {
-        const start = chain[0];
-        const end = chain[chain.length - 1];
-        console.log(`Chain ${idx}: ${chain.length} items`);
-        console.log(`  Start: ${start.date} (${start.marketBias}) - ID: ${start.id ? start.id.substring(0, 8) : 'NO-ID'}`);
-        console.log(`  End: ${end.date} (${end.analysisStatus}) - ID: ${end.id ? end.id.substring(0, 8) : 'NO-ID'}`);
-    });
     
-    // Date picker filter
+    // Date filter
     const filterContainer = document.createElement('div');
     filterContainer.style.cssText = 'margin-bottom: 30px; display: flex; align-items: center; gap: 15px;';
     filterContainer.innerHTML = `
@@ -4089,7 +4076,7 @@ function showPairHistory(pair) {
 
 function filterChainsByDate(pair) {
     const dateInput = document.getElementById('chainDatePicker');
-    const selectedDate = dateInput.value; // Format: YYYY-MM-DD
+    const selectedDate = dateInput.value;
     const filterStatus = document.getElementById('filterStatus');
     
     if (!selectedDate) {
@@ -4098,31 +4085,19 @@ function filterChainsByDate(pair) {
         return;
     }
     
-    const selected = new Date(selectedDate + 'T12:00:00'); // Noon to avoid timezone issues
+    const selected = new Date(selectedDate + 'T12:00:00');
     
-    // Filter chains where selected date is WITHIN the chain's date range
     const filtered = window.currentPairChains.filter(chain => {
         if (chain.length === 0) return false;
         
-        // Get first and last analysis dates
-        const firstAnalysis = chain[0];
-        const lastAnalysis = chain[chain.length - 1];
+        const startDate = new Date(chain[0].date);
+        const endDate = new Date(chain[chain.length - 1].date);
         
-        // Parse dates in local timezone (not UTC)
-        const startDate = new Date(firstAnalysis.date);
-        const endDate = new Date(lastAnalysis.date);
-        
-        // Normalize to midnight local time for comparison
         const startMidnight = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
         const endMidnight = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
         const selectedMidnight = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
         
-        // Check if selected date is within chain range (inclusive)
-        const isInRange = selectedMidnight >= startMidnight && selectedMidnight <= endMidnight;
-        
-        console.log(`Chain range: ${startMidnight.toLocaleDateString()} to ${endMidnight.toLocaleDateString()}, Selected: ${selectedMidnight.toLocaleDateString()}, In range: ${isInRange}`);
-        
-        return isInRange;
+        return selectedMidnight >= startMidnight && selectedMidnight <= endMidnight;
     });
     
     const formattedDate = selected.toLocaleDateString('ro-RO', {
@@ -4139,10 +4114,8 @@ function filterChainsByDate(pair) {
 }
 
 function clearDateFilter(pair) {
-    const dateInput = document.getElementById('chainDatePicker');
-    const filterStatus = document.getElementById('filterStatus');
-    dateInput.value = '';
-    filterStatus.textContent = '';
+    document.getElementById('chainDatePicker').value = '';
+    document.getElementById('filterStatus').textContent = '';
     renderChains(window.currentPairChains, pair);
 }
 
@@ -4224,16 +4197,13 @@ function renderChains(chains, pair) {
             const statusColor = statusLabel === 'START' ? '#2196F3' : statusLabel === 'FINISH' ? '#FF5252' : '#FFB300';
             const hasTrade = a.tradeStatus === 'Trade Taken';
             
-            // CRITICAL FIX: Match with MORE specific fields to avoid wrong index
+            // Find index in MAIN analyses array
             const mainIndex = analyses.findIndex(an => 
                 an.pair === a.pair && 
-                an.date === a.date &&
-                an.analysisStatus === a.analysisStatus &&
-                an.tradeStatus === a.tradeStatus &&
-                an.weeklyAnalysis === a.weeklyAnalysis
+                an.rowNumber === a.rowNumber
             );
             
-            console.log(`${versionLabel}: date=${a.date}, mainIndex=${mainIndex}, status=${a.analysisStatus}, trade=${a.tradeStatus}`);
+            console.log(`${versionLabel}: row=${a.rowNumber}, mainIndex=${mainIndex}, trade=${a.tradeStatus}`);
             
             const itemWrapper = document.createElement('div');
             itemWrapper.style.cssText = 'position: relative; margin-bottom: 20px;';
@@ -4309,307 +4279,3 @@ function renderChains(chains, pair) {
         chainsContainer.appendChild(chainContainer);
     });
 }
-
-function closeHistoryModal() {
-    document.getElementById('historyModal').style.display = 'none';
-}
-
-
-// Custom Alert (replaces alert())
-function customAlert(message, title = 'Notice', icon = '✅') {
-    const modal = document.getElementById('customAlertModal');
-    const iconEl = document.getElementById('customAlertIcon');
-    const titleEl = document.getElementById('customAlertTitle');
-    const messageEl = document.getElementById('customAlertMessage');
-    
-    if (!modal) return alert(message); // Fallback
-    
-    iconEl.textContent = icon;
-    titleEl.textContent = title;
-    messageEl.textContent = message;
-    modal.style.display = 'flex';
-}
-
-function closeCustomAlert() {
-    document.getElementById('customAlertModal').style.display = 'none';
-}
-
-// Custom Confirm (replaces confirm())
-let confirmCallback = null;
-
-function customConfirm(message, title = 'Confirm Action') {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('customConfirmModal');
-        const titleEl = document.getElementById('customConfirmTitle');
-        const messageEl = document.getElementById('customConfirmMessage');
-        
-        if (!modal) {
-            resolve(confirm(message)); // Fallback
-            return;
-        }
-        
-        titleEl.textContent = title;
-        messageEl.textContent = message;
-        modal.style.display = 'flex';
-        confirmCallback = resolve;
-    });
-}
-
-function closeCustomConfirm(result) {
-    document.getElementById('customConfirmModal').style.display = 'none';
-    if (confirmCallback) {
-        confirmCallback(result);
-        confirmCallback = null;
-    }
-}
-
-
-// Global variable to track which analysis is being closed
-let pendingCloseAnalysisIndex = -1;
-
-// Show/hide observations field based on reason
-document.addEventListener('DOMContentLoaded', function() {
-    const reasonSelect = document.getElementById('closeReasonSelect');
-    const observationsContainer = document.getElementById('observationsContainer');
-    
-    if (reasonSelect && observationsContainer) {
-        reasonSelect.addEventListener('change', function() {
-            if (this.value === 'Incorrect') {
-                observationsContainer.style.display = 'block';
-            } else {
-                observationsContainer.style.display = 'none';
-                document.getElementById('closeObservations').value = '';
-            }
-        });
-    }
-});
-
-// Modified updateAnalysis to show choice modal
-let originalUpdateAnalysisIndex = -1;
-
-function updateAnalysis(i) {
-    originalUpdateAnalysisIndex = i;
-    pendingCloseAnalysisIndex = i;
-    
-    const a = analyses[i];
-    document.getElementById('closeAnalysisPairName').textContent = a.pair;
-    
-    document.getElementById('updateChoiceModal').style.display = 'flex';
-    
-    // Setup button handlers
-    document.getElementById('continueUpdateBtn').onclick = () => {
-        closeUpdateChoiceModal();
-        openEditPageForUpdate(originalUpdateAnalysisIndex);
-    };
-    
-    document.getElementById('closeAnalysisBtn').onclick = () => {
-        closeUpdateChoiceModal();
-        showCloseAnalysisModal();
-    };
-}
-
-function closeUpdateChoiceModal() {
-    document.getElementById('updateChoiceModal').style.display = 'none';
-}
-
-function showCloseAnalysisModal() {
-    const modal = document.getElementById('closeAnalysisModal');
-    const reasonSelect = document.getElementById('closeReasonSelect');
-    const observationsContainer = document.getElementById('observationsContainer');
-    const observationsField = document.getElementById('closeObservations');
-    
-    // Reset form
-    reasonSelect.value = 'Correct';
-    observationsContainer.style.display = 'none';
-    observationsField.value = '';
-    
-    modal.style.display = 'flex';
-    
-    // Setup save button
-    document.getElementById('saveCloseAnalysisBtn').onclick = saveCloseAnalysis;
-}
-
-function closeCloseAnalysisModal() {
-    document.getElementById('closeAnalysisModal').style.display = 'none';
-}
-
-async function saveCloseAnalysis() {
-    if (pendingCloseAnalysisIndex < 0) return;
-    
-    const a = analyses[pendingCloseAnalysisIndex];
-    const reason = document.getElementById('closeReasonSelect').value;
-    const observations = document.getElementById('closeObservations').value;
-    
-    // Validate: if Incorrect, observations required
-    if (reason === 'Incorrect' && !observations.trim()) {
-        customAlert('Please provide observations for incorrect analysis', 'Missing Information', '⚠️');
-        return;
-    }
-    
-    // Get TODAY's date for the close action (like update)
-    const today = new Date();
-    const todayStr = formatDateLocal(today);
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    
-    // Create NEW row with today's date + Closed status + reason/observations
-    const closeData = {
-        action: 'add', // Add new row like an update
-        month: monthNames[today.getMonth()],
-        day: dayNames[today.getDay()],
-        date: todayStr,
-        year: today.getFullYear(),
-        pair: a.pair,
-        tradeStatus: a.tradeStatus || 'Analysis Only',
-        marketBias: a.marketBias || 'Bullish',
-        analysisStatus: 'Closed', // Set to Closed
-        weeklyAnalysis: a.weeklyAnalysis || '',
-        weeklyPhoto: a.weeklyPhoto || '',
-        dailyAnalysis: a.dailyAnalysis || '',
-        dailyPhoto: a.dailyPhoto || '',
-        fourHAnalysis: a.fourHAnalysis || '',
-        fourHPhoto: a.fourHPhoto || '',
-        oneHAnalysis: a.oneHAnalysis || '',
-        oneHPhoto: a.oneHPhoto || '',
-        closeReason: reason,
-        closeObservations: observations || ''
-    };
-    
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify(closeData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            closeCloseAnalysisModal();
-            customAlert(`${a.pair} analysis closed as ${reason}`, 'Analysis Closed', '🔒');
-            loadAnalyses();
-        } else {
-            customAlert('Failed to close analysis. Please try again.', 'Error', '❌');
-        }
-    } catch (err) {
-        console.error('Close error:', err);
-        customAlert('Error closing analysis. Please try again.', 'Error', '❌');
-    }
-}
-
-
-// Global calendar filter
-let calendarFilterPair = 'ALL';
-
-function filterCalendarByPair() {
-    const select = document.getElementById('calendarPairFilter');
-    calendarFilterPair = select.value;
-    renderCalendar(); // Re-render calendar with filter
-}
-
-    </script>
-<!-- Update Choice Modal -->
-<div id="updateChoiceModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 20000; align-items: center; justify-content: center;">
-    <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 500px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: modalSlideIn 0.3s ease;">
-        <h2 style="color: #fff; margin: 0 0 20px 0; font-size: 1.5em;">🔄 Update Analysis</h2>
-        <p style="color: #90CAF9; margin: 0 0 25px 0;">What would you like to do?</p>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <button id="continueUpdateBtn" style="width: 100%; background: linear-gradient(135deg, #00E676, #00C853); color: #000; border: none; padding: 15px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 700; transition: all 0.3s ease;">
-                ➕ Continue with Update
-            </button>
-            <button id="closeAnalysisBtn" style="width: 100%; background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 15px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
-                🔒 Close Analysis
-            </button>
-            <button onclick="closeUpdateChoiceModal()" style="width: 100%; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(255, 255, 255, 0.3); padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600;">
-                Cancel
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Close Analysis Modal -->
-<div id="closeAnalysisModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 20001; align-items: center; justify-content: center;">
-    <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: modalSlideIn 0.3s ease;">
-        <h2 style="color: #fff; margin: 0 0 20px 0; font-size: 1.5em;">🔒 Close Analysis</h2>
-        <p id="closeAnalysisPairName" style="color: #2196F3; margin: 0 0 20px 0; font-size: 1.2em; font-weight: 700;"></p>
-        
-        <label style="color: #90CAF9; display: block; margin-bottom: 8px; font-weight: 600;">Was the analysis correct?</label>
-        <select id="closeReasonSelect" style="width: 100%; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(33, 150, 243, 0.4); padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 1em;">
-            <option value="Correct">✅ Correct - Analysis was accurate</option>
-            <option value="Incorrect">❌ Incorrect - Analysis was wrong</option>
-        </select>
-        
-        <div id="observationsContainer" style="display: none;">
-            <label style="color: #90CAF9; display: block; margin-bottom: 8px; font-weight: 600;">Observations (What went wrong?):</label>
-            <textarea id="closeObservations" placeholder="Describe what went wrong with this analysis..." style="width: 100%; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(33, 150, 243, 0.4); padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 1em; min-height: 100px; resize: vertical;"></textarea>
-        </div>
-        
-        <div style="display: flex; gap: 12px;">
-            <button onclick="closeCloseAnalysisModal()" style="flex: 1; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(255, 255, 255, 0.3); padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600;">
-                Cancel
-            </button>
-            <button id="saveCloseAnalysisBtn" style="flex: 1; background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 700;">
-                🔒 Close Analysis
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Custom Alert Modal -->
-<div id="customAlertModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 20000; align-items: center; justify-content: center;">
-    <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 400px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: modalSlideIn 0.3s ease;">
-        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-            <div id="customAlertIcon" style="font-size: 2.5em;"></div>
-            <h3 id="customAlertTitle" style="color: #fff; margin: 0; font-size: 1.3em;"></h3>
-        </div>
-        <p id="customAlertMessage" style="color: #90CAF9; margin: 0 0 25px 0; line-height: 1.6; font-size: 1em;"></p>
-        <button id="customAlertBtn" onclick="closeCustomAlert()" style="width: 100%; background: linear-gradient(135deg, #2196F3, #1976D2); color: #fff; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
-            OK
-        </button>
-    </div>
-</div>
-
-<!-- Custom Confirm Modal -->
-<div id="customConfirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 20000; align-items: center; justify-content: center;">
-    <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 30px; max-width: 400px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); animation: modalSlideIn 0.3s ease;">
-        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-            <div style="font-size: 2.5em;">⚠️</div>
-            <h3 id="customConfirmTitle" style="color: #fff; margin: 0; font-size: 1.3em;">Confirm Action</h3>
-        </div>
-        <p id="customConfirmMessage" style="color: #90CAF9; margin: 0 0 25px 0; line-height: 1.6; font-size: 1em;"></p>
-        <div style="display: flex; gap: 12px;">
-            <button onclick="closeCustomConfirm(false)" style="flex: 1; background: rgba(255, 255, 255, 0.1); color: #fff; border: 2px solid rgba(255, 255, 255, 0.3); padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
-                Cancel
-            </button>
-            <button onclick="closeCustomConfirm(true)" style="flex: 1; background: linear-gradient(135deg, #FF5252, #E53935); color: #fff; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease;">
-                Confirm
-            </button>
-        </div>
-    </div>
-</div>
-
-<style>
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-</style>
-
-    <!-- History Modal -->
-    <div id="historyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; overflow-y: auto; padding: 40px 20px;">
-        <div style="max-width: 1000px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
-            <div style="background: linear-gradient(135deg, #2196F3, #1976D2); padding: 25px 30px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                <h2 id="historyModalTitle" style="color: #fff; margin: 0; font-size: 1.8em;">📊 Analysis History</h2>
-                <button onclick="closeHistoryModal()" style="background: rgba(255, 255, 255, 0.2); border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.5em; display: flex; align-items: center; justify-content: center;">×</button>
-            </div>
-            <div id="historyModalContent" style="padding: 30px; max-height: 70vh; overflow-y: auto;"></div>
-        </div>
-    </div>
-
-</body>
-</html>
