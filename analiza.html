@@ -1398,9 +1398,10 @@ function checkAuth() {
 // Load Analyses
 function loadAnalyses() {
     showLoading();
-    fetch(GOOGLE_SCRIPT_URL + '?action=get&sheet=Sheet1')
+    fetch(GOOGLE_SCRIPT_URL)
         .then(r => r.json())
         .then(res => {
+            console.log('Raw response from Google Script:', res);
             hideLoading();
             // Handle direct array response from Google Apps Script
             let rawData = [];
@@ -1410,6 +1411,11 @@ function loadAnalyses() {
                 rawData = res.data || [];
             } else {
                 throw new Error(res.message || 'Failed to load data');
+            }
+            
+            console.log('Parsed rawData:', rawData.length, 'analyses');
+            if (rawData.length > 0) {
+                console.log('First analysis sample:', rawData[0]);
             }
             
             // Store ALL versions in allAnalyses (for history)
@@ -1434,6 +1440,8 @@ function loadAnalyses() {
             
             // Convert to array
             analyses = Object.values(latestByPair);
+            
+            console.log('Latest analyses for display:', analyses.length);
             
             filteredAnalyses = [...analyses];
             populateFilterDropdowns();
