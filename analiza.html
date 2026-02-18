@@ -3,32 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A random trader</title>
+    <title>A Random Trader</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-
     <style>
         :root {
-            --bg: #080c14;
-            --surface: #0d1520;
-            --surface2: #111c2d;
-            --border: rgba(255,255,255,0.07);
-            --border-active: rgba(33,150,243,0.4);
-            --blue: #2196F3;
-            --blue-dim: rgba(33,150,243,0.15);
-            --cyan: #00BCD4;
-            --green: #00E676;
-            --red: #FF5252;
-            --orange: #FF9800;
-            --gold: #FFD54F;
-            --text: #e8edf4;
-            --text-dim: #6b7a94;
-            --text-mid: #9aabc2;
+            /* Softened dark palette — lifted from near-black to deep navy-slate */
+            --bg:        #0e1520;
+            --surface:   #151e2e;
+            --surface2:  #1c2740;
+            --surface3:  #243050;
+            --border:    rgba(255,255,255,0.09);
+            --border-active: rgba(33,150,243,0.45);
+            --blue:      #3ba3f5;
+            --blue-dim:  rgba(59,163,245,0.13);
+            --cyan:      #22d3ee;
+            --green:     #22e5a0;
+            --red:       #f87272;
+            --orange:    #fb923c;
+            --gold:      #fcd34d;
+            --purple:    #a78bfa;
+            --text:      #dde4f0;
+            --text-dim:  #6e7e98;
+            --text-mid:  #9aaec8;
             --font-display: 'Syne', sans-serif;
-            --font-body: 'DM Sans', sans-serif;
-            --font-mono: 'DM Mono', monospace;
-            --radius: 14px;
-            --radius-sm: 8px;
+            --font-body:    'DM Sans', sans-serif;
+            --font-mono:    'DM Mono', monospace;
+            --radius:    14px;
+            --radius-sm: 9px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,8 +41,63 @@
             color: var(--text);
             min-height: 100vh;
             background-image:
-                radial-gradient(ellipse 60% 40% at 20% 0%, rgba(33,150,243,0.06) 0%, transparent 60%),
-                radial-gradient(ellipse 40% 30% at 80% 100%, rgba(0,188,212,0.04) 0%, transparent 60%);
+                radial-gradient(ellipse 70% 45% at 15% 0%, rgba(59,163,245,0.07) 0%, transparent 65%),
+                radial-gradient(ellipse 45% 35% at 85% 100%, rgba(34,211,238,0.05) 0%, transparent 65%);
+        }
+
+        /* ── TICKER BAR ── */
+        .ticker-bar {
+            background: linear-gradient(90deg, #0a1628, #0d1c35, #0a1628);
+            border-bottom: 1px solid rgba(251,146,60,0.2);
+            height: 34px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .ticker-label {
+            background: var(--orange);
+            color: #1a0a00;
+            font-family: var(--font-mono);
+            font-size: 0.68em;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 0 14px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 2;
+        }
+        .ticker-fade-l {
+            position: absolute; left: 80px; top: 0; bottom: 0; width: 40px;
+            background: linear-gradient(to right, #0a1628, transparent);
+            z-index: 1; pointer-events: none;
+        }
+        .ticker-track {
+            display: flex;
+            animation: ticker-run 35s linear infinite;
+            white-space: nowrap;
+            padding-left: 20px;
+        }
+        .ticker-track:hover { animation-play-state: paused; cursor: default; }
+        .ticker-item {
+            font-family: var(--font-mono);
+            font-size: 0.75em;
+            color: var(--text-mid);
+            padding: 0 28px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .ticker-item .t-pair { color: var(--orange); font-weight: 500; }
+        .ticker-item .t-warn { color: var(--orange); font-size: 0.85em; }
+        .ticker-item .t-ok { color: var(--green); }
+        .ticker-sep { color: rgba(255,255,255,0.12); margin-right: 28px; font-size: 0.9em; }
+        @keyframes ticker-run {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
         /* ── TOPBAR ── */
@@ -48,802 +105,459 @@
             position: sticky; top: 0; z-index: 100;
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 32px;
-            height: 64px;
-            background: rgba(8,12,20,0.85);
-            backdrop-filter: blur(16px);
+            height: 62px;
+            background: rgba(14,21,32,0.92);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
         }
-
-        .topbar-brand {
-            display: flex; align-items: center; gap: 12px;
-        }
-
+        .topbar-brand { display: flex; align-items: center; gap: 12px; }
         .topbar-brand .icon {
-            width: 36px; height: 36px;
+            width: 34px; height: 34px;
             background: linear-gradient(135deg, var(--blue), var(--cyan));
-            border-radius: 10px;
+            border-radius: 9px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.1em;
+            font-size: 1em;
+            box-shadow: 0 4px 14px rgba(59,163,245,0.3);
         }
-
         .topbar-brand h1 {
             font-family: var(--font-display);
-            font-size: 1.15em;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-            background: linear-gradient(135deg, #fff 60%, var(--blue));
+            font-size: 1.1em; font-weight: 700;
+            letter-spacing: -0.2px;
+            background: linear-gradient(120deg, #e8edf8 50%, var(--blue));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-
-        .topbar-nav {
-            display: flex; gap: 4px;
-        }
-
+        .topbar-right { display: flex; align-items: center; gap: 10px; }
+        .topbar-meta { font-family: var(--font-mono); font-size: 0.72em; color: var(--text-dim); }
         .nav-pill {
-            font-family: var(--font-body);
-            font-size: 0.85em;
-            font-weight: 600;
-            padding: 8px 20px;
-            border-radius: 30px;
-            border: 1px solid transparent;
-            background: transparent;
-            color: var(--text-dim);
-            cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: 0.2px;
+            font-family: var(--font-body); font-size: 0.84em; font-weight: 600;
+            padding: 7px 18px; border-radius: 30px; border: 1px solid transparent;
+            background: transparent; color: var(--text-dim); cursor: pointer; transition: all 0.2s;
         }
-
-        .nav-pill:hover { color: var(--text); background: var(--surface2); }
-
-        .nav-pill.active {
-            background: var(--blue);
-            color: #fff;
-            border-color: transparent;
-            box-shadow: 0 0 20px rgba(33,150,243,0.35);
-        }
+        .nav-pill:hover { color: var(--text); background: var(--surface2); border-color: var(--border); }
+        .nav-pill.active { background: var(--blue); color: #fff; border-color: transparent; box-shadow: 0 0 18px rgba(59,163,245,0.35); }
 
         /* ── LAYOUT ── */
-        .main {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 32px 24px;
-        }
-
-        /* ── PAGE TRANSITIONS ── */
-        .page { display: none; animation: fadeUp 0.35s ease; }
+        .main { max-width: 1440px; margin: 0 auto; padding: 28px 24px; }
+        .page { display: none; animation: fadeUp 0.3s ease; }
         .page.active { display: block; }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* ── SECTION HEADER ── */
         .section-header {
             display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
         }
-
-        .section-title {
-            font-family: var(--font-display);
-            font-size: 1.5em;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
+        .section-title { font-family: var(--font-display); font-size: 1.45em; font-weight: 700; letter-spacing: -0.4px; }
         .section-title span { color: var(--blue); }
 
-        /* ── TABS (category) ── */
-        .tab-strip {
-            display: flex; gap: 8px; flex-wrap: wrap;
-            margin-bottom: 28px;
-        }
-
+        /* ── CATEGORY TABS ── */
+        .tab-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 26px; }
         .tab-chip {
-            font-family: var(--font-body);
-            font-size: 0.82em;
-            font-weight: 600;
-            padding: 8px 18px;
-            border-radius: 30px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            color: var(--text-dim);
-            cursor: pointer;
-            transition: all 0.2s;
+            font-family: var(--font-body); font-size: 0.81em; font-weight: 600;
+            padding: 8px 17px; border-radius: 30px; border: 1px solid var(--border);
+            background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all 0.2s;
             display: flex; align-items: center; gap: 8px;
         }
-
         .tab-chip:hover { border-color: var(--border-active); color: var(--text); }
-
-        .tab-chip.active {
-            background: var(--blue);
-            border-color: var(--blue);
-            color: #fff;
-            box-shadow: 0 4px 16px rgba(33,150,243,0.3);
-        }
-
-        .tab-chip .count {
-            background: rgba(255,255,255,0.18);
-            padding: 2px 7px;
-            border-radius: 10px;
-            font-size: 0.85em;
-        }
-
-        .tab-chip:not(.active) .count {
-            background: rgba(255,255,255,0.08);
-        }
+        .tab-chip.active { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 4px 16px rgba(59,163,245,0.28); }
+        .tab-chip .count { background: rgba(255,255,255,0.18); padding: 2px 7px; border-radius: 10px; font-size: 0.85em; }
+        .tab-chip:not(.active) .count { background: rgba(255,255,255,0.07); }
 
         /* ── PAIR GRID ── */
         .pair-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+            gap: 15px;
         }
 
-        /* ── PAIR CARD ── */
+        /* ── PAIR CARD — redesigned ── */
         .pair-card {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 20px;
+            overflow: hidden;
             transition: all 0.25s ease;
             position: relative;
-            overflow: hidden;
+            display: flex; flex-direction: column;
         }
-
-        .pair-card::before {
-            content: '';
-            position: absolute; top: 0; left: 0; right: 0; height: 2px;
-            background: transparent;
-            transition: background 0.3s;
-        }
-
-        .pair-card.has-analysis::before { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
-        .pair-card.bullish::before { background: linear-gradient(90deg, var(--green), var(--cyan)); }
-        .pair-card.bearish::before { background: linear-gradient(90deg, var(--red), var(--orange)); }
-        .pair-card.neutral::before { background: linear-gradient(90deg, var(--text-dim), var(--blue)); }
-
         .pair-card:hover {
-            border-color: var(--border-active);
+            border-color: rgba(59,163,245,0.3);
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 36px rgba(0,0,0,0.35);
         }
 
-        .pair-card-header {
-            display: flex; align-items: flex-start; justify-content: space-between;
-            margin-bottom: 16px;
+        /* top colour strip */
+        .card-strip {
+            height: 3px; width: 100%;
+            background: var(--surface3);
+            flex-shrink: 0;
         }
+        .pair-card.bullish  .card-strip { background: linear-gradient(90deg, #16a34a, var(--green), var(--cyan)); }
+        .pair-card.bearish  .card-strip { background: linear-gradient(90deg, #b91c1c, var(--red), var(--orange)); }
+        .pair-card.neutral  .card-strip { background: linear-gradient(90deg, var(--text-dim), var(--blue)); }
+        .pair-card.no-data  .card-strip { background: var(--surface3); }
 
-        .pair-name {
-            font-family: var(--font-display);
-            font-size: 1.25em;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-            color: var(--text);
-        }
+        .card-body { padding: 18px 18px 14px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
 
-        .currency-tags {
-            display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;
-        }
-
+        /* pair header row */
+        .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+        .card-pair-info { display: flex; flex-direction: column; gap: 5px; }
+        .pair-name { font-family: var(--font-display); font-size: 1.22em; font-weight: 800; letter-spacing: -0.5px; }
+        .currency-tags { display: flex; gap: 4px; }
         .ctag {
-            font-family: var(--font-mono);
-            font-size: 0.62em;
-            font-weight: 500;
-            padding: 3px 7px;
-            border-radius: 5px;
-            letter-spacing: 0.5px;
-            border: 1px solid;
+            font-family: var(--font-mono); font-size: 0.6em; font-weight: 500;
+            padding: 3px 7px; border-radius: 5px; border: 1px solid; letter-spacing: 0.4px;
         }
-
-        .pair-count-badge {
-            font-family: var(--font-mono);
-            font-size: 0.72em;
-            font-weight: 500;
-            background: var(--blue-dim);
-            color: var(--blue);
-            border: 1px solid var(--border-active);
-            padding: 4px 10px;
-            border-radius: 20px;
+        .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+        .count-badge {
+            font-family: var(--font-mono); font-size: 0.7em; font-weight: 500;
+            background: var(--blue-dim); color: var(--blue); border: 1px solid var(--border-active);
+            padding: 3px 9px; border-radius: 20px;
         }
-
-        .pair-meta {
-            margin-bottom: 16px;
-            min-height: 52px;
-        }
-
-        .pair-date {
-            font-family: var(--font-mono);
-            font-size: 0.75em;
-            color: var(--text-dim);
-            margin-bottom: 10px;
-            display: flex; align-items: center; gap: 6px;
-        }
-
-        .pair-badges {
-            display: flex; gap: 6px; flex-wrap: wrap;
-        }
-
-        .badge {
-            font-size: 0.72em;
-            font-weight: 600;
-            padding: 5px 11px;
-            border-radius: 20px;
-            border: 1px solid;
-            display: flex; align-items: center; gap: 4px;
-        }
-
-        .badge-bullish { background: rgba(0,230,118,0.1); color: var(--green); border-color: rgba(0,230,118,0.25); }
-        .badge-bearish { background: rgba(255,82,82,0.1); color: var(--red); border-color: rgba(255,82,82,0.25); }
-        .badge-neutral { background: rgba(155,175,200,0.08); color: var(--text-mid); border-color: rgba(155,175,200,0.2); }
-        .badge-trade { background: rgba(255,152,0,0.1); color: var(--orange); border-color: rgba(255,152,0,0.25); }
-        .badge-noanalysis { background: rgba(255,255,255,0.03); color: var(--text-dim); border-color: var(--border); }
-
-        .pair-actions {
-            display: flex; gap: 8px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border);
-        }
-
-        .btn {
-            font-family: var(--font-body);
-            font-size: 0.82em;
-            font-weight: 600;
-            padding: 9px 16px;
-            border-radius: var(--radius-sm);
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex; align-items: center; gap: 6px;
+        .stale-pill {
+            font-family: var(--font-mono); font-size: 0.65em; font-weight: 500;
+            background: rgba(251,146,60,0.12); color: var(--orange);
+            border: 1px solid rgba(251,146,60,0.28); padding: 3px 9px; border-radius: 20px;
             white-space: nowrap;
         }
 
-        .btn-primary { background: var(--blue); color: #fff; flex: 2; justify-content: center; }
-        .btn-primary:hover { background: #1e88e5; box-shadow: 0 4px 12px rgba(33,150,243,0.35); }
+        /* card middle info */
+        .card-info { display: flex; flex-direction: column; gap: 6px; min-height: 50px; }
+        .card-date { font-family: var(--font-mono); font-size: 0.72em; color: var(--text-dim); display: flex; align-items: center; gap: 5px; }
+        .card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+        .badge {
+            font-size: 0.71em; font-weight: 600; padding: 4px 10px;
+            border-radius: 20px; border: 1px solid; display: flex; align-items: center; gap: 4px;
+        }
+        .badge-bullish { background: rgba(34,229,160,0.1); color: var(--green); border-color: rgba(34,229,160,0.25); }
+        .badge-bearish { background: rgba(248,114,114,0.1); color: var(--red);   border-color: rgba(248,114,114,0.25); }
+        .badge-neutral { background: rgba(155,175,200,0.08); color: var(--text-mid); border-color: rgba(155,175,200,0.2); }
+        .badge-trade   { background: rgba(251,146,60,0.1); color: var(--orange); border-color: rgba(251,146,60,0.25); }
+        .badge-nodata  { background: rgba(255,255,255,0.03); color: var(--text-dim); border-color: var(--border); font-style: italic; }
+        .badge-latest  { background: var(--blue-dim); color: var(--blue); border-color: var(--border-active); }
 
+        /* card preview snippet */
+        .card-snippet {
+            font-size: 0.78em; color: var(--text-dim); line-height: 1.5;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            padding: 8px 10px; background: rgba(255,255,255,0.02);
+            border-radius: 7px; border: 1px solid var(--border);
+            font-family: var(--font-body);
+        }
+
+        /* card actions */
+        .card-actions {
+            display: flex; gap: 7px;
+            padding: 14px 18px 16px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            font-family: var(--font-body); font-size: 0.81em; font-weight: 600;
+            padding: 9px 15px; border-radius: var(--radius-sm); border: none;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+            white-space: nowrap;
+        }
+        .btn-primary { background: var(--blue); color: #fff; flex: 2; justify-content: center; }
+        .btn-primary:hover { background: #2d96f0; box-shadow: 0 4px 14px rgba(59,163,245,0.38); }
+        .btn-edit-card { background: rgba(251,146,60,0.12); color: var(--orange); border: 1px solid rgba(251,146,60,0.25); flex: 1.5; justify-content: center; }
+        .btn-edit-card:hover { background: rgba(251,146,60,0.22); }
         .btn-secondary { background: var(--surface2); color: var(--text-mid); border: 1px solid var(--border); flex: 1; justify-content: center; }
         .btn-secondary:hover { border-color: var(--border-active); color: var(--text); }
-
-        .btn-add { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.25); flex: 1; justify-content: center; }
-        .btn-add:hover { background: rgba(0,230,118,0.2); box-shadow: 0 4px 12px rgba(0,230,118,0.15); }
-
+        .btn-add { background: rgba(34,229,160,0.1); color: var(--green); border: 1px solid rgba(34,229,160,0.25); flex: 1; justify-content: center; }
+        .btn-add:hover { background: rgba(34,229,160,0.2); box-shadow: 0 4px 12px rgba(34,229,160,0.15); }
         .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
         .btn-ghost:hover { color: var(--text); border-color: var(--border-active); }
 
         /* ── EMPTY STATE ── */
-        .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-dim);
-        }
+        .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-dim); }
+        .empty-state .icon { font-size: 2.8em; margin-bottom: 14px; }
 
-        .empty-state .icon { font-size: 3em; margin-bottom: 16px; }
-        .empty-state p { font-size: 1em; }
-
-        /* ── MODAL BACKDROP ── */
+        /* ── MODAL ── */
         .modal-overlay {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 9000;
-            align-items: center; justify-content: center;
-            padding: 24px;
-            animation: fadeIn 0.2s ease;
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.72); z-index: 9000;
+            align-items: center; justify-content: center; padding: 24px;
+            animation: fadeIn 0.2s ease; backdrop-filter: blur(4px);
         }
-
         .modal-overlay.visible { display: flex; }
-
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .modal-box {
             background: var(--surface);
             border: 1px solid var(--border-active);
-            border-radius: 20px;
-            padding: 32px;
-            width: 100%;
-            max-width: 680px;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: modalIn 0.3s cubic-bezier(0.34,1.4,0.64,1);
-            position: relative;
+            border-radius: 20px; padding: 30px;
+            width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto;
+            animation: modalIn 0.28s cubic-bezier(0.34,1.3,0.64,1); position: relative;
         }
-
         .modal-box.wide { max-width: 860px; }
-
         @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.93) translateY(12px); }
+            from { opacity: 0; transform: scale(0.94) translateY(10px); }
             to   { opacity: 1; transform: scale(1) translateY(0); }
         }
-
         .modal-close {
-            position: absolute; top: 18px; right: 18px;
-            width: 32px; height: 32px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            color: var(--text-dim);
-            font-size: 1.1em; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s;
+            position: absolute; top: 16px; right: 16px;
+            width: 30px; height: 30px;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            border-radius: 50%; color: var(--text-dim); font-size: 1.05em;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
         }
-
-        .modal-close:hover { background: rgba(255,82,82,0.15); color: var(--red); border-color: rgba(255,82,82,0.3); }
-
-        .modal-title {
-            font-family: var(--font-display);
-            font-size: 1.35em;
-            font-weight: 700;
-            margin-bottom: 6px;
-            padding-right: 40px;
-        }
-
-        .modal-subtitle {
-            font-size: 0.85em;
-            color: var(--text-dim);
-            margin-bottom: 28px;
-        }
+        .modal-close:hover { background: rgba(248,114,114,0.15); color: var(--red); border-color: rgba(248,114,114,0.3); }
+        .modal-title { font-family: var(--font-display); font-size: 1.3em; font-weight: 700; margin-bottom: 5px; padding-right: 40px; }
+        .modal-subtitle { font-size: 0.84em; color: var(--text-dim); margin-bottom: 26px; }
 
         /* ── FORM ── */
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
         .form-row.single { grid-template-columns: 1fr; }
         .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
-
         .form-group label {
-            display: block;
-            font-size: 0.78em;
-            font-weight: 600;
-            color: var(--text-dim);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
+            display: block; font-size: 0.76em; font-weight: 600; color: var(--text-dim);
+            letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 7px;
         }
-
         .form-control {
-            width: 100%;
-            padding: 11px 14px;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text);
-            font-family: var(--font-body);
-            font-size: 0.92em;
-            transition: border-color 0.2s;
+            width: 100%; padding: 10px 13px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); color: var(--text);
+            font-family: var(--font-body); font-size: 0.91em; transition: border-color 0.2s;
         }
-
-        .form-control:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(33,150,243,0.12); }
+        .form-control:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,163,245,0.1); }
         .form-control option { background: #1a2236; }
-
-        textarea.form-control {
-            min-height: 100px; resize: vertical;
-            font-family: var(--font-body);
-            line-height: 1.6;
-        }
+        textarea.form-control { min-height: 96px; resize: vertical; font-family: var(--font-body); line-height: 1.6; }
 
         .tf-section {
-            border-left: 3px solid;
-            padding: 18px;
-            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-            margin-bottom: 16px;
-            background: rgba(255,255,255,0.02);
+            border-left: 3px solid; padding: 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin-bottom: 14px; background: rgba(255,255,255,0.02);
         }
+        .tf-section h4 { font-size: 0.88em; font-weight: 600; margin-bottom: 12px; }
+        .tf-weekly { border-color: var(--orange); }  .tf-weekly h4 { color: var(--orange); }
+        .tf-daily  { border-color: var(--green);  }  .tf-daily h4  { color: var(--green); }
+        .tf-4h     { border-color: var(--purple); }  .tf-4h h4     { color: var(--purple); }
+        .tf-1h     { border-color: var(--cyan);   }  .tf-1h h4     { color: var(--cyan); }
 
-        .tf-section h4 {
-            font-size: 0.9em;
-            font-weight: 600;
-            margin-bottom: 14px;
+        /* ── PICKERS ── */
+        .bias-picker, .type-picker { display: flex; gap: 8px; }
+        .bias-opt, .type-opt {
+            flex: 1; padding: 11px; border-radius: var(--radius-sm);
+            border: 2px solid var(--border); background: var(--surface2);
+            color: var(--text-dim); font-weight: 600; font-size: 0.84em;
+            cursor: pointer; transition: all 0.2s; text-align: center;
         }
-
-        .tf-weekly { border-color: var(--orange); }
-        .tf-weekly h4 { color: var(--orange); }
-        .tf-daily { border-color: var(--green); }
-        .tf-daily h4 { color: var(--green); }
-        .tf-4h { border-color: #9C27B0; }
-        .tf-4h h4 { color: #9C27B0; }
-        .tf-1h { border-color: var(--cyan); }
-        .tf-1h h4 { color: var(--cyan); }
-
-        /* ── BIAS PICKER ── */
-        .bias-picker { display: flex; gap: 10px; }
-
-        .bias-opt {
-            flex: 1;
-            padding: 12px;
-            border-radius: var(--radius-sm);
-            border: 2px solid var(--border);
-            background: var(--surface2);
-            color: var(--text-dim);
-            font-weight: 600;
-            font-size: 0.85em;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-
-        .bias-opt:hover { border-color: var(--border-active); }
-        .bias-opt[data-val="Bullish"].selected { border-color: var(--green); background: rgba(0,230,118,0.1); color: var(--green); }
-        .bias-opt[data-val="Bearish"].selected { border-color: var(--red); background: rgba(255,82,82,0.1); color: var(--red); }
+        .bias-opt:hover, .type-opt:hover { border-color: var(--border-active); }
+        .bias-opt[data-val="Bullish"].selected { border-color: var(--green); background: rgba(34,229,160,0.1); color: var(--green); }
+        .bias-opt[data-val="Bearish"].selected { border-color: var(--red);   background: rgba(248,114,114,0.1); color: var(--red); }
         .bias-opt[data-val="Neutral"].selected { border-color: var(--text-mid); background: rgba(155,175,200,0.08); color: var(--text-mid); }
-
-        .type-opt {
-            flex: 1;
-            padding: 12px;
-            border-radius: var(--radius-sm);
-            border: 2px solid var(--border);
-            background: var(--surface2);
-            color: var(--text-dim);
-            font-weight: 600;
-            font-size: 0.85em;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-
-        .type-opt:hover { border-color: var(--border-active); }
         .type-opt[data-val="Analysis Only"].selected { border-color: var(--blue); background: var(--blue-dim); color: var(--blue); }
-        .type-opt[data-val="Trade Taken"].selected { border-color: var(--orange); background: rgba(255,152,0,0.1); color: var(--orange); }
+        .type-opt[data-val="Trade Taken"].selected   { border-color: var(--orange); background: rgba(251,146,60,0.1); color: var(--orange); }
 
-        /* ── FORM SUBMIT ── */
-        .form-actions {
-            display: flex; gap: 12px; padding-top: 24px;
-            border-top: 1px solid var(--border);
-            margin-top: 24px;
-        }
-
+        .form-actions { display: flex; gap: 10px; padding-top: 22px; border-top: 1px solid var(--border); margin-top: 22px; }
         .btn-submit {
-            flex: 2; padding: 14px;
-            background: linear-gradient(135deg, var(--blue), #1565c0);
+            flex: 2; padding: 13px; background: linear-gradient(135deg, var(--blue), #1565c0);
             color: #fff; border: none; border-radius: var(--radius-sm);
-            font-family: var(--font-body);
-            font-size: 0.95em; font-weight: 700;
-            cursor: pointer; transition: all 0.2s;
-            box-shadow: 0 4px 16px rgba(33,150,243,0.3);
+            font-family: var(--font-body); font-size: 0.94em; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 16px rgba(59,163,245,0.28);
         }
-
-        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(33,150,243,0.45); }
-
+        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(59,163,245,0.42); }
+        .btn-submit.orange { background: linear-gradient(135deg, var(--orange), #c2410c); box-shadow: 0 4px 16px rgba(251,146,60,0.28); }
+        .btn-submit.orange:hover { box-shadow: 0 6px 22px rgba(251,146,60,0.42); }
         .btn-cancel-form {
-            flex: 1; padding: 14px;
-            background: var(--surface2); color: var(--text-dim);
+            flex: 1; padding: 13px; background: var(--surface2); color: var(--text-dim);
             border: 1px solid var(--border); border-radius: var(--radius-sm);
-            font-family: var(--font-body);
-            font-size: 0.95em; font-weight: 600;
+            font-family: var(--font-body); font-size: 0.94em; font-weight: 600;
             cursor: pointer; transition: all 0.2s;
         }
-
         .btn-cancel-form:hover { color: var(--text); border-color: var(--border-active); }
 
         /* ── HISTORY ── */
-        .history-list { display: flex; flex-direction: column; gap: 12px; }
-
+        .history-list { display: flex; flex-direction: column; gap: 10px; }
         .history-item {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            display: flex; align-items: center; gap: 16px;
-            transition: all 0.2s;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 16px 18px;
+            display: flex; align-items: center; gap: 14px; transition: all 0.2s;
         }
-
         .history-item:hover { border-color: var(--border-active); }
-
-        .history-dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
+        .history-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
         .history-info { flex: 1; }
-
-        .history-date {
-            font-family: var(--font-mono);
-            font-size: 0.78em;
-            color: var(--text-dim);
-            margin-bottom: 4px;
-        }
-
-        .history-meta {
-            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-        }
-
-        .history-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .history-date { font-family: var(--font-mono); font-size: 0.76em; color: var(--text-dim); margin-bottom: 5px; }
+        .history-meta { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+        .history-actions { display: flex; gap: 7px; flex-shrink: 0; }
 
         .btn-sm {
-            font-size: 0.78em; font-weight: 600;
-            padding: 7px 13px;
-            border-radius: 7px; border: none;
-            cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; gap: 5px;
+            font-size: 0.76em; font-weight: 600; padding: 6px 12px;
+            border-radius: 7px; border: none; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 4px;
         }
-
-        .btn-sm-view { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--border-active); }
+        .btn-sm-view   { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--border-active); }
         .btn-sm-view:hover { background: var(--blue); color: #fff; }
-
-        .btn-sm-del { background: rgba(255,82,82,0.1); color: var(--red); border: 1px solid rgba(255,82,82,0.2); }
+        .btn-sm-edit   { background: rgba(251,146,60,0.1); color: var(--orange); border: 1px solid rgba(251,146,60,0.25); }
+        .btn-sm-edit:hover { background: var(--orange); color: #fff; }
+        .btn-sm-del    { background: rgba(248,114,114,0.1); color: var(--red); border: 1px solid rgba(248,114,114,0.2); }
         .btn-sm-del:hover { background: var(--red); color: #fff; }
 
         /* ── VIEW MODAL ── */
         .view-pair-header {
-            display: flex; gap: 16px; align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
+            display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+            margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border);
         }
-
-        .view-pair-name {
-            font-family: var(--font-display);
-            font-size: 1.8em;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
-
+        .view-pair-name { font-family: var(--font-display); font-size: 1.75em; font-weight: 800; letter-spacing: -1px; }
         .view-tf {
-            border-left: 3px solid;
-            padding: 16px 20px;
+            border-left: 3px solid; padding: 14px 18px;
             border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-            background: rgba(255,255,255,0.02);
-            margin-bottom: 14px;
+            background: rgba(255,255,255,0.02); margin-bottom: 12px;
         }
-
-        .view-tf h4 {
-            font-size: 0.8em;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 10px;
-        }
-
-        .view-tf p {
-            font-size: 0.92em;
-            color: var(--text-mid);
-            line-height: 1.7;
-            white-space: pre-wrap;
-        }
-
+        .view-tf h4 { font-size: 0.78em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 9px; }
+        .view-tf p  { font-size: 0.91em; color: var(--text-mid); line-height: 1.7; white-space: pre-wrap; }
         .view-chart-link {
-            display: inline-flex; align-items: center; gap: 6px;
-            margin-top: 10px;
-            font-size: 0.82em;
-            font-weight: 600;
-            color: var(--blue);
-            text-decoration: none;
-            padding: 6px 12px;
-            background: var(--blue-dim);
-            border-radius: 6px;
-            border: 1px solid var(--border-active);
-            transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 5px; margin-top: 9px;
+            font-size: 0.8em; font-weight: 600; color: var(--blue);
+            text-decoration: none; padding: 5px 11px; background: var(--blue-dim);
+            border-radius: 6px; border: 1px solid var(--border-active); transition: all 0.2s;
         }
-
         .view-chart-link:hover { background: var(--blue); color: #fff; }
-
-        /* ── VIEW MODAL CHART IMG ── */
-        .chart-img { width: 100%; border-radius: 10px; margin-top: 12px; border: 1px solid var(--border); cursor: zoom-in; }
-
-        /* ── SHARE ACTIONS ── */
         .share-actions {
-            display: flex; gap: 10px; flex-wrap: wrap;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
+            display: flex; gap: 9px; flex-wrap: wrap; padding-top: 18px; border-top: 1px solid var(--border);
         }
 
-        /* ── CONFIRM MODAL ── */
-        .confirm-icon { font-size: 2.5em; margin-bottom: 12px; }
-        .confirm-msg { color: var(--text-mid); font-size: 0.92em; line-height: 1.6; margin-bottom: 24px; }
-
-        /* ── ALERT ── */
-        .alert-toast {
-            position: fixed; bottom: 24px; right: 24px;
-            background: var(--surface);
-            border: 1px solid var(--border-active);
-            border-radius: var(--radius);
-            padding: 14px 20px;
-            display: flex; align-items: center; gap: 12px;
-            z-index: 99999;
-            animation: slideInRight 0.3s ease;
-            max-width: 340px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-        }
-
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(20px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
-
-        .alert-toast.hidden { display: none; }
-
-        .toast-icon { font-size: 1.3em; }
-        .toast-text { font-size: 0.88em; font-weight: 500; color: var(--text-mid); }
-
-        /* ── WIZARD STEPS ── */
+        /* ── PAIR PICKER ── */
         .wizard-pair-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            max-height: 360px;
-            overflow-y: auto;
-            padding-right: 4px;
-            margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px;
+            max-height: 340px; overflow-y: auto; padding-right: 4px; margin-bottom: 18px;
         }
-
         .wizard-pair-btn {
-            font-family: var(--font-mono);
-            font-size: 0.8em;
-            font-weight: 500;
-            padding: 12px 6px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            background: var(--surface2);
-            color: var(--text-mid);
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.18s;
+            font-family: var(--font-mono); font-size: 0.78em; font-weight: 500;
+            padding: 11px 6px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); background: var(--surface2);
+            color: var(--text-mid); cursor: pointer; text-align: center; transition: all 0.18s;
         }
-
         .wizard-pair-btn:hover { border-color: var(--border-active); color: var(--text); }
         .wizard-pair-btn.selected { border-color: var(--blue); background: var(--blue-dim); color: var(--blue); }
-        .wizard-pair-btn.taken { border-color: rgba(255,82,82,0.3); color: var(--red); opacity: 0.6; cursor: not-allowed; }
+        .wizard-pair-btn.taken { border-color: rgba(248,114,114,0.3); color: var(--red); opacity: 0.55; cursor: not-allowed; }
 
         /* ── CALENDAR ── */
         .cal-controls {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 24px;
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px;
         }
-
         .cal-nav-btn {
-            width: 38px; height: 38px;
-            background: var(--surface2); border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text-mid); font-size: 1em;
-            cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; background: var(--surface2); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); color: var(--text-mid); cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center;
         }
-
         .cal-nav-btn:hover { border-color: var(--border-active); color: var(--text); }
-
-        .cal-month-label {
-            font-family: var(--font-display);
-            font-size: 1.15em;
-            font-weight: 700;
-        }
-
-        .cal-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-        }
-
-        .cal-day-name {
-            text-align: center;
-            font-size: 0.72em;
-            font-weight: 600;
-            color: var(--text-dim);
-            padding: 8px 0;
-            letter-spacing: 0.5px;
-        }
-
+        .cal-month-label { font-family: var(--font-display); font-size: 1.1em; font-weight: 700; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .cal-day-name { text-align: center; font-size: 0.7em; font-weight: 600; color: var(--text-dim); padding: 7px 0; letter-spacing: 0.5px; }
         .cal-cell {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 8px;
-            min-height: 80px;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 7px; min-height: 76px;
+            cursor: pointer; transition: all 0.2s; position: relative;
         }
-
         .cal-cell:hover { border-color: var(--border-active); }
-        .cal-cell.other-month { opacity: 0.25; pointer-events: none; }
-        .cal-cell.has-data { border-color: rgba(33,150,243,0.3); }
+        .cal-cell.other-month { opacity: 0.22; pointer-events: none; }
+        .cal-cell.has-data { border-color: rgba(59,163,245,0.3); }
         .cal-cell.has-data::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--blue); border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
-
-        .cal-cell-day { font-size: 0.8em; font-weight: 700; color: var(--text-dim); margin-bottom: 6px; }
-        .cal-pair-chip { font-size: 0.65em; font-family: var(--font-mono); color: var(--blue); padding: 2px 0; }
-
-        /* ── CALENDAR VIEW ── */
-        #calendarView {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-        }
+        .cal-cell-day { font-size: 0.78em; font-weight: 700; color: var(--text-dim); margin-bottom: 5px; }
+        .cal-pair-chip { font-size: 0.62em; font-family: var(--font-mono); color: var(--blue); padding: 1px 0; }
+        #calendarView { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
 
         /* ── DAY MODAL ── */
         .day-card {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 16px 20px;
-            display: flex; align-items: center; gap: 14px;
-            cursor: pointer; transition: all 0.2s;
-            margin-bottom: 10px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 14px 18px;
+            display: flex; align-items: center; gap: 12px;
+            cursor: pointer; transition: all 0.2s; margin-bottom: 9px;
         }
-
         .day-card:hover { border-color: var(--border-active); }
+
+        /* ── CONFIRM ── */
+        .confirm-icon { font-size: 2.4em; margin-bottom: 10px; }
+        .confirm-msg  { color: var(--text-mid); font-size: 0.9em; line-height: 1.6; margin-bottom: 22px; }
+
+        /* ── TOAST ── */
+        .alert-toast {
+            position: fixed; bottom: 22px; right: 22px;
+            background: var(--surface); border: 1px solid var(--border-active);
+            border-radius: var(--radius); padding: 13px 18px;
+            display: flex; align-items: center; gap: 11px; z-index: 99999;
+            animation: slideInRight 0.28s ease; max-width: 330px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+        }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: translateX(0); } }
+        .alert-toast.hidden { display: none; }
+        .toast-icon { font-size: 1.25em; }
+        .toast-text { font-size: 0.87em; font-weight: 500; color: var(--text-mid); }
 
         /* ── LOADING ── */
         .loading-overlay-full {
-            position: fixed; inset: 0;
-            background: rgba(8,12,20,0.8);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 99998;
-            backdrop-filter: blur(4px);
+            position: fixed; inset: 0; background: rgba(8,12,20,0.82);
+            display: flex; align-items: center; justify-content: center; z-index: 99998; backdrop-filter: blur(4px);
         }
-
         .spinner {
-            width: 48px; height: 48px;
-            border: 3px solid rgba(33,150,243,0.2);
-            border-top-color: var(--blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            width: 44px; height: 44px; border: 3px solid rgba(59,163,245,0.2);
+            border-top-color: var(--blue); border-radius: 50%; animation: spin 0.75s linear infinite;
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* ── SCROLLBAR ── */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(33,150,243,0.4); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.09); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(59,163,245,0.4); }
 
-        /* Responsive */
         @media (max-width: 768px) {
-            .topbar { padding: 0 16px; }
-            .main { padding: 20px 12px; }
+            .topbar { padding: 0 14px; }
+            .main { padding: 16px 10px; }
             .wizard-pair-grid { grid-template-columns: repeat(3, 1fr); }
-            .form-row { grid-template-columns: 1fr; }
-            .form-row.triple { grid-template-columns: 1fr; }
+            .form-row, .form-row.triple { grid-template-columns: 1fr; }
             .pair-grid { grid-template-columns: 1fr 1fr; }
         }
-
         @media (max-width: 480px) {
             .pair-grid { grid-template-columns: 1fr; }
-            .wizard-pair-grid { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
 </head>
 <body>
 
-    <!-- TOPBAR -->
+    <!-- ── TICKER BAR ── -->
+    <div class="ticker-bar">
+        <div class="ticker-label">⚠ Alerts</div>
+        <div class="ticker-fade-l"></div>
+        <div class="ticker-track" id="tickerTrack">
+            <span id="tickerInner"></span>
+            <span id="tickerClone"></span>
+        </div>
+    </div>
+
+    <!-- ── TOPBAR ── -->
     <header class="topbar">
         <div class="topbar-brand">
             <div class="icon">📊</div>
             <h1>A Random Trader</h1>
         </div>
-        <nav class="topbar-nav">
-            <button class="nav-pill active" id="btnDashboard" onclick="showView('dashboard')">Dashboard</button>
-            <button class="nav-pill" id="btnCalendar" onclick="showView('calendar')">Calendar</button>
-            <button class="nav-pill" id="btnJournal" onclick="showView('journal')">Journal</button>
-        </nav>
+        <div class="topbar-right">
+            <span class="topbar-meta" id="topbarMeta"></span>
+            <nav style="display:flex;gap:4px;">
+                <button class="nav-pill active" id="btnDashboard" onclick="showView('dashboard')">Dashboard</button>
+                <button class="nav-pill" id="btnCalendar"  onclick="showView('calendar')">Calendar</button>
+                <button class="nav-pill" id="btnJournal"   onclick="showView('journal')">Journal</button>
+            </nav>
+        </div>
     </header>
 
-    <!-- MAIN -->
+    <!-- ── MAIN ── -->
     <div class="main">
 
-        <!-- ══ DASHBOARD VIEW ══ -->
+        <!-- DASHBOARD -->
         <div class="page active" id="dashboardView">
             <div class="section-header">
                 <h2 class="section-title">Market <span>Dashboard</span></h2>
-                <button class="btn btn-add" onclick="openAddModal(null)" style="padding:10px 20px;">
-                    ➕ New Analysis
-                </button>
+                <button class="btn btn-add" onclick="openAddModal(null)" style="padding:9px 18px;">➕ New Analysis</button>
             </div>
-
-            <!-- Category Tabs -->
             <div class="tab-strip" id="categoryTabs"></div>
-
-            <!-- Pair Grid -->
             <div class="pair-grid" id="pairGrid"></div>
         </div>
 
-        <!-- ══ CALENDAR VIEW ══ -->
+        <!-- CALENDAR -->
         <div class="page" id="calendarView">
             <div class="section-header">
                 <h2 class="section-title">Calendar <span>View</span></h2>
@@ -851,7 +565,7 @@
             <div id="calendarContainer"></div>
         </div>
 
-        <!-- ══ JOURNAL VIEW ══ -->
+        <!-- JOURNAL -->
         <div class="page" id="journalView">
             <div class="section-header">
                 <h2 class="section-title">Analysis <span>Journal</span></h2>
@@ -862,25 +576,21 @@
 
     <!-- ══ MODALS ══ -->
 
-    <!-- Add / Edit Analysis -->
+    <!-- ADD / EDIT -->
     <div class="modal-overlay" id="addModal">
         <div class="modal-box wide">
             <button class="modal-close" onclick="closeModal('addModal')">×</button>
             <h2 class="modal-title" id="addModalTitle">New Analysis</h2>
-            <p class="modal-subtitle" id="addModalSubtitle">Fill in your market analysis for today</p>
-
-            <!-- Pair selection (when no pair preselected) -->
+            <p class="modal-subtitle" id="addModalSubtitle">Fill in your market analysis</p>
             <div id="pairSelectionSection">
-                <div class="form-group" style="margin-bottom:20px;">
+                <div class="form-group" style="margin-bottom:18px;">
                     <label>Select Pair</label>
                     <div class="wizard-pair-grid" id="pairPickerGrid"></div>
                 </div>
             </div>
-
-            <!-- Date -->
             <div class="form-row triple">
                 <div class="form-group">
-                    <label>Exact Date</label>
+                    <label>Date</label>
                     <input type="date" class="form-control" id="fDate">
                 </div>
                 <div class="form-group">
@@ -899,59 +609,51 @@
                     </select>
                 </div>
             </div>
-
-            <!-- Status & Bias -->
-            <div class="form-row" style="margin-bottom:20px;">
+            <div class="form-row" style="margin-bottom:18px;">
                 <div class="form-group">
                     <label>Type</label>
-                    <div class="bias-picker">
+                    <div class="type-picker">
                         <div class="type-opt" data-val="Analysis Only" onclick="selectType(this)">📊 Analysis</div>
-                        <div class="type-opt" data-val="Trade Taken" onclick="selectType(this)">💰 Trade</div>
+                        <div class="type-opt" data-val="Trade Taken"   onclick="selectType(this)">💰 Trade</div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Market Bias</label>
                     <div class="bias-picker">
-                        <div class="bias-opt" data-val="Bullish" onclick="selectBias(this)">🟢 Bullish</div>
-                        <div class="bias-opt" data-val="Neutral" onclick="selectBias(this)">⚪ Neutral</div>
-                        <div class="bias-opt" data-val="Bearish" onclick="selectBias(this)">🔴 Bearish</div>
+                        <div class="bias-opt" data-val="Bullish" onclick="selectBias(this)">🟢 Bull</div>
+                        <div class="bias-opt" data-val="Neutral" onclick="selectBias(this)">⚪ Neu</div>
+                        <div class="bias-opt" data-val="Bearish" onclick="selectBias(this)">🔴 Bear</div>
                     </div>
                 </div>
             </div>
-
-            <!-- Timeframes -->
             <div class="tf-section tf-weekly">
                 <h4>📅 Weekly</h4>
-                <div class="form-row single"><div class="form-group"><textarea class="form-control" id="fWeeklyAnalysis" placeholder="Weekly analysis..."></textarea></div></div>
+                <div class="form-row single"><div class="form-group"><textarea class="form-control" id="fWeeklyAnalysis" placeholder="Weekly analysis…"></textarea></div></div>
                 <div class="form-group"><input type="url" class="form-control" id="fWeeklyPhoto" placeholder="Chart link (optional)"></div>
             </div>
-
             <div class="tf-section tf-daily">
                 <h4>📊 Daily</h4>
-                <div class="form-row single"><div class="form-group"><textarea class="form-control" id="fDailyAnalysis" placeholder="Daily analysis..."></textarea></div></div>
+                <div class="form-row single"><div class="form-group"><textarea class="form-control" id="fDailyAnalysis" placeholder="Daily analysis…"></textarea></div></div>
                 <div class="form-group"><input type="url" class="form-control" id="fDailyPhoto" placeholder="Chart link (optional)"></div>
             </div>
-
             <div class="tf-section tf-4h">
                 <h4>⏱️ 4H</h4>
-                <div class="form-row single"><div class="form-group"><textarea class="form-control" id="fFourHAnalysis" placeholder="4H analysis..."></textarea></div></div>
+                <div class="form-row single"><div class="form-group"><textarea class="form-control" id="fFourHAnalysis" placeholder="4H analysis…"></textarea></div></div>
                 <div class="form-group"><input type="url" class="form-control" id="fFourHPhoto" placeholder="Chart link (optional)"></div>
             </div>
-
             <div class="tf-section tf-1h">
                 <h4>⚡ 1H</h4>
-                <div class="form-row single"><div class="form-group"><textarea class="form-control" id="fOneHAnalysis" placeholder="1H analysis..."></textarea></div></div>
+                <div class="form-row single"><div class="form-group"><textarea class="form-control" id="fOneHAnalysis" placeholder="1H analysis…"></textarea></div></div>
                 <div class="form-group"><input type="url" class="form-control" id="fOneHPhoto" placeholder="Chart link (optional)"></div>
             </div>
-
             <div class="form-actions">
                 <button class="btn-cancel-form" onclick="closeModal('addModal')">Cancel</button>
-                <button class="btn-submit" onclick="submitAnalysis()">💾 Save Analysis</button>
+                <button class="btn-submit" id="submitBtn" onclick="submitAnalysis()">💾 Save Analysis</button>
             </div>
         </div>
     </div>
 
-    <!-- View Analysis -->
+    <!-- VIEW -->
     <div class="modal-overlay" id="viewModal">
         <div class="modal-box wide">
             <button class="modal-close" onclick="closeModal('viewModal')">×</button>
@@ -959,7 +661,7 @@
         </div>
     </div>
 
-    <!-- History -->
+    <!-- HISTORY -->
     <div class="modal-overlay" id="historyModal">
         <div class="modal-box wide">
             <button class="modal-close" onclick="closeModal('historyModal')">×</button>
@@ -969,7 +671,7 @@
         </div>
     </div>
 
-    <!-- Confirm Delete -->
+    <!-- CONFIRM DELETE -->
     <div class="modal-overlay" id="confirmModal">
         <div class="modal-box" style="max-width:400px; text-align:center;">
             <div class="confirm-icon">🗑️</div>
@@ -977,12 +679,12 @@
             <p class="confirm-msg" id="confirmMsg"></p>
             <div class="form-actions" style="justify-content:center;">
                 <button class="btn-cancel-form" style="flex:1;" onclick="closeModal('confirmModal')">Cancel</button>
-                <button class="btn-submit" style="flex:1; background:linear-gradient(135deg,var(--red),#b71c1c); box-shadow:0 4px 16px rgba(255,82,82,0.3);" id="confirmYesBtn">Delete</button>
+                <button class="btn-submit" style="flex:1; background:linear-gradient(135deg,var(--red),#b91c1c); box-shadow:0 4px 16px rgba(248,114,114,0.28);" id="confirmYesBtn">Delete</button>
             </div>
         </div>
     </div>
 
-    <!-- Day Modal (calendar) -->
+    <!-- DAY MODAL -->
     <div class="modal-overlay" id="dayModal">
         <div class="modal-box wide">
             <button class="modal-close" onclick="closeModal('dayModal')">×</button>
@@ -992,716 +694,777 @@
         </div>
     </div>
 
-    <!-- Toast -->
+    <!-- TOAST -->
     <div class="alert-toast hidden" id="toast">
         <span class="toast-icon" id="toastIcon"></span>
         <span class="toast-text" id="toastText"></span>
     </div>
 
-    <!-- Loading -->
+    <!-- LOADING -->
     <div class="loading-overlay-full" id="loadingOverlay" style="display:none;">
         <div style="text-align:center;">
             <div class="spinner"></div>
-            <div style="margin-top:16px; font-family:var(--font-mono); font-size:0.85em; color:var(--text-dim);">Loading...</div>
+            <div style="margin-top:14px; font-family:var(--font-mono); font-size:0.82em; color:var(--text-dim);">Loading…</div>
         </div>
     </div>
 
-    <script>
-    // ════════════════════════════════════════
-    // CONFIG
-    // ════════════════════════════════════════
-    const GS_URL = 'https://script.google.com/macros/s/AKfycby545E0z1U_T4y7Obgp7jbkhjEM-nTQ14zccKu3_WhAWI93028iGy3JHPHk9XJvU1_5/exec';
+<script>
+// ════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════
+const GS_URL = 'https://script.google.com/macros/s/AKfycby545E0z1U_T4y7Obgp7jbkhjEM-nTQ14zccKu3_WhAWI93028iGy3JHPHk9XJvU1_5/exec';
+const STALE_DAYS = 3; // pairs older than N days show in ticker
 
-    const CATEGORIES = {
-        'Major Pairs':     ['EUR/USD','GBP/USD','USD/JPY','USD/CHF','AUD/USD','USD/CAD','NZD/USD'],
-        'EUR Crosses':     ['EUR/GBP','EUR/JPY','EUR/CHF','EUR/CAD','EUR/AUD','EUR/NZD'],
-        'GBP Crosses':     ['GBP/JPY','GBP/CHF','GBP/CAD','GBP/AUD','GBP/NZD'],
-        'JPY Crosses':     ['CAD/JPY','CHF/JPY','AUD/JPY','NZD/JPY'],
-        'Commodity Pairs': ['AUD/CAD','AUD/NZD','NZD/CAD','CAD/CHF','NZD/CHF','AUD/CHF'],
-        'Metals & Indices':['XAU/USD','XAG/USD','US100','US30','GER40','UK100']
-    };
+const CATEGORIES = {
+    'Major Pairs':     ['EUR/USD','GBP/USD','USD/JPY','USD/CHF','AUD/USD','USD/CAD','NZD/USD'],
+    'EUR Crosses':     ['EUR/GBP','EUR/JPY','EUR/CHF','EUR/CAD','EUR/AUD','EUR/NZD'],
+    'GBP Crosses':     ['GBP/JPY','GBP/CHF','GBP/CAD','GBP/AUD','GBP/NZD'],
+    'JPY Crosses':     ['CAD/JPY','CHF/JPY','AUD/JPY','NZD/JPY'],
+    'Commodity Pairs': ['AUD/CAD','AUD/NZD','NZD/CAD','CAD/CHF','NZD/CHF','AUD/CHF'],
+    'Metals & Indices':['XAU/USD','XAG/USD','US100','US30','GER40','UK100']
+};
+const ALL_PAIRS = Object.values(CATEGORIES).flat();
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const CTAG_COLORS = {
+    EUR:'rgba(0,51,153,0.28)',   USD:'rgba(178,34,52,0.22)',
+    GBP:'rgba(1,33,105,0.22)',   JPY:'rgba(188,0,45,0.22)',
+    CHF:'rgba(255,0,0,0.16)',    CAD:'rgba(255,0,0,0.16)',
+    AUD:'rgba(0,0,139,0.22)',    NZD:'rgba(0,36,125,0.22)',
+    XAU:'rgba(255,215,0,0.22)', XAG:'rgba(192,192,192,0.2)'
+};
 
-    const ALL_PAIRS = Object.values(CATEGORIES).flat();
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let allAnalyses = [];
+let currentCategory = Object.keys(CATEGORIES)[0];
+let currentCalMonth = new Date().getMonth();
+let currentCalYear  = new Date().getFullYear();
+let selectedPairForAdd = null;
+let selectedBias = '';
+let selectedType = 'Analysis Only';
+let confirmCallback = null;
+let editingDeleteId = null;   // null = add mode, string = edit mode
 
-    const CTAG_COLORS = {
-        EUR: 'rgba(0,51,153,0.25)',  USD: 'rgba(178,34,52,0.2)',
-        GBP: 'rgba(1,33,105,0.2)',   JPY: 'rgba(188,0,45,0.2)',
-        CHF: 'rgba(255,0,0,0.15)',   CAD: 'rgba(255,0,0,0.15)',
-        AUD: 'rgba(0,0,139,0.2)',    NZD: 'rgba(0,36,125,0.2)',
-        XAU: 'rgba(255,215,0,0.2)', XAG: 'rgba(192,192,192,0.2)'
-    };
+// ════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════
+function localDateStr(date) {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function parseDateSafe(str) {
+    if (!str) return null;
+    const d = new Date(str);
+    return isNaN(d) ? null : d;
+}
+function fmtDate(str) {
+    const d = parseDateSafe(str);
+    if (!d) return '—';
+    return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function todayStr() { return localDateStr(new Date()); }
+function daysBetween(dateStr) {
+    const d = parseDateSafe(dateStr);
+    if (!d) return null;
+    return Math.floor((new Date() - d) / 86400000);
+}
+function toast(msg, icon='✅') {
+    const t = document.getElementById('toast');
+    document.getElementById('toastIcon').textContent = icon;
+    document.getElementById('toastText').textContent = msg;
+    t.classList.remove('hidden');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.add('hidden'), 3200);
+}
+function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+function openModal(id)  { document.getElementById(id).classList.add('visible'); }
+function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
+function confirmAction(msg, cb) {
+    document.getElementById('confirmMsg').textContent = msg;
+    confirmCallback = cb;
+    document.getElementById('confirmYesBtn').onclick = () => { closeModal('confirmModal'); confirmCallback && confirmCallback(); };
+    openModal('confirmModal');
+}
 
-    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+// ════════════════════════════════════════
+// TICKER
+// ════════════════════════════════════════
+function buildTicker() {
+    const now = new Date();
+    const alerts = [];
 
-    // ════════════════════════════════════════
-    // STATE
-    // ════════════════════════════════════════
-    let allAnalyses = [];   // raw from server
-    let currentCategory = Object.keys(CATEGORIES)[0];
-    let currentCalMonth = new Date().getMonth();
-    let currentCalYear = new Date().getFullYear();
-    let selectedPairForAdd = null;
-    let selectedBias = '';
-    let selectedType = 'Analysis Only';
-    let confirmCallback = null;
-
-    // ════════════════════════════════════════
-    // UTIL
-    // ════════════════════════════════════════
-    function localDateStr(date) {
-        if (!date) return '';
-        const d = typeof date === 'string' ? new Date(date) : date;
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-
-    function parseDateSafe(str) {
-        if (!str) return null;
-        const d = new Date(str);
-        return isNaN(d) ? null : d;
-    }
-
-    function fmtDate(str) {
-        const d = parseDateSafe(str);
-        if (!d) return '—';
-        return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
-    }
-
-    function todayStr() {
-        return localDateStr(new Date());
-    }
-
-    function toast(msg, icon='✅') {
-        const t = document.getElementById('toast');
-        document.getElementById('toastIcon').textContent = icon;
-        document.getElementById('toastText').textContent = msg;
-        t.classList.remove('hidden');
-        clearTimeout(t._timer);
-        t._timer = setTimeout(() => t.classList.add('hidden'), 3200);
-    }
-
-    function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
-    function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
-
-    function openModal(id) { document.getElementById(id).classList.add('visible'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
-
-    function confirmAction(msg, cb) {
-        document.getElementById('confirmMsg').textContent = msg;
-        confirmCallback = cb;
-        document.getElementById('confirmYesBtn').onclick = () => { closeModal('confirmModal'); confirmCallback && confirmCallback(); };
-        openModal('confirmModal');
-    }
-
-    // ════════════════════════════════════════
-    // VIEW ROUTING
-    // ════════════════════════════════════════
-    function showView(view) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active'));
-        document.getElementById(view + 'View').classList.add('active');
-        document.getElementById('btn' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
-
-        if (view === 'calendar') renderCalendar();
-        if (view === 'journal')  renderJournal();
-    }
-
-    // ════════════════════════════════════════
-    // LOAD DATA
-    // ════════════════════════════════════════
-    function loadAnalyses() {
-        showLoading();
-        fetch(GS_URL + '?action=get&sheet=Sheet1')
-            .then(r => r.json())
-            .then(res => {
-                hideLoading();
-                allAnalyses = Array.isArray(res) ? res : (res.data || []);
-                renderDashboard();
-            })
-            .catch(err => {
-                console.error(err);
-                hideLoading();
-                toast('Failed to load data', '❌');
-                allAnalyses = [];
-                renderDashboard();
-            });
-    }
-
-    // ════════════════════════════════════════
-    // DASHBOARD
-    // ════════════════════════════════════════
-    function renderDashboard() {
-        renderCategoryTabs();
-        renderPairGrid();
-    }
-
-    function renderCategoryTabs() {
-        const container = document.getElementById('categoryTabs');
-        container.innerHTML = '';
-        Object.keys(CATEGORIES).forEach(cat => {
-            const pairs = CATEGORIES[cat];
-            // Count pairs with ANY analysis
-            const withAnalysis = pairs.filter(p => allAnalyses.some(a => a.pair === p)).length;
-            const btn = document.createElement('button');
-            btn.className = 'tab-chip' + (cat === currentCategory ? ' active' : '');
-            btn.innerHTML = `${cat} <span class="count">${withAnalysis}/${pairs.length}</span>`;
-            btn.onclick = () => { currentCategory = cat; renderDashboard(); };
-            container.appendChild(btn);
-        });
-    }
-
-    function getLatestAnalysis(pair) {
-        const pairAnalyses = allAnalyses
-            .filter(a => a.pair === pair)
-            .sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-        return pairAnalyses[0] || null;
-    }
-
-    function renderPairGrid() {
-        const grid = document.getElementById('pairGrid');
-        grid.innerHTML = '';
-        const pairs = CATEGORIES[currentCategory] || [];
-
-        if (!pairs.length) {
-            grid.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No pairs in this category</p></div>';
+    ALL_PAIRS.forEach(pair => {
+        const latest = getLatestAnalysis(pair);
+        if (!latest) {
+            alerts.push({ pair, msg: 'No analysis', cls: 't-warn' });
             return;
         }
+        const days = daysBetween(latest.date);
+        if (days !== null && days >= STALE_DAYS) {
+            alerts.push({ pair, msg: `${days}d ago`, cls: 't-warn' });
+        }
+    });
 
-        pairs.forEach(pair => {
-            const latest = getLatestAnalysis(pair);
-            const total = allAnalyses.filter(a => a.pair === pair).length;
-            const card = buildPairCard(pair, latest, total);
-            grid.appendChild(card);
+    const makeHtml = () => {
+        if (!alerts.length) return `<span class="ticker-item"><span class="t-ok">✓</span> All pairs up to date</span>`;
+        return alerts.map(a =>
+            `<span class="ticker-item"><span class="${a.cls}">⚠</span> <span class="t-pair">${a.pair}</span> — ${a.msg}</span><span class="ticker-sep">|</span>`
+        ).join('');
+    };
+
+    const html = makeHtml();
+    document.getElementById('tickerInner').innerHTML = html;
+    document.getElementById('tickerClone').innerHTML = html;
+
+    // Update topbar meta
+    document.getElementById('topbarMeta').textContent = alerts.length
+        ? `${alerts.length} pair${alerts.length !== 1 ? 's' : ''} need attention`
+        : 'All pairs current';
+}
+
+// ════════════════════════════════════════
+// VIEW ROUTING
+// ════════════════════════════════════════
+function showView(view) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active'));
+    document.getElementById(view + 'View').classList.add('active');
+    document.getElementById('btn' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
+    if (view === 'calendar') renderCalendar();
+    if (view === 'journal')  renderJournal();
+}
+
+// ════════════════════════════════════════
+// LOAD DATA
+// ════════════════════════════════════════
+function loadAnalyses() {
+    showLoading();
+    fetch(GS_URL)
+        .then(r => r.json())
+        .then(res => {
+            hideLoading();
+            allAnalyses = Array.isArray(res) ? res : (res.data || []);
+            renderDashboard();
+            buildTicker();
+        })
+        .catch(err => {
+            console.error(err);
+            hideLoading();
+            toast('Failed to load data', '❌');
+            allAnalyses = [];
+            renderDashboard();
+            buildTicker();
         });
+}
+
+// ════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════
+function renderDashboard() {
+    renderCategoryTabs();
+    renderPairGrid();
+}
+
+function renderCategoryTabs() {
+    const container = document.getElementById('categoryTabs');
+    container.innerHTML = '';
+    Object.keys(CATEGORIES).forEach(cat => {
+        const withAnalysis = CATEGORIES[cat].filter(p => allAnalyses.some(a => a.pair === p)).length;
+        const btn = document.createElement('button');
+        btn.className = 'tab-chip' + (cat === currentCategory ? ' active' : '');
+        btn.innerHTML = `${cat} <span class="count">${withAnalysis}/${CATEGORIES[cat].length}</span>`;
+        btn.onclick = () => { currentCategory = cat; renderDashboard(); };
+        container.appendChild(btn);
+    });
+}
+
+function getLatestAnalysis(pair) {
+    return allAnalyses
+        .filter(a => a.pair === pair)
+        .sort((a,b) => new Date(b.date||0) - new Date(a.date||0))[0] || null;
+}
+
+function renderPairGrid() {
+    const grid = document.getElementById('pairGrid');
+    grid.innerHTML = '';
+    const pairs = CATEGORIES[currentCategory] || [];
+    if (!pairs.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No pairs in this category</p></div>';
+        return;
+    }
+    pairs.forEach(pair => {
+        const latest = getLatestAnalysis(pair);
+        const total  = allAnalyses.filter(a => a.pair === pair).length;
+        grid.appendChild(buildPairCard(pair, latest, total));
+    });
+}
+
+function buildPairCard(pair, analysis, totalCount) {
+    const div = document.createElement('div');
+    const biasClass = analysis
+        ? (analysis.marketBias === 'Bullish' ? 'bullish' : analysis.marketBias === 'Bearish' ? 'bearish' : 'neutral')
+        : 'no-data';
+    div.className = `pair-card ${biasClass}`;
+
+    // Currency tags
+    const tags = buildCurrencyTags(pair);
+
+    // Stale check
+    let stalePill = '';
+    if (analysis) {
+        const days = daysBetween(analysis.date);
+        if (days !== null && days >= STALE_DAYS) {
+            stalePill = `<span class="stale-pill">⚠ ${days}d old</span>`;
+        }
     }
 
-    function buildPairCard(pair, analysis, totalCount) {
-        const div = document.createElement('div');
-        div.className = 'pair-card' + (analysis ? ' has-analysis ' + (analysis.marketBias||'').toLowerCase() : '');
+    // Snippet from most informative timeframe
+    const snippet = analysis
+        ? (analysis.dailyAnalysis || analysis.weeklyAnalysis || analysis.fourHAnalysis || analysis.oneHAnalysis || '')
+        : '';
+    const snippetHtml = snippet
+        ? `<div class="card-snippet">${snippet.slice(0, 120)}${snippet.length > 120 ? '…' : ''}</div>`
+        : '';
 
-        // Currency tags
-        const tags = buildCurrencyTags(pair);
+    let metaHTML = '';
+    if (analysis) {
+        const biasLabel = analysis.marketBias || 'N/A';
+        const biasIcon  = analysis.marketBias === 'Bullish' ? '🟢' : analysis.marketBias === 'Bearish' ? '🔴' : '⚪';
+        const badgeCls  = analysis.marketBias === 'Bullish' ? 'badge-bullish' : analysis.marketBias === 'Bearish' ? 'badge-bearish' : 'badge-neutral';
+        metaHTML = `
+            <div class="card-date">📅 ${fmtDate(analysis.date)}</div>
+            <div class="card-badges">
+                <span class="badge ${badgeCls}">${biasIcon} ${biasLabel}</span>
+                ${analysis.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade">💰 Trade</span>' : ''}
+                ${totalCount > 1 ? `<span class="badge badge-latest">Latest of ${totalCount}</span>` : ''}
+            </div>
+        `;
+    } else {
+        metaHTML = `<div class="card-date" style="font-style:italic;">No analysis yet</div>
+                    <div class="card-badges"><span class="badge badge-nodata">—</span></div>`;
+    }
 
-        let metaHTML = '';
-        if (analysis) {
-            const biasClass = analysis.marketBias === 'Bullish' ? 'badge-bullish' : analysis.marketBias === 'Bearish' ? 'badge-bearish' : 'badge-neutral';
-            const biasIcon = analysis.marketBias === 'Bullish' ? '🟢' : analysis.marketBias === 'Bearish' ? '🔴' : '⚪';
-            metaHTML = `
-                <div class="pair-date">📅 ${fmtDate(analysis.date)}</div>
-                <div class="pair-badges">
-                    <span class="badge ${biasClass}">${biasIcon} ${analysis.marketBias || 'N/A'}</span>
-                    ${analysis.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade">💰 Trade</span>' : ''}
-                </div>
-            `;
-        } else {
-            metaHTML = `
-                <div class="pair-date">No analysis yet</div>
-                <div class="pair-badges"><span class="badge badge-noanalysis">—</span></div>
-            `;
-        }
+    const analysisIdx = analysis ? allAnalyses.indexOf(analysis) : -1;
 
-        const analysisIdx = analysis ? allAnalyses.indexOf(analysis) : -1;
-
-        div.innerHTML = `
-            <div class="pair-card-header">
-                <div>
+    div.innerHTML = `
+        <div class="card-strip"></div>
+        <div class="card-body">
+            <div class="card-head">
+                <div class="card-pair-info">
                     <div class="pair-name">${pair}</div>
                     <div class="currency-tags">${tags}</div>
                 </div>
-                ${totalCount > 0 ? `<span class="pair-count-badge">${totalCount}</span>` : ''}
+                <div class="card-right">
+                    ${totalCount > 0 ? `<span class="count-badge">${totalCount}</span>` : ''}
+                    ${stalePill}
+                </div>
             </div>
-            <div class="pair-meta">${metaHTML}</div>
-            <div class="pair-actions">
-                ${analysis
-                    ? `<button class="btn btn-primary" onclick="openViewModal(${analysisIdx})">👁 View</button>`
-                    : `<button class="btn btn-add" onclick="openAddModal('${pair}')">➕ Add</button>`
-                }
-                <button class="btn btn-secondary" onclick="openHistoryModal('${pair}')">📊 History</button>
-            </div>
-        `;
-
-        return div;
-    }
-
-    function buildCurrencyTags(pair) {
-        const parts = pair.includes('/') ? pair.split('/') : [pair];
-        return parts.map(p => {
-            const bg = CTAG_COLORS[p] || 'rgba(255,255,255,0.06)';
-            const border = (CTAG_COLORS[p] || 'rgba(255,255,255,0.12)').replace('0.2','0.4').replace('0.25','0.4');
-            return `<span class="ctag" style="background:${bg}; border-color:${border}; color:var(--text-mid);">${p}</span>`;
-        }).join('');
-    }
-
-    // ════════════════════════════════════════
-    // ADD MODAL
-    // ════════════════════════════════════════
-    function openAddModal(pair) {
-        // Reset form
-        resetForm();
-
-        selectedPairForAdd = pair;
-
-        if (pair) {
-            document.getElementById('addModalTitle').textContent = `New Analysis — ${pair}`;
-            document.getElementById('addModalSubtitle').textContent = 'One analysis per day per pair';
-            document.getElementById('pairSelectionSection').style.display = 'none';
-        } else {
-            document.getElementById('addModalTitle').textContent = 'New Analysis';
-            document.getElementById('addModalSubtitle').textContent = 'Select a pair and fill in your analysis';
-            document.getElementById('pairSelectionSection').style.display = 'block';
-            buildPairPicker();
-        }
-
-        // Set today's date
-        const now = new Date();
-        document.getElementById('fDate').value = todayStr();
-        document.getElementById('fMonth').value = MONTHS[now.getMonth()];
-        document.getElementById('fYear').value = now.getFullYear();
-
-        openModal('addModal');
-    }
-
-    function buildPairPicker() {
-        const grid = document.getElementById('pairPickerGrid');
-        grid.innerHTML = '';
-        const today = todayStr();
-
-        ALL_PAIRS.forEach(p => {
-            const btn = document.createElement('button');
-            const hasToday = allAnalyses.some(a => a.pair === p && localDateStr(parseDateSafe(a.date)) === today);
-            btn.className = 'wizard-pair-btn' + (hasToday ? ' taken' : '');
-            btn.textContent = p;
-            if (hasToday) {
-                btn.title = 'Analysis already exists for today';
-                btn.disabled = true;
-            } else {
-                btn.onclick = () => {
-                    document.querySelectorAll('.wizard-pair-btn').forEach(b => b.classList.remove('selected'));
-                    btn.classList.add('selected');
-                    selectedPairForAdd = p;
-                };
+            <div class="card-info">${metaHTML}</div>
+            ${snippetHtml}
+        </div>
+        <div class="card-actions">
+            ${analysis
+                ? `<button class="btn btn-primary"    onclick="openViewModal(${analysisIdx})">👁 View</button>
+                   <button class="btn btn-edit-card"  onclick="openEditModal(${analysisIdx})">✏️ Edit</button>
+                   <button class="btn btn-secondary"  onclick="openHistoryModal('${pair}')">📊</button>`
+                : `<button class="btn btn-add"        onclick="openAddModal('${pair}')" style="flex:1;">➕ Add Analysis</button>
+                   <button class="btn btn-secondary"  onclick="openHistoryModal('${pair}')">📊</button>`
             }
-            grid.appendChild(btn);
-        });
+        </div>
+    `;
+    return div;
+}
+
+function buildCurrencyTags(pair) {
+    const parts = pair.includes('/') ? pair.split('/') : [pair];
+    return parts.map(p => {
+        const bg  = CTAG_COLORS[p] || 'rgba(255,255,255,0.06)';
+        const brd = (CTAG_COLORS[p] || 'rgba(255,255,255,0.12)').replace('0.22','0.45').replace('0.2','0.4');
+        return `<span class="ctag" style="background:${bg}; border-color:${brd}; color:var(--text-mid);">${p}</span>`;
+    }).join('');
+}
+
+// ════════════════════════════════════════
+// ADD MODAL
+// ════════════════════════════════════════
+function openAddModal(pair) {
+    editingDeleteId = null;
+    resetForm();
+    selectedPairForAdd = pair;
+
+    document.getElementById('submitBtn').textContent = '💾 Save Analysis';
+    document.getElementById('submitBtn').className = 'btn-submit';
+
+    if (pair) {
+        document.getElementById('addModalTitle').textContent = `New Analysis — ${pair}`;
+        document.getElementById('addModalSubtitle').textContent = 'One analysis per day per pair';
+        document.getElementById('pairSelectionSection').style.display = 'none';
+    } else {
+        document.getElementById('addModalTitle').textContent = 'New Analysis';
+        document.getElementById('addModalSubtitle').textContent = 'Select a pair and fill in your analysis';
+        document.getElementById('pairSelectionSection').style.display = 'block';
+        buildPairPicker();
     }
 
-    function resetForm() {
-        selectedBias = '';
-        selectedType = 'Analysis Only';
-        document.querySelectorAll('.bias-opt').forEach(b => b.classList.remove('selected'));
-        document.querySelectorAll('.type-opt').forEach(b => b.classList.remove('selected'));
-        // Default selections
-        document.querySelector('.type-opt[data-val="Analysis Only"]').classList.add('selected');
-        ['fWeeklyAnalysis','fDailyAnalysis','fFourHAnalysis','fOneHAnalysis'].forEach(id => document.getElementById(id).value = '');
-        ['fWeeklyPhoto','fDailyPhoto','fFourHPhoto','fOneHPhoto'].forEach(id => document.getElementById(id).value = '');
+    const now = new Date();
+    document.getElementById('fDate').value  = todayStr();
+    document.getElementById('fMonth').value = MONTHS[now.getMonth()];
+    document.getElementById('fYear').value  = now.getFullYear();
+    openModal('addModal');
+}
+
+// ── EDIT MODAL ──
+function openEditModal(idx) {
+    const a = allAnalyses[idx];
+    if (!a) return;
+
+    editingDeleteId = a.deleteId;
+    selectedPairForAdd = a.pair;
+    resetForm();
+
+    document.getElementById('addModalTitle').textContent = `Edit Analysis — ${a.pair}`;
+    document.getElementById('addModalSubtitle').textContent = `Editing entry from ${fmtDate(a.date)}`;
+    document.getElementById('pairSelectionSection').style.display = 'none';
+    document.getElementById('submitBtn').textContent = '✏️ Update Analysis';
+    document.getElementById('submitBtn').className = 'btn-submit orange';
+
+    // Fill date fields
+    const d = parseDateSafe(a.date);
+    if (d) {
+        document.getElementById('fDate').value  = localDateStr(d);
+        document.getElementById('fMonth').value = MONTHS[d.getMonth()];
+        document.getElementById('fYear').value  = d.getFullYear();
     }
 
-    function selectBias(el) {
-        document.querySelectorAll('.bias-opt').forEach(b => b.classList.remove('selected'));
-        el.classList.add('selected');
-        selectedBias = el.dataset.val;
+    // Bias & type
+    if (a.marketBias) {
+        const biasEl = document.querySelector(`.bias-opt[data-val="${a.marketBias}"]`);
+        if (biasEl) { biasEl.classList.add('selected'); selectedBias = a.marketBias; }
+    }
+    if (a.tradeStatus) {
+        const typeEl = document.querySelector(`.type-opt[data-val="${a.tradeStatus}"]`);
+        if (typeEl) { typeEl.classList.add('selected'); selectedType = a.tradeStatus; }
     }
 
-    function selectType(el) {
-        document.querySelectorAll('.type-opt').forEach(b => b.classList.remove('selected'));
-        el.classList.add('selected');
-        selectedType = el.dataset.val;
-    }
+    // Text fields
+    document.getElementById('fWeeklyAnalysis').value = a.weeklyAnalysis || '';
+    document.getElementById('fWeeklyPhoto').value    = a.weeklyPhoto    || '';
+    document.getElementById('fDailyAnalysis').value  = a.dailyAnalysis  || '';
+    document.getElementById('fDailyPhoto').value     = a.dailyPhoto     || '';
+    document.getElementById('fFourHAnalysis').value  = a.fourHAnalysis  || '';
+    document.getElementById('fFourHPhoto').value     = a.fourHPhoto     || '';
+    document.getElementById('fOneHAnalysis').value   = a.oneHAnalysis   || '';
+    document.getElementById('fOneHPhoto').value      = a.oneHPhoto      || '';
 
-    async function submitAnalysis() {
-        const pair = selectedPairForAdd;
-        if (!pair) { toast('Please select a pair', '⚠️'); return; }
-        if (!selectedBias) { toast('Please select a market bias', '⚠️'); return; }
+    openModal('addModal');
+}
 
-        const dateVal = document.getElementById('fDate').value;
-        if (!dateVal) { toast('Please select a date', '⚠️'); return; }
+function buildPairPicker() {
+    const grid  = document.getElementById('pairPickerGrid');
+    const today = todayStr();
+    grid.innerHTML = '';
+    ALL_PAIRS.forEach(p => {
+        const btn = document.createElement('button');
+        const hasToday = allAnalyses.some(a => a.pair === p && localDateStr(parseDateSafe(a.date)) === today);
+        btn.className = 'wizard-pair-btn' + (hasToday ? ' taken' : '');
+        btn.textContent = p;
+        if (hasToday) { btn.title = 'Analysis already exists for today'; btn.disabled = true; }
+        else {
+            btn.onclick = () => {
+                document.querySelectorAll('.wizard-pair-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedPairForAdd = p;
+            };
+        }
+        grid.appendChild(btn);
+    });
+}
 
-        // ONE ANALYSIS PER DAY CHECK
+function resetForm() {
+    selectedBias = '';
+    selectedType = 'Analysis Only';
+    document.querySelectorAll('.bias-opt').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.type-opt').forEach(b => b.classList.remove('selected'));
+    document.querySelector('.type-opt[data-val="Analysis Only"]').classList.add('selected');
+    ['fWeeklyAnalysis','fDailyAnalysis','fFourHAnalysis','fOneHAnalysis'].forEach(id => document.getElementById(id).value = '');
+    ['fWeeklyPhoto','fDailyPhoto','fFourHPhoto','fOneHPhoto'].forEach(id => document.getElementById(id).value = '');
+}
+
+function selectBias(el) {
+    document.querySelectorAll('.bias-opt').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected'); selectedBias = el.dataset.val;
+}
+function selectType(el) {
+    document.querySelectorAll('.type-opt').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected'); selectedType = el.dataset.val;
+}
+
+async function submitAnalysis() {
+    const pair = selectedPairForAdd;
+    if (!pair)         { toast('Please select a pair', '⚠️');      return; }
+    if (!selectedBias) { toast('Please select a market bias', '⚠️'); return; }
+    const dateVal = document.getElementById('fDate').value;
+    if (!dateVal) { toast('Please select a date', '⚠️'); return; }
+
+    const isEdit = !!editingDeleteId;
+
+    // Duplicate check only on add
+    if (!isEdit) {
         const sameDayExists = allAnalyses.some(a =>
             a.pair === pair && localDateStr(parseDateSafe(a.date)) === dateVal
         );
-        if (sameDayExists) {
-            toast(`Analysis for ${pair} already exists on this date`, '❌');
-            return;
-        }
-
-        const d = parseDateSafe(dateVal);
-        const month = MONTHS[d.getMonth()];
-        const dayName = DAY_NAMES[d.getDay()];
-        const year = d.getFullYear();
-
-        const data = {
-            action: 'add',
-            pair, month, day: dayName, date: dateVal, year,
-            tradeStatus: selectedType,
-            marketBias: selectedBias,
-            analysisStatus: 'Active',
-            weeklyAnalysis: document.getElementById('fWeeklyAnalysis').value,
-            weeklyPhoto:    document.getElementById('fWeeklyPhoto').value,
-            dailyAnalysis:  document.getElementById('fDailyAnalysis').value,
-            dailyPhoto:     document.getElementById('fDailyPhoto').value,
-            fourHAnalysis:  document.getElementById('fFourHAnalysis').value,
-            fourHPhoto:     document.getElementById('fFourHPhoto').value,
-            oneHAnalysis:   document.getElementById('fOneHAnalysis').value,
-            oneHPhoto:      document.getElementById('fOneHPhoto').value,
-        };
-
-        showLoading();
-        try {
-            const r = await fetch(GS_URL, { method: 'POST', body: JSON.stringify(data) });
-            await r.json();
-            hideLoading();
-            closeModal('addModal');
-            toast(`${pair} analysis saved!`, '✅');
-            loadAnalyses();
-        } catch(e) {
-            hideLoading();
-            console.error(e);
-            toast('Save failed. Please retry.', '❌');
-        }
+        if (sameDayExists) { toast(`Analysis for ${pair} already exists on this date`, '❌'); return; }
     }
 
-    // ════════════════════════════════════════
-    // HISTORY MODAL
-    // ════════════════════════════════════════
-    function openHistoryModal(pair) {
-        const pairAnalyses = allAnalyses
-            .filter(a => a.pair === pair)
-            .sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    const d       = parseDateSafe(dateVal);
+    const month   = MONTHS[d.getMonth()];
+    const dayName = DAY_NAMES[d.getDay()];
+    const year    = d.getFullYear();
 
-        document.getElementById('historyModalTitle').textContent = `${pair} — History`;
-        document.getElementById('historyModalSub').textContent =
-            pairAnalyses.length ? `${pairAnalyses.length} analysis${pairAnalyses.length !== 1 ? 'es' : ''} recorded` : 'No analyses yet';
-
-        const list = document.getElementById('historyList');
-        list.innerHTML = '';
-
-        if (!pairAnalyses.length) {
-            list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No analyses for ${pair} yet.<br>Add one from the Dashboard.</p></div>`;
-            openModal('historyModal');
-            return;
-        }
-
-        pairAnalyses.forEach((a, i) => {
-            const idx = allAnalyses.indexOf(a);
-            const biasClass = a.marketBias === 'Bullish' ? 'badge-bullish' : a.marketBias === 'Bearish' ? 'badge-bearish' : 'badge-neutral';
-            const biasIcon = a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪';
-            const dotColor = a.marketBias === 'Bullish' ? 'var(--green)' : a.marketBias === 'Bearish' ? 'var(--red)' : 'var(--text-dim)';
-            const isLatest = i === 0;
-
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            item.innerHTML = `
-                <div class="history-dot" style="background:${dotColor};"></div>
-                <div class="history-info">
-                    <div class="history-date">${fmtDate(a.date)} · ${a.day || ''}</div>
-                    <div class="history-meta">
-                        <span class="badge ${biasClass}" style="font-size:0.72em;">${biasIcon} ${a.marketBias || '—'}</span>
-                        ${a.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade" style="font-size:0.72em;">💰 Trade</span>' : ''}
-                        ${isLatest ? '<span class="badge" style="font-size:0.72em; background:var(--blue-dim); color:var(--blue); border-color:var(--border-active);">Latest</span>' : ''}
-                    </div>
-                </div>
-                <div class="history-actions">
-                    <button class="btn-sm btn-sm-view" onclick="closeModal('historyModal'); openViewModal(${idx})">👁 View</button>
-                    <button class="btn-sm btn-sm-del" onclick="askDeleteFromHistory(${idx}, '${pair}', '${a.date||''}')">🗑</button>
-                </div>
-            `;
-            list.appendChild(item);
-        });
-
-        // Add new analysis button at bottom
-        const addBtn = document.createElement('button');
-        addBtn.className = 'btn btn-add';
-        addBtn.style.cssText = 'width:100%; margin-top:16px; padding:12px; justify-content:center;';
-        addBtn.innerHTML = '➕ Add New Analysis';
-        addBtn.onclick = () => { closeModal('historyModal'); openAddModal(pair); };
-        list.appendChild(addBtn);
-
-        openModal('historyModal');
-    }
-
-    function askDeleteFromHistory(idx, pair, date) {
-        closeModal('historyModal');
-        confirmAction(`Delete ${pair} analysis from ${fmtDate(date)}?`, () => deleteAnalysis(idx, pair));
-    }
-
-    async function deleteAnalysis(idx, pair) {
-        const a = allAnalyses[idx];
-        if (!a) { toast('Analysis not found', '❌'); return; }
-        if (!a.deleteId) { toast('Missing deleteId — please refresh', '❌'); return; }
-
-        showLoading();
-        try {
-            const r = await fetch(GS_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'delete', deleteId: String(a.deleteId) })
-            });
-            const res = await r.json();
-            hideLoading();
-            if (res.success) {
-                toast(`${pair} analysis deleted`, '🗑️');
-                loadAnalyses();
-            } else {
-                toast('Delete failed: ' + (res.message || 'unknown'), '❌');
-            }
-        } catch(e) {
-            hideLoading();
-            console.error(e);
-            toast('Network error', '❌');
-        }
-    }
-
-    // ════════════════════════════════════════
-    // VIEW MODAL
-    // ════════════════════════════════════════
-    function openViewModal(idx) {
-        const a = allAnalyses[idx];
-        if (!a) return;
-
-        const biasClass = a.marketBias === 'Bullish' ? 'badge-bullish' : a.marketBias === 'Bearish' ? 'badge-bearish' : 'badge-neutral';
-        const biasIcon = a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪';
-
-        function tfBlock(label, colorVar, text, photoUrl) {
-            if (!text && !photoUrl) return '';
-            return `
-                <div class="view-tf" style="border-color:${colorVar};">
-                    <h4 style="color:${colorVar};">${label}</h4>
-                    ${text ? `<p>${text}</p>` : ''}
-                    ${photoUrl ? `<a href="${photoUrl}" target="_blank" class="view-chart-link">📸 View Chart</a>` : ''}
-                </div>
-            `;
-        }
-
-        const content = document.getElementById('viewModalContent');
-        content.innerHTML = `
-            <div class="view-pair-header">
-                <div class="view-pair-name">${a.pair}</div>
-                <span class="badge ${biasClass}">${biasIcon} ${a.marketBias || '—'}</span>
-                ${a.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade">💰 Trade</span>' : ''}
-                <span style="font-family:var(--font-mono); font-size:0.78em; color:var(--text-dim); margin-left:auto;">${fmtDate(a.date)} · ${a.day || ''}</span>
-            </div>
-
-            ${tfBlock('📅 Weekly','var(--orange)',a.weeklyAnalysis,a.weeklyPhoto)}
-            ${tfBlock('📊 Daily','var(--green)',a.dailyAnalysis,a.dailyPhoto)}
-            ${tfBlock('⏱️ 4H','#9C27B0',a.fourHAnalysis,a.fourHPhoto)}
-            ${tfBlock('⚡ 1H','var(--cyan)',a.oneHAnalysis,a.oneHPhoto)}
-
-            <div class="share-actions">
-                <button class="btn btn-secondary btn-ghost" onclick="copyDiscord(${idx})">📋 Copy for Discord</button>
-                <button class="btn btn-secondary btn-ghost" onclick="copyTV(${idx})">📈 Copy for TradingView</button>
-                <button class="btn btn-secondary btn-ghost" style="color:var(--red); border-color:rgba(255,82,82,0.3);" onclick="closeModal('viewModal'); askDeleteFromHistory(${idx}, '${a.pair}', '${a.date||''}')">🗑 Delete</button>
-            </div>
-        `;
-
-        openModal('viewModal');
-    }
-
-    // ════════════════════════════════════════
-    // SHARE / COPY
-    // ════════════════════════════════════════
-    function buildText(a, style) {
-        const d = fmtDate(a.date);
-        let t = '';
-        if (style === 'discord') {
-            t = `**📊 ${a.pair} — ${d}**\n`;
-            if (a.weeklyAnalysis) t += `\n**📅 Weekly**\n${a.weeklyAnalysis}${a.weeklyPhoto ? '\n📸 ' + a.weeklyPhoto : ''}\n`;
-            if (a.dailyAnalysis)  t += `\n**📊 Daily**\n${a.dailyAnalysis}${a.dailyPhoto ? '\n📸 ' + a.dailyPhoto : ''}\n`;
-            if (a.fourHAnalysis)  t += `\n**⏱️ 4H**\n${a.fourHAnalysis}${a.fourHPhoto ? '\n📸 ' + a.fourHPhoto : ''}\n`;
-            if (a.oneHAnalysis)   t += `\n**⚡ 1H**\n${a.oneHAnalysis}${a.oneHPhoto ? '\n📸 ' + a.oneHPhoto : ''}\n`;
-        } else {
-            t = `${'━'.repeat(50)}\n📊 ${a.pair} ANALYSIS — ${d}\n${'━'.repeat(50)}\n`;
-            if (a.weeklyAnalysis) t += `\n📅 WEEKLY\n${a.weeklyAnalysis}${a.weeklyPhoto ? '\n📸 ' + a.weeklyPhoto : ''}\n`;
-            if (a.dailyAnalysis)  t += `\n📊 DAILY\n${a.dailyAnalysis}${a.dailyPhoto ? '\n📸 ' + a.dailyPhoto : ''}\n`;
-            if (a.fourHAnalysis)  t += `\n⏱️ 4H\n${a.fourHAnalysis}${a.fourHPhoto ? '\n📸 ' + a.fourHPhoto : ''}\n`;
-            if (a.oneHAnalysis)   t += `\n⚡ 1H\n${a.oneHAnalysis}${a.oneHPhoto ? '\n📸 ' + a.oneHPhoto : ''}\n`;
-            t += `${'━'.repeat(50)}`;
-        }
-        return t;
-    }
-
-    function copyDiscord(idx) {
-        const a = allAnalyses[idx];
-        navigator.clipboard.writeText(buildText(a, 'discord')).then(() => toast('Copied for Discord', '📋'));
-    }
-
-    function copyTV(idx) {
-        const a = allAnalyses[idx];
-        navigator.clipboard.writeText(buildText(a, 'tv')).then(() => toast('Copied for TradingView', '📈'));
-    }
-
-    // ════════════════════════════════════════
-    // CALENDAR
-    // ════════════════════════════════════════
-    function renderCalendar() {
-        const container = document.getElementById('calendarContainer');
-        const monthName = MONTHS[currentCalMonth];
-        const year = currentCalYear;
-
-        const firstDay = new Date(year, currentCalMonth, 1).getDay();
-        const daysInMonth = new Date(year, currentCalMonth + 1, 0).getDate();
-        const daysInPrev = new Date(year, currentCalMonth, 0).getDate();
-        const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-
-        // Build date → analyses map
-        const dayMap = {};
-        allAnalyses.forEach(a => {
-            if (!a.date) return;
-            const key = localDateStr(parseDateSafe(a.date));
-            if (!dayMap[key]) dayMap[key] = [];
-            dayMap[key].push(a);
-        });
-
-        let html = `
-            <div id="calendarContainer">
-                <div class="cal-controls">
-                    <button class="cal-nav-btn" onclick="calNav(-1)">◄</button>
-                    <span class="cal-month-label">${monthName} ${year}</span>
-                    <button class="cal-nav-btn" onclick="calNav(1)">►</button>
-                </div>
-                <div class="cal-grid">
-                    ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<div class="cal-day-name">${d}</div>`).join('')}
-        `;
-
-        // Prev month padding
-        for (let i = startOffset - 1; i >= 0; i--) {
-            html += `<div class="cal-cell other-month"><div class="cal-cell-day">${daysInPrev - i}</div></div>`;
-        }
-
-        // Current month days
-        for (let d = 1; d <= daysInMonth; d++) {
-            const dateKey = `${year}-${String(currentCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const dayAnalyses = dayMap[dateKey] || [];
-            const hasData = dayAnalyses.length > 0;
-            html += `
-                <div class="cal-cell${hasData ? ' has-data' : ''}" onclick="openDayModal('${dateKey}', ${d})">
-                    <div class="cal-cell-day">${d}</div>
-                    ${dayAnalyses.slice(0,4).map(a =>
-                        `<div class="cal-pair-chip">${a.pair}</div>`
-                    ).join('')}
-                </div>
-            `;
-        }
-
-        // Fill remaining
-        const totalCells = startOffset + daysInMonth;
-        const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-        for (let i = 1; i <= remaining; i++) {
-            html += `<div class="cal-cell other-month"><div class="cal-cell-day">${i}</div></div>`;
-        }
-
-        html += `</div></div>`;
-        container.innerHTML = html;
-    }
-
-    function calNav(delta) {
-        currentCalMonth += delta;
-        if (currentCalMonth < 0) { currentCalMonth = 11; currentCalYear--; }
-        if (currentCalMonth > 11) { currentCalMonth = 0; currentCalYear++; }
-        renderCalendar();
-    }
-
-    function openDayModal(dateKey, day) {
-        const analyses = allAnalyses.filter(a => localDateStr(parseDateSafe(a.date)) === dateKey);
-        const d = parseDateSafe(dateKey);
-        const label = d ? d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : dateKey;
-
-        document.getElementById('dayModalTitle').textContent = label;
-        document.getElementById('dayModalSub').textContent = analyses.length
-            ? `${analyses.length} analysis${analyses.length !== 1 ? 'es' : ''} on this day`
-            : 'No analyses on this day';
-
-        const content = document.getElementById('dayModalContent');
-        content.innerHTML = '';
-
-        if (!analyses.length) {
-            content.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No analyses.</p></div>`;
-        } else {
-            analyses.forEach(a => {
-                const idx = allAnalyses.indexOf(a);
-                const biasClass = a.marketBias === 'Bullish' ? 'badge-bullish' : a.marketBias === 'Bearish' ? 'badge-bearish' : 'badge-neutral';
-                const biasIcon = a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪';
-
-                const card = document.createElement('div');
-                card.className = 'day-card';
-                card.innerHTML = `
-                    <div style="flex:1;">
-                        <div style="font-family:var(--font-display); font-size:1.1em; font-weight:700; margin-bottom:6px;">${a.pair}</div>
-                        <div class="pair-badges">
-                            <span class="badge ${biasClass}">${biasIcon} ${a.marketBias||'—'}</span>
-                            ${a.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade">💰 Trade</span>' : ''}
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn-sm btn-sm-view" onclick="closeModal('dayModal'); openViewModal(${idx})">👁 View</button>
-                        <button class="btn-sm btn-sm-del" onclick="closeModal('dayModal'); askDeleteFromHistory(${idx}, '${a.pair}', '${a.date||''}')">🗑</button>
-                    </div>
-                `;
-                content.appendChild(card);
-            });
-        }
-
-        openModal('dayModal');
-    }
-
-    // ════════════════════════════════════════
-    // JOURNAL
-    // ════════════════════════════════════════
-    function renderJournal() {
-        const container = document.getElementById('journalContainer');
-
-        const sorted = [...allAnalyses].sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-
-        if (!sorted.length) {
-            container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No analyses yet</p></div>`;
-            return;
-        }
-
-        let html = `
-            <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
-            <table style="width:100%; border-collapse:collapse; font-size:0.88em;">
-                <thead>
-                    <tr style="background:var(--surface2); border-bottom:1px solid var(--border);">
-                        <th style="padding:14px 16px; text-align:left; color:var(--text-dim); font-size:0.78em; letter-spacing:0.5px; text-transform:uppercase; font-family:var(--font-mono);">Date</th>
-                        <th style="padding:14px 16px; text-align:left; color:var(--text-dim); font-size:0.78em; letter-spacing:0.5px; text-transform:uppercase; font-family:var(--font-mono);">Pair</th>
-                        <th style="padding:14px 16px; text-align:left; color:var(--text-dim); font-size:0.78em; letter-spacing:0.5px; text-transform:uppercase; font-family:var(--font-mono);">Bias</th>
-                        <th style="padding:14px 16px; text-align:left; color:var(--text-dim); font-size:0.78em; letter-spacing:0.5px; text-transform:uppercase; font-family:var(--font-mono);">Type</th>
-                        <th style="padding:14px 16px; text-align:left; color:var(--text-dim); font-size:0.78em; letter-spacing:0.5px; text-transform:uppercase; font-family:var(--font-mono);">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        sorted.forEach((a, i) => {
-            const idx = allAnalyses.indexOf(a);
-            const biasColor = a.marketBias === 'Bullish' ? 'var(--green)' : a.marketBias === 'Bearish' ? 'var(--red)' : 'var(--text-dim)';
-            const biasIcon = a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪';
-            html += `
-                <tr style="border-bottom:1px solid var(--border); transition:background 0.15s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-                    <td style="padding:13px 16px; font-family:var(--font-mono); font-size:0.85em; color:var(--text-dim);">${fmtDate(a.date)}</td>
-                    <td style="padding:13px 16px; font-family:var(--font-display); font-weight:700; font-size:0.95em;">${a.pair}</td>
-                    <td style="padding:13px 16px; color:${biasColor}; font-weight:600; font-size:0.88em;">${biasIcon} ${a.marketBias || '—'}</td>
-                    <td style="padding:13px 16px; font-size:0.85em; color:var(--text-mid);">${a.tradeStatus === 'Trade Taken' ? '💰 Trade' : '📊 Analysis'}</td>
-                    <td style="padding:13px 16px;">
-                        <div style="display:flex; gap:6px;">
-                            <button class="btn-sm btn-sm-view" onclick="openViewModal(${idx})">👁 View</button>
-                            <button class="btn-sm" style="background:rgba(33,150,243,0.1);color:var(--blue);border:1px solid var(--border-active);" onclick="copyDiscord(${idx})">📋</button>
-                            <button class="btn-sm btn-sm-del" onclick="askDeleteFromHistory(${idx}, '${a.pair}', '${a.date||''}')">🗑</button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-
-        html += `</tbody></table></div>`;
-        container.innerHTML = html;
-    }
-
-    // ════════════════════════════════════════
-    // INIT
-    // ════════════════════════════════════════
-    window.onload = () => {
-        loadAnalyses();
+    const data = {
+        action: isEdit ? 'update' : 'add',
+        pair, month, day: dayName, date: dateVal, year,
+        tradeStatus:    selectedType,
+        marketBias:     selectedBias,
+        analysisStatus: 'Active',
+        weeklyAnalysis: document.getElementById('fWeeklyAnalysis').value,
+        weeklyPhoto:    document.getElementById('fWeeklyPhoto').value,
+        dailyAnalysis:  document.getElementById('fDailyAnalysis').value,
+        dailyPhoto:     document.getElementById('fDailyPhoto').value,
+        fourHAnalysis:  document.getElementById('fFourHAnalysis').value,
+        fourHPhoto:     document.getElementById('fFourHPhoto').value,
+        oneHAnalysis:   document.getElementById('fOneHAnalysis').value,
+        oneHPhoto:      document.getElementById('fOneHPhoto').value,
     };
-    </script>
+    if (isEdit) data.deleteId = editingDeleteId;
+
+    showLoading();
+    try {
+        const r = await fetch(GS_URL, { method: 'POST', body: JSON.stringify(data) });
+        await r.json();
+        hideLoading();
+        closeModal('addModal');
+        toast(isEdit ? `${pair} analysis updated!` : `${pair} analysis saved!`, '✅');
+        loadAnalyses();
+    } catch(e) {
+        hideLoading(); console.error(e);
+        toast('Save failed. Please retry.', '❌');
+    }
+}
+
+// ════════════════════════════════════════
+// HISTORY MODAL
+// ════════════════════════════════════════
+function openHistoryModal(pair) {
+    const pairAnalyses = allAnalyses
+        .filter(a => a.pair === pair)
+        .sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+
+    document.getElementById('historyModalTitle').textContent = `${pair} — History`;
+    document.getElementById('historyModalSub').textContent   = pairAnalyses.length
+        ? `${pairAnalyses.length} analysis${pairAnalyses.length !== 1 ? 'es' : ''} recorded`
+        : 'No analyses yet';
+
+    const list = document.getElementById('historyList');
+    list.innerHTML = '';
+
+    if (!pairAnalyses.length) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No analyses for ${pair} yet.</p></div>`;
+        openModal('historyModal'); return;
+    }
+
+    pairAnalyses.forEach((a, i) => {
+        const idx      = allAnalyses.indexOf(a);
+        const biasClass = a.marketBias === 'Bullish' ? 'badge-bullish' : a.marketBias === 'Bearish' ? 'badge-bearish' : 'badge-neutral';
+        const biasIcon  = a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪';
+        const dotColor  = a.marketBias === 'Bullish' ? 'var(--green)' : a.marketBias === 'Bearish' ? 'var(--red)' : 'var(--text-dim)';
+
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `
+            <div class="history-dot" style="background:${dotColor};"></div>
+            <div class="history-info">
+                <div class="history-date">${fmtDate(a.date)} · ${a.day || ''}</div>
+                <div class="history-meta">
+                    <span class="badge ${biasClass}" style="font-size:0.7em;">${biasIcon} ${a.marketBias||'—'}</span>
+                    ${a.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade" style="font-size:0.7em;">💰 Trade</span>' : ''}
+                    ${i === 0 ? '<span class="badge badge-latest" style="font-size:0.7em;">Latest</span>' : ''}
+                </div>
+            </div>
+            <div class="history-actions">
+                <button class="btn-sm btn-sm-view" onclick="closeModal('historyModal'); openViewModal(${idx})">👁</button>
+                <button class="btn-sm btn-sm-edit" onclick="closeModal('historyModal'); openEditModal(${idx})">✏️</button>
+                <button class="btn-sm btn-sm-del"  onclick="askDeleteFromHistory(${idx}, '${pair}', '${a.date||''}')">🗑</button>
+            </div>
+        `;
+        list.appendChild(item);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn btn-add';
+    addBtn.style.cssText = 'width:100%; margin-top:14px; padding:11px; justify-content:center;';
+    addBtn.innerHTML = '➕ Add New Analysis';
+    addBtn.onclick = () => { closeModal('historyModal'); openAddModal(pair); };
+    list.appendChild(addBtn);
+
+    openModal('historyModal');
+}
+
+function askDeleteFromHistory(idx, pair, date) {
+    closeModal('historyModal');
+    confirmAction(`Delete ${pair} analysis from ${fmtDate(date)}?`, () => deleteAnalysis(idx, pair));
+}
+
+async function deleteAnalysis(idx, pair) {
+    const a = allAnalyses[idx];
+    if (!a)           { toast('Analysis not found', '❌'); return; }
+    if (!a.deleteId)  { toast('Missing deleteId — please refresh', '❌'); return; }
+
+    showLoading();
+    try {
+        const r = await fetch(GS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'delete', deleteId: String(a.deleteId) })
+        });
+        const res = await r.json();
+        hideLoading();
+        if (res.success) {
+            toast(`${pair} analysis deleted`, '🗑️');
+            loadAnalyses();
+        } else {
+            toast('Delete failed: ' + (res.message||'unknown'), '❌');
+        }
+    } catch(e) {
+        hideLoading(); console.error(e);
+        toast('Network error', '❌');
+    }
+}
+
+// ════════════════════════════════════════
+// VIEW MODAL
+// ════════════════════════════════════════
+function openViewModal(idx) {
+    const a = allAnalyses[idx];
+    if (!a) return;
+
+    const biasClass = a.marketBias === 'Bullish' ? 'badge-bullish' : a.marketBias === 'Bearish' ? 'badge-bearish' : 'badge-neutral';
+    const biasIcon  = a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪';
+
+    function tfBlock(label, colorVar, text, photoUrl) {
+        if (!text && !photoUrl) return '';
+        return `<div class="view-tf" style="border-color:${colorVar};">
+            <h4 style="color:${colorVar};">${label}</h4>
+            ${text ? `<p>${text}</p>` : ''}
+            ${photoUrl ? `<a href="${photoUrl}" target="_blank" class="view-chart-link">📸 View Chart</a>` : ''}
+        </div>`;
+    }
+
+    const content = document.getElementById('viewModalContent');
+    content.innerHTML = `
+        <div class="view-pair-header">
+            <div class="view-pair-name">${a.pair}</div>
+            <span class="badge ${biasClass}">${biasIcon} ${a.marketBias||'—'}</span>
+            ${a.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade">💰 Trade</span>' : ''}
+            <span style="font-family:var(--font-mono); font-size:0.76em; color:var(--text-dim); margin-left:auto;">${fmtDate(a.date)} · ${a.day||''}</span>
+        </div>
+        ${tfBlock('📅 Weekly','var(--orange)',a.weeklyAnalysis,a.weeklyPhoto)}
+        ${tfBlock('📊 Daily','var(--green)',a.dailyAnalysis,a.dailyPhoto)}
+        ${tfBlock('⏱️ 4H','var(--purple)',a.fourHAnalysis,a.fourHPhoto)}
+        ${tfBlock('⚡ 1H','var(--cyan)',a.oneHAnalysis,a.oneHPhoto)}
+        <div class="share-actions">
+            <button class="btn btn-edit-card" onclick="closeModal('viewModal'); openEditModal(${idx})">✏️ Edit</button>
+            <button class="btn btn-ghost" onclick="copyDiscord(${idx})">📋 Discord</button>
+            <button class="btn btn-ghost" onclick="copyTV(${idx})">📈 TradingView</button>
+            <button class="btn btn-ghost" style="color:var(--red); border-color:rgba(248,114,114,0.3);" onclick="closeModal('viewModal'); askDeleteFromHistory(${idx}, '${a.pair}', '${a.date||''}')">🗑 Delete</button>
+        </div>
+    `;
+    openModal('viewModal');
+}
+
+// ════════════════════════════════════════
+// SHARE / COPY
+// ════════════════════════════════════════
+function buildText(a, style) {
+    const d = fmtDate(a.date);
+    let t = '';
+    if (style === 'discord') {
+        t = `**📊 ${a.pair} — ${d}**\n`;
+        if (a.weeklyAnalysis) t += `\n**📅 Weekly**\n${a.weeklyAnalysis}${a.weeklyPhoto ? '\n📸 ' + a.weeklyPhoto : ''}\n`;
+        if (a.dailyAnalysis)  t += `\n**📊 Daily**\n${a.dailyAnalysis}${a.dailyPhoto ? '\n📸 ' + a.dailyPhoto : ''}\n`;
+        if (a.fourHAnalysis)  t += `\n**⏱️ 4H**\n${a.fourHAnalysis}${a.fourHPhoto ? '\n📸 ' + a.fourHPhoto : ''}\n`;
+        if (a.oneHAnalysis)   t += `\n**⚡ 1H**\n${a.oneHAnalysis}${a.oneHPhoto ? '\n📸 ' + a.oneHPhoto : ''}\n`;
+    } else {
+        t = `${'━'.repeat(50)}\n📊 ${a.pair} ANALYSIS — ${d}\n${'━'.repeat(50)}\n`;
+        if (a.weeklyAnalysis) t += `\n📅 WEEKLY\n${a.weeklyAnalysis}${a.weeklyPhoto ? '\n📸 ' + a.weeklyPhoto : ''}\n`;
+        if (a.dailyAnalysis)  t += `\n📊 DAILY\n${a.dailyAnalysis}${a.dailyPhoto ? '\n📸 ' + a.dailyPhoto : ''}\n`;
+        if (a.fourHAnalysis)  t += `\n⏱️ 4H\n${a.fourHAnalysis}${a.fourHPhoto ? '\n📸 ' + a.fourHPhoto : ''}\n`;
+        if (a.oneHAnalysis)   t += `\n⚡ 1H\n${a.oneHAnalysis}${a.oneHPhoto ? '\n📸 ' + a.oneHPhoto : ''}\n`;
+        t += `${'━'.repeat(50)}`;
+    }
+    return t;
+}
+function copyDiscord(idx) {
+    navigator.clipboard.writeText(buildText(allAnalyses[idx], 'discord')).then(() => toast('Copied for Discord', '📋'));
+}
+function copyTV(idx) {
+    navigator.clipboard.writeText(buildText(allAnalyses[idx], 'tv')).then(() => toast('Copied for TradingView', '📈'));
+}
+
+// ════════════════════════════════════════
+// CALENDAR
+// ════════════════════════════════════════
+function renderCalendar() {
+    const container = document.getElementById('calendarContainer');
+    const monthName = MONTHS[currentCalMonth];
+    const year      = currentCalYear;
+    const firstDay  = new Date(year, currentCalMonth, 1).getDay();
+    const daysInMonth = new Date(year, currentCalMonth + 1, 0).getDate();
+    const daysInPrev  = new Date(year, currentCalMonth, 0).getDate();
+    const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+
+    const dayMap = {};
+    allAnalyses.forEach(a => {
+        if (!a.date) return;
+        const key = localDateStr(parseDateSafe(a.date));
+        if (!dayMap[key]) dayMap[key] = [];
+        dayMap[key].push(a);
+    });
+
+    let html = `<div class="cal-controls">
+        <button class="cal-nav-btn" onclick="calNav(-1)">◄</button>
+        <span class="cal-month-label">${monthName} ${year}</span>
+        <button class="cal-nav-btn" onclick="calNav(1)">►</button>
+    </div>
+    <div class="cal-grid">
+        ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<div class="cal-day-name">${d}</div>`).join('')}`;
+
+    for (let i = startOffset - 1; i >= 0; i--) {
+        html += `<div class="cal-cell other-month"><div class="cal-cell-day">${daysInPrev - i}</div></div>`;
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateKey    = `${year}-${String(currentCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dayAnalyses = dayMap[dateKey] || [];
+        const hasData    = dayAnalyses.length > 0;
+        html += `<div class="cal-cell${hasData ? ' has-data' : ''}" onclick="openDayModal('${dateKey}', ${d})">
+            <div class="cal-cell-day">${d}</div>
+            ${dayAnalyses.slice(0,4).map(a => `<div class="cal-pair-chip">${a.pair}</div>`).join('')}
+        </div>`;
+    }
+    const totalCells = startOffset + daysInMonth;
+    const remaining  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= remaining; i++) {
+        html += `<div class="cal-cell other-month"><div class="cal-cell-day">${i}</div></div>`;
+    }
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+function calNav(delta) {
+    currentCalMonth += delta;
+    if (currentCalMonth < 0)  { currentCalMonth = 11; currentCalYear--; }
+    if (currentCalMonth > 11) { currentCalMonth = 0;  currentCalYear++; }
+    renderCalendar();
+}
+
+function openDayModal(dateKey, day) {
+    const analyses = allAnalyses.filter(a => localDateStr(parseDateSafe(a.date)) === dateKey);
+    const d = parseDateSafe(dateKey);
+    const label = d ? d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : dateKey;
+
+    document.getElementById('dayModalTitle').textContent = label;
+    document.getElementById('dayModalSub').textContent   = analyses.length
+        ? `${analyses.length} analysis${analyses.length !== 1 ? 'es' : ''} on this day`
+        : 'No analyses on this day';
+
+    const content = document.getElementById('dayModalContent');
+    content.innerHTML = '';
+
+    if (!analyses.length) {
+        content.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No analyses.</p></div>`;
+    } else {
+        analyses.forEach(a => {
+            const idx       = allAnalyses.indexOf(a);
+            const biasClass = a.marketBias === 'Bullish' ? 'badge-bullish' : a.marketBias === 'Bearish' ? 'badge-bearish' : 'badge-neutral';
+            const biasIcon  = a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪';
+            const card = document.createElement('div');
+            card.className = 'day-card';
+            card.innerHTML = `
+                <div style="flex:1;">
+                    <div style="font-family:var(--font-display); font-size:1.05em; font-weight:700; margin-bottom:6px;">${a.pair}</div>
+                    <div class="card-badges">
+                        <span class="badge ${biasClass}">${biasIcon} ${a.marketBias||'—'}</span>
+                        ${a.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade">💰 Trade</span>' : ''}
+                    </div>
+                </div>
+                <div style="display:flex; gap:7px;">
+                    <button class="btn-sm btn-sm-view" onclick="closeModal('dayModal'); openViewModal(${idx})">👁</button>
+                    <button class="btn-sm btn-sm-edit" onclick="closeModal('dayModal'); openEditModal(${idx})">✏️</button>
+                    <button class="btn-sm btn-sm-del"  onclick="closeModal('dayModal'); askDeleteFromHistory(${idx}, '${a.pair}', '${a.date||''}')">🗑</button>
+                </div>
+            `;
+            content.appendChild(card);
+        });
+    }
+    openModal('dayModal');
+}
+
+// ════════════════════════════════════════
+// JOURNAL
+// ════════════════════════════════════════
+function renderJournal() {
+    const container = document.getElementById('journalContainer');
+    const sorted = [...allAnalyses].sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+
+    if (!sorted.length) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No analyses yet</p></div>`;
+        return;
+    }
+
+    let html = `<div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
+        <table style="width:100%; border-collapse:collapse; font-size:0.87em;">
+            <thead>
+                <tr style="background:var(--surface2); border-bottom:1px solid var(--border);">
+                    <th style="padding:13px 15px; text-align:left; color:var(--text-dim); font-size:0.76em; letter-spacing:0.5px; text-transform:uppercase; font-family:var(--font-mono);">Date</th>
+                    <th style="padding:13px 15px; text-align:left; color:var(--text-dim); font-size:0.76em; letter-spacing:0.5px; text-transform:uppercase; font-family:var(--font-mono);">Pair</th>
+                    <th style="padding:13px 15px; text-align:left; color:var(--text-dim); font-size:0.76em; letter-spacing:0.5px; text-transform:uppercase; font-family:var(--font-mono);">Bias</th>
+                    <th style="padding:13px 15px; text-align:left; color:var(--text-dim); font-size:0.76em; letter-spacing:0.5px; text-transform:uppercase; font-family:var(--font-mono);">Type</th>
+                    <th style="padding:13px 15px; text-align:left; color:var(--text-dim); font-size:0.76em; letter-spacing:0.5px; text-transform:uppercase; font-family:var(--font-mono);">Actions</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+    sorted.forEach((a, i) => {
+        const idx       = allAnalyses.indexOf(a);
+        const biasColor = a.marketBias === 'Bullish' ? 'var(--green)' : a.marketBias === 'Bearish' ? 'var(--red)' : 'var(--text-dim)';
+        const biasIcon  = a.marketBias === 'Bullish' ? '🟢' : a.marketBias === 'Bearish' ? '🔴' : '⚪';
+        html += `<tr style="border-bottom:1px solid var(--border); transition:background 0.15s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+            <td style="padding:12px 15px; font-family:var(--font-mono); font-size:0.83em; color:var(--text-dim);">${fmtDate(a.date)}</td>
+            <td style="padding:12px 15px; font-family:var(--font-display); font-weight:700; font-size:0.94em;">${a.pair}</td>
+            <td style="padding:12px 15px; color:${biasColor}; font-weight:600; font-size:0.86em;">${biasIcon} ${a.marketBias||'—'}</td>
+            <td style="padding:12px 15px; font-size:0.83em; color:var(--text-mid);">${a.tradeStatus === 'Trade Taken' ? '💰 Trade' : '📊 Analysis'}</td>
+            <td style="padding:12px 15px;">
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-sm btn-sm-view" onclick="openViewModal(${idx})">👁</button>
+                    <button class="btn-sm btn-sm-edit" onclick="openEditModal(${idx})">✏️</button>
+                    <button class="btn-sm" style="background:rgba(59,163,245,0.1);color:var(--blue);border:1px solid var(--border-active);" onclick="copyDiscord(${idx})">📋</button>
+                    <button class="btn-sm btn-sm-del"  onclick="askDeleteFromHistory(${idx}, '${a.pair}', '${a.date||''}')">🗑</button>
+                </div>
+            </td>
+        </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    container.innerHTML = html;
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+window.onload = () => { loadAnalyses(); };
+</script>
 </body>
 </html>
