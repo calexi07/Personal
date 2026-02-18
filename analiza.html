@@ -1947,26 +1947,49 @@ async function loadEconCalendar() {
     container.innerHTML = '<div class="econ-loading"><div class="spinner" style="margin:0 auto 12px;width:30px;height:30px;border-width:2px;"></div>Loading economic events…</div>';
     document.getElementById('econLastUpdated').textContent = '';
 
-    // Forex Factory public JSON — no API key needed
-    const url = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json?version=' + Date.now();
-    try {
-        const res  = await fetch(url);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        econData = await res.json();
-        document.getElementById('econLastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
-        renderEconCalendar();
-    } catch(e) {
-        console.warn('FF calendar fetch failed:', e);
-        container.innerHTML = `
-            <div class="econ-error">
-                <div style="font-size:2em;margin-bottom:12px;">📅</div>
-                <div style="font-weight:600;margin-bottom:8px;color:var(--text);">Could not load live calendar</div>
-                <div style="font-size:0.85em;line-height:1.6;">
-                    The Forex Factory calendar feed (<code>nfs.faireconomy.media</code>) is blocked or unavailable in your browser.<br><br>
-                    <strong>Try:</strong> Opening this file directly in your browser (not via a local server), or check if an <a href="https://www.forexfactory.com/calendar" target="_blank" style="color:var(--blue);">ad blocker is blocking the request</a>.
-                </div>
-            </div>`;
+    const FF_URL = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+
+    // Proxy chain — tries each in order until one works
+    const attempts = [
+        // 1. Direct (works if no ad blocker blocking CORS)
+        () => fetch(FF_URL, { signal: AbortSignal.timeout(5000) }),
+        // 2. allorigins — free, reliable, adds CORS headers
+        async () => {
+            const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(FF_URL)}`, { signal: AbortSignal.timeout(8000) });
+            const j = await r.json();
+            if (!j.contents) throw new Error('empty');
+            return new Response(j.contents, { status: 200 });
+        },
+        // 3. corsproxy.io
+        () => fetch(`https://corsproxy.io/?${encodeURIComponent(FF_URL)}`, { signal: AbortSignal.timeout(8000) }),
+        // 4. thingproxy
+        () => fetch(`https://thingproxy.freeboard.io/fetch/${FF_URL}`, { signal: AbortSignal.timeout(8000) }),
+    ];
+
+    for (const attempt of attempts) {
+        try {
+            const res = await attempt();
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const text = await res.text();
+            const parsed = JSON.parse(text);
+            if (!Array.isArray(parsed)) throw new Error('Unexpected format');
+            econData = parsed;
+            document.getElementById('econLastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+            renderEconCalendar();
+            return;
+        } catch(e) { console.warn('Calendar attempt failed:', e.message); }
     }
+
+    container.innerHTML = `
+        <div class="econ-error">
+            <div style="font-size:2em;margin-bottom:12px;">📅</div>
+            <div style="font-weight:600;margin-bottom:10px;color:var(--text);">Could not load live calendar</div>
+            <div style="font-size:0.84em;line-height:1.7;color:var(--text-mid);">
+                All proxy attempts failed — most likely caused by an <strong style="color:var(--text);">ad blocker or privacy extension</strong> (uBlock Origin, AdGuard, etc.) blocking external requests.<br><br>
+                <strong style="color:var(--text);">Fix:</strong> Whitelist this page in your ad blocker, then click ↻ Refresh.<br><br>
+                Or view the calendar directly: <a href="https://www.forexfactory.com/calendar" target="_blank" style="color:var(--blue);">ForexFactory.com ↗</a>
+            </div>
+        </div>`;
 }
 
 function setEconFilter(f) {
@@ -2073,45 +2096,87 @@ let newsFilterCurrency = 'ALL';
 
 const NEWS_CURRENCIES = ['ALL','USD','EUR','GBP','JPY','AUD','NZD','CAD','CHF','XAU'];
 
-// RSS feeds via rss2json proxy (free, no key needed for public RSS)
+// These feeds are confirmed to work with rss2json free tier (no API key needed for public RSS)
 const NEWS_FEEDS = [
-    { name: 'FXStreet',    url: 'https://www.fxstreet.com/rss/news',                      tags: ['FXStreet'] },
-    { name: 'ForexLive',   url: 'https://www.forexlive.com/feed/news',                     tags: ['ForexLive'] },
-    { name: 'DailyFX',     url: 'https://www.dailyfx.com/feeds/all',                       tags: ['DailyFX'] },
-    { name: 'Investing',   url: 'https://www.investing.com/rss/news_301.rss',              tags: ['Investing'] },
+    // MarketWatch FX — reliable public RSS
+    { name: 'MarketWatch',  url: 'https://feeds.marketwatch.com/marketwatch/realtimeheadlines/' },
+    // Reuters business/finance
+    { name: 'Reuters',      url: 'https://feeds.reuters.com/reuters/businessNews' },
+    // Yahoo Finance — EUR/USD
+    { name: 'Yahoo EUR/USD', url: 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=EURUSD%3DX&region=US&lang=en-US' },
+    // Yahoo Finance — GBP/USD
+    { name: 'Yahoo GBP/USD', url: 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=GBPUSD%3DX&region=US&lang=en-US' },
+    // Yahoo Finance — Gold
+    { name: 'Yahoo XAU',    url: 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=GC%3DF&region=US&lang=en-US' },
+    // ForexLive technical RSS — confirmed working via allorigins proxy
+    { name: 'ForexLive',    url: 'https://www.forexlive.com/feed/technicalanalysis', proxy: true },
 ];
-const RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+// rss2json free — works for most public RSS without API key
+const RSS2JSON = 'https://api.rss2json.com/v1/api.json?count=15&rss_url=';
+// allorigins proxy for feeds that need CORS help
+const ALLORIGINS = 'https://api.allorigins.win/get?url=';
 
 async function loadNews() {
     document.getElementById('newsList').innerHTML = '<div class="news-loading"><div class="spinner" style="margin:0 auto 10px;width:26px;height:26px;border-width:2px;"></div>Loading news…</div>';
     buildNewsFilters();
 
-    // Try feeds in order, collect results
     const results = [];
-    const tryFeed = async (feed) => {
-        try {
-            const r = await fetch(RSS_PROXY + encodeURIComponent(feed.url) + '&count=20&api_key=', { signal: AbortSignal.timeout(6000) });
-            const j = await r.json();
-            if (j.status === 'ok' && j.items) {
-                j.items.forEach(item => {
-                    results.push({
-                        title:   item.title   || '',
-                        link:    item.link    || item.guid || '',
-                        source:  feed.name,
-                        pubDate: item.pubDate || '',
-                        tags:    detectCurrencies(item.title + ' ' + (item.description || ''))
-                    });
-                });
-            }
-        } catch(e) { console.warn('Feed failed:', feed.name, e); }
+
+    const tryRss2json = async (feed) => {
+        const r = await fetch(RSS2JSON + encodeURIComponent(feed.url), { signal: AbortSignal.timeout(7000) });
+        const j = await r.json();
+        if (j.status !== 'ok' || !j.items?.length) throw new Error('bad response');
+        j.items.forEach(item => {
+            results.push({
+                title:   (item.title || '').trim(),
+                link:    item.link || item.guid || '',
+                source:  feed.name,
+                pubDate: item.pubDate || '',
+                tags:    detectCurrencies(item.title + ' ' + (item.description || ''))
+            });
+        });
     };
 
-    await Promise.allSettled(NEWS_FEEDS.map(f => tryFeed(f)));
+    // For feeds needing proxy, parse RSS XML via allorigins
+    const tryViaProxy = async (feed) => {
+        const r = await fetch(ALLORIGINS + encodeURIComponent(feed.url), { signal: AbortSignal.timeout(8000) });
+        const j = await r.json();
+        if (!j.contents) throw new Error('empty');
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(j.contents, 'text/xml');
+        const items = [...xml.querySelectorAll('item')];
+        if (!items.length) throw new Error('no items');
+        items.slice(0, 15).forEach(item => {
+            const title = item.querySelector('title')?.textContent?.trim() || '';
+            const link  = item.querySelector('link')?.textContent?.trim() || '';
+            const pub   = item.querySelector('pubDate')?.textContent?.trim() || '';
+            if (title) results.push({
+                title, link, source: feed.name, pubDate: pub,
+                tags: detectCurrencies(title)
+            });
+        });
+    };
 
-    // Sort by date desc, deduplicate by title
+    await Promise.allSettled(NEWS_FEEDS.map(async feed => {
+        try {
+            if (feed.proxy) await tryViaProxy(feed);
+            else await tryRss2json(feed);
+        } catch(e1) {
+            // Fallback: try proxy method for any feed that failed rss2json
+            try { await tryViaProxy(feed); }
+            catch(e2) { console.warn('Feed failed entirely:', feed.name); }
+        }
+    }));
+
+    // Sort & deduplicate
     const seen = new Set();
     allNewsItems = results
-        .filter(n => { const k = n.title.slice(0,60); if (seen.has(k)) return false; seen.add(k); return true; })
+        .filter(n => n.title && (() => {
+            const k = n.title.slice(0, 55).toLowerCase();
+            if (seen.has(k)) return false;
+            seen.add(k); return true;
+        })())
         .sort((a,b) => new Date(b.pubDate||0) - new Date(a.pubDate||0));
 
     if (!allNewsItems.length) {
@@ -2119,11 +2184,14 @@ async function loadNews() {
             <div class="news-loading" style="padding:40px;">
                 <div style="font-size:1.6em;margin-bottom:10px;">📡</div>
                 <div style="font-weight:600;color:var(--text);margin-bottom:8px;">News feeds unavailable</div>
-                <div style="font-size:0.84em;line-height:1.6;">The RSS proxy could not be reached.<br>
-                Make sure you're online and check if an ad blocker is interfering.<br><br>
-                Direct links: <a href="https://www.fxstreet.com/news" target="_blank" style="color:var(--blue);">FXStreet</a> · 
-                <a href="https://www.forexlive.com" target="_blank" style="color:var(--blue);">ForexLive</a> · 
-                <a href="https://www.dailyfx.com/news" target="_blank" style="color:var(--blue);">DailyFX</a></div>
+                <div style="font-size:0.84em;line-height:1.6;color:var(--text-mid);">
+                    RSS feeds could not be reached. This is usually caused by an <strong style="color:var(--text);">ad blocker</strong> blocking external requests.<br><br>
+                    Whitelist this page in your ad blocker and try refreshing.<br><br>
+                    Direct links: 
+                    <a href="https://www.forexlive.com" target="_blank" style="color:var(--blue);">ForexLive</a> · 
+                    <a href="https://www.marketwatch.com/markets/currencies" target="_blank" style="color:var(--blue);">MarketWatch</a> · 
+                    <a href="https://finance.yahoo.com/currencies/" target="_blank" style="color:var(--blue);">Yahoo Finance</a>
+                </div>
             </div>`;
         return;
     }
@@ -2177,24 +2245,55 @@ function renderNews() {
 async function loadFxWire() {
     const list = document.getElementById('fxWireList');
     list.innerHTML = '<div class="news-loading" style="padding:20px;">Loading…</div>';
-    try {
-        const r = await fetch(RSS_PROXY + encodeURIComponent('https://www.forexlive.com/feed/technicalanalysis') + '&count=10', { signal: AbortSignal.timeout(5000) });
-        const j = await r.json();
-        if (j.status === 'ok' && j.items?.length) {
-            list.innerHTML = j.items.slice(0,8).map(item => {
-                const ago = timeAgo(item.pubDate);
-                return `<div class="news-item" onclick="window.open('${item.link||'#'}','_blank')">
-                    <div class="news-item-title">${escHtml(item.title||'')}</div>
+
+    const WIRE_FEEDS = [
+        { name: 'ForexLive', url: 'https://www.forexlive.com/feed/technicalanalysis' },
+        { name: 'ForexLive', url: 'https://www.forexlive.com/feed/news' },
+    ];
+
+    for (const feed of WIRE_FEEDS) {
+        try {
+            // Try rss2json first
+            let items = null;
+            try {
+                const r = await fetch(RSS2JSON + encodeURIComponent(feed.url), { signal: AbortSignal.timeout(6000) });
+                const j = await r.json();
+                if (j.status === 'ok' && j.items?.length) items = j.items;
+            } catch {}
+
+            // Fallback: allorigins + XML parse
+            if (!items) {
+                const r = await fetch(ALLORIGINS + encodeURIComponent(feed.url), { signal: AbortSignal.timeout(7000) });
+                const j = await r.json();
+                if (!j.contents) throw new Error('empty');
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(j.contents, 'text/xml');
+                items = [...xml.querySelectorAll('item')].map(el => ({
+                    title:   el.querySelector('title')?.textContent || '',
+                    link:    el.querySelector('link')?.textContent  || '',
+                    pubDate: el.querySelector('pubDate')?.textContent || ''
+                }));
+            }
+
+            if (!items?.length) continue;
+
+            list.innerHTML = items.slice(0, 8).map(item => {
+                const title   = (item.title || '').trim();
+                const link    = item.link || '';
+                const pubDate = item.pubDate || '';
+                return `<div class="news-item" onclick="window.open('${link}','_blank')">
+                    <div class="news-item-title">${escHtml(title)}</div>
                     <div class="news-item-meta">
-                        <span class="news-source">ForexLive</span>
-                        <span class="news-time">${ago}</span>
+                        <span class="news-source">${feed.name}</span>
+                        <span class="news-time">${timeAgo(pubDate)}</span>
                     </div>
                 </div>`;
             }).join('');
-        } else { throw new Error('no items'); }
-    } catch {
-        list.innerHTML = '<div class="news-loading" style="padding:20px;font-size:0.82em;">Could not load wire feed.</div>';
+            return; // success
+        } catch(e) { console.warn('Wire feed failed:', feed.url, e); }
     }
+
+    list.innerHTML = '<div class="news-loading" style="padding:20px;font-size:0.82em;">Could not load wire feed.</div>';
 }
 
 function renderTodayHighImpact() {
