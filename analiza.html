@@ -498,6 +498,169 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* ── CHART EMBED ── */
+        .chart-embed-wrap {
+            margin-top: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            line-height: 0;
+        }
+        .chart-embed {
+            width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            display: block;
+            cursor: zoom-in;
+            transition: opacity 0.2s;
+        }
+        .chart-embed:hover { opacity: 0.92; }
+
+        /* ── LIGHTBOX ── */
+        .lightbox-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 99999;
+            align-items: center; justify-content: center;
+            cursor: zoom-out;
+            animation: fadeIn 0.18s ease;
+        }
+        .lightbox-overlay.open { display: flex; }
+        .lightbox-img {
+            max-width: 94vw; max-height: 92vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+        .lightbox-close {
+            position: fixed; top: 18px; right: 18px;
+            width: 38px; height: 38px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50%; color: #fff; font-size: 1.2em;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s; z-index: 100000;
+        }
+        .lightbox-close:hover { background: rgba(248,114,114,0.4); }
+
+        /* ── NOTIFICATION BELL ── */
+        .notif-wrapper {
+            position: relative;
+        }
+        .notif-btn {
+            width: 36px; height: 36px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-mid);
+            font-size: 1.05em;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .notif-btn:hover { border-color: var(--border-active); color: var(--text); }
+        .notif-btn.has-alerts { border-color: rgba(251,146,60,0.4); color: var(--orange); }
+        .notif-badge {
+            position: absolute; top: -5px; right: -5px;
+            background: var(--orange);
+            color: #1a0a00;
+            font-family: var(--font-mono);
+            font-size: 0.6em; font-weight: 700;
+            min-width: 17px; height: 17px;
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 4px;
+            border: 2px solid var(--bg);
+            pointer-events: none;
+        }
+        .notif-badge.hidden { display: none; }
+
+        .notif-panel {
+            display: none;
+            position: absolute; top: calc(100% + 10px); right: 0;
+            width: 320px;
+            background: var(--surface);
+            border: 1px solid var(--border-active);
+            border-radius: 14px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+            z-index: 9999;
+            overflow: hidden;
+            animation: notifIn 0.2s cubic-bezier(0.34,1.3,0.64,1);
+        }
+        .notif-panel.open { display: block; }
+        @keyframes notifIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .notif-header {
+            padding: 14px 16px 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .notif-header-title {
+            font-family: var(--font-display);
+            font-size: 0.92em; font-weight: 700;
+            color: var(--text);
+        }
+        .notif-mark-read {
+            font-size: 0.72em; color: var(--blue); cursor: pointer;
+            background: none; border: none; font-family: var(--font-body);
+            font-weight: 600; padding: 0;
+        }
+        .notif-mark-read:hover { text-decoration: underline; }
+        .notif-list {
+            max-height: 340px;
+            overflow-y: auto;
+        }
+        .notif-item {
+            padding: 11px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: flex-start; gap: 10px;
+            cursor: pointer; transition: background 0.15s;
+        }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item:hover { background: var(--surface2); }
+        .notif-item.unread { background: rgba(251,146,60,0.05); }
+        .notif-item.unread:hover { background: rgba(251,146,60,0.1); }
+        .notif-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--orange); flex-shrink: 0; margin-top: 5px;
+        }
+        .notif-dot.read { background: transparent; border: 1px solid var(--border); }
+        .notif-item-pair {
+            font-family: var(--font-display);
+            font-size: 0.88em; font-weight: 700;
+            color: var(--text); margin-bottom: 2px;
+        }
+        .notif-item-msg {
+            font-size: 0.78em; color: var(--text-dim); line-height: 1.4;
+        }
+        .notif-item-time {
+            font-family: var(--font-mono);
+            font-size: 0.68em; color: var(--text-dim);
+            margin-top: 3px;
+        }
+        .notif-empty {
+            padding: 28px 16px; text-align: center;
+            color: var(--text-dim); font-size: 0.84em;
+        }
+        .notif-empty .icon { font-size: 1.8em; margin-bottom: 8px; }
+        .notif-footer {
+            padding: 10px 16px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        .notif-footer-btn {
+            font-size: 0.78em; color: var(--text-dim);
+            background: none; border: none; cursor: pointer;
+            font-family: var(--font-body);
+        }
+        .notif-footer-btn:hover { color: var(--text); }
+
         /* ── SCROLLBAR ── */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -536,6 +699,22 @@
         </div>
         <div class="topbar-right">
             <span class="topbar-meta" id="topbarMeta"></span>
+            <div class="notif-wrapper" id="notifWrapper">
+                <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()" title="Notifications">
+                    🔔
+                    <span class="notif-badge hidden" id="notifBadge">0</span>
+                </button>
+                <div class="notif-panel" id="notifPanel">
+                    <div class="notif-header">
+                        <span class="notif-header-title">Notifications</span>
+                        <button class="notif-mark-read" onclick="markAllRead()">Mark all read</button>
+                    </div>
+                    <div class="notif-list" id="notifList"></div>
+                    <div class="notif-footer">
+                        <button class="notif-footer-btn" onclick="toggleNotifPanel()">Close</button>
+                    </div>
+                </div>
+            </div>
             <nav style="display:flex;gap:4px;">
                 <button class="nav-pill active" id="btnDashboard" onclick="showView('dashboard')">Dashboard</button>
                 <button class="nav-pill" id="btnCalendar"  onclick="showView('calendar')">Calendar</button>
@@ -551,7 +730,7 @@
         <div class="page active" id="dashboardView">
             <div class="section-header">
                 <h2 class="section-title">Market <span>Dashboard</span></h2>
-                <button class="btn btn-add" onclick="openAddModal(null)" style="padding:9px 18px;">➕ New Analysis</button>
+                <button class="btn btn-add" onclick="openAddModal(null)" style="padding:8px 14px; font-size:0.8em;">➕ New</button>
             </div>
             <div class="tab-strip" id="categoryTabs"></div>
             <div class="pair-grid" id="pairGrid"></div>
@@ -700,6 +879,12 @@
         <span class="toast-text" id="toastText"></span>
     </div>
 
+    <!-- LIGHTBOX -->
+    <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <img class="lightbox-img" id="lightboxImg" src="" alt="Chart">
+    </div>
+
     <!-- LOADING -->
     <div class="loading-overlay-full" id="loadingOverlay" style="display:none;">
         <div style="text-align:center;">
@@ -791,40 +976,127 @@ function confirmAction(msg, cb) {
 }
 
 // ════════════════════════════════════════
-// TICKER
+// TICKER + NOTIFICATIONS
 // ════════════════════════════════════════
-function buildTicker() {
-    const now = new Date();
-    const alerts = [];
 
+// Notification read state (persisted in sessionStorage)
+function getReadSet() {
+    try { return new Set(JSON.parse(sessionStorage.getItem('notif_read') || '[]')); }
+    catch { return new Set(); }
+}
+function saveReadSet(set) {
+    try { sessionStorage.setItem('notif_read', JSON.stringify([...set])); } catch {}
+}
+
+function buildAlerts() {
+    const alerts = [];
     ALL_PAIRS.forEach(pair => {
         const latest = getLatestAnalysis(pair);
         if (!latest) {
-            alerts.push({ pair, msg: 'No analysis', cls: 't-warn' });
+            alerts.push({ pair, msg: 'No analysis yet', detail: 'This pair has never been analysed.', type: 'missing', key: `missing_${pair}` });
             return;
         }
         const days = daysBetween(latest.date);
         if (days !== null && days >= STALE_DAYS) {
-            alerts.push({ pair, msg: `${days}d ago`, cls: 't-warn' });
+            alerts.push({ pair, msg: `Not updated for ${days} day${days !== 1 ? 's' : ''}`, detail: `Last analysis: ${fmtDate(latest.date)}`, type: 'stale', key: `stale_${pair}_${latest.date}` });
         }
     });
+    return alerts;
+}
+
+function buildTicker() {
+    const alerts = buildAlerts();
 
     const makeHtml = () => {
         if (!alerts.length) return `<span class="ticker-item"><span class="t-ok">✓</span> All pairs up to date</span>`;
         return alerts.map(a =>
-            `<span class="ticker-item"><span class="${a.cls}">⚠</span> <span class="t-pair">${a.pair}</span> — ${a.msg}</span><span class="ticker-sep">|</span>`
+            `<span class="ticker-item"><span class="t-warn">⚠</span> <span class="t-pair">${a.pair}</span> — ${a.msg}</span><span class="ticker-sep">|</span>`
         ).join('');
     };
-
     const html = makeHtml();
     document.getElementById('tickerInner').innerHTML = html;
     document.getElementById('tickerClone').innerHTML = html;
 
-    // Update topbar meta
     document.getElementById('topbarMeta').textContent = alerts.length
         ? `${alerts.length} pair${alerts.length !== 1 ? 's' : ''} need attention`
         : 'All pairs current';
+
+    buildNotifPanel(alerts);
 }
+
+function buildNotifPanel(alerts) {
+    const readSet = getReadSet();
+    const unread  = alerts.filter(a => !readSet.has(a.key));
+
+    // Badge
+    const badge = document.getElementById('notifBadge');
+    const btn   = document.getElementById('notifBtn');
+    if (unread.length) {
+        badge.textContent = unread.length > 9 ? '9+' : unread.length;
+        badge.classList.remove('hidden');
+        btn.classList.add('has-alerts');
+    } else {
+        badge.classList.add('hidden');
+        btn.classList.remove('has-alerts');
+    }
+
+    // List
+    const list = document.getElementById('notifList');
+    if (!alerts.length) {
+        list.innerHTML = `<div class="notif-empty"><div class="icon">✅</div>All pairs are up to date!</div>`;
+        return;
+    }
+
+    list.innerHTML = alerts.map(a => {
+        const isUnread = !readSet.has(a.key);
+        const icon = a.type === 'missing' ? '📭' : '🕐';
+        return `<div class="notif-item ${isUnread ? 'unread' : ''}" onclick="notifItemClick('${a.pair}', '${a.key}')">
+            <div class="notif-dot ${isUnread ? '' : 'read'}"></div>
+            <div style="flex:1; min-width:0;">
+                <div class="notif-item-pair">${icon} ${a.pair}</div>
+                <div class="notif-item-msg">${a.msg}</div>
+                <div class="notif-item-time">${a.detail}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function notifItemClick(pair, key) {
+    // Mark this one read
+    const readSet = getReadSet();
+    readSet.add(key);
+    saveReadSet(readSet);
+    toggleNotifPanel();
+    // Jump to the pair's category and open add modal
+    for (const [cat, pairs] of Object.entries(CATEGORIES)) {
+        if (pairs.includes(pair)) { currentCategory = cat; break; }
+    }
+    renderDashboard();
+    showView('dashboard');
+    // Small delay so dashboard renders first
+    setTimeout(() => openAddModal(pair), 150);
+}
+
+function markAllRead() {
+    const alerts  = buildAlerts();
+    const readSet = getReadSet();
+    alerts.forEach(a => readSet.add(a.key));
+    saveReadSet(readSet);
+    buildNotifPanel(alerts);
+}
+
+function toggleNotifPanel() {
+    const panel = document.getElementById('notifPanel');
+    panel.classList.toggle('open');
+}
+
+// Close panel when clicking outside
+document.addEventListener('click', e => {
+    const wrapper = document.getElementById('notifWrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('notifPanel').classList.remove('open');
+    }
+});
 
 // ════════════════════════════════════════
 // VIEW ROUTING
@@ -922,13 +1194,7 @@ function buildPairCard(pair, analysis, totalCount) {
         }
     }
 
-    // Snippet from most informative timeframe
-    const snippet = analysis
-        ? (analysis.dailyAnalysis || analysis.weeklyAnalysis || analysis.fourHAnalysis || analysis.oneHAnalysis || '')
-        : '';
-    const snippetHtml = snippet
-        ? `<div class="card-snippet">${snippet.slice(0, 120)}${snippet.length > 120 ? '…' : ''}</div>`
-        : '';
+    const snippetHtml = '';
 
     let metaHTML = '';
     if (analysis) {
@@ -1256,10 +1522,42 @@ function openViewModal(idx) {
 
     function tfBlock(label, colorVar, text, photoUrl) {
         if (!text && !photoUrl) return '';
+        // Check if the URL looks like a direct image
+        const isImage = photoUrl && /\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i.test(photoUrl);
+        // Also try to embed imgur, TradingView snapshots, postimg, etc. via direct URL
+        const isEmbeddable = photoUrl && (isImage ||
+            photoUrl.includes('imgur.com') ||
+            photoUrl.includes('postimg.cc') ||
+            photoUrl.includes('ibb.co') ||
+            photoUrl.includes('i.ibb.co') ||
+            photoUrl.includes('tradingview.com/x/') ||
+            photoUrl.includes('prnt.sc') ||
+            photoUrl.includes('gyazo.com') ||
+            photoUrl.includes('pbs.twimg.com')
+        );
+        // For imgur, convert page URLs to direct image URLs
+        let imgSrc = photoUrl;
+        if (photoUrl) {
+            if (/imgur\.com\/([a-zA-Z0-9]+)$/.test(photoUrl)) {
+                imgSrc = photoUrl.replace('imgur.com/', 'i.imgur.com/') + '.jpg';
+            }
+            if (/gyazo\.com\/([a-zA-Z0-9]+)$/.test(photoUrl)) {
+                imgSrc = photoUrl.replace('gyazo.com/', 'i.gyazo.com/') + '.png';
+            }
+        }
         return `<div class="view-tf" style="border-color:${colorVar};">
             <h4 style="color:${colorVar};">${label}</h4>
             ${text ? `<p>${text}</p>` : ''}
-            ${photoUrl ? `<a href="${photoUrl}" target="_blank" class="view-chart-link">📸 View Chart</a>` : ''}
+            ${photoUrl ? (isEmbeddable
+                ? `<div class="chart-embed-wrap">
+                     <img class="chart-embed" src="${imgSrc}" alt="Chart" loading="lazy"
+                          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
+                          onclick="openLightbox('${imgSrc}')">
+                     <a href="${photoUrl}" target="_blank" class="view-chart-link" style="display:none;">📸 Open Chart ↗</a>
+                   </div>
+                   <a href="${photoUrl}" target="_blank" class="view-chart-link" style="margin-top:6px;">↗ Open in new tab</a>`
+                : `<a href="${photoUrl}" target="_blank" class="view-chart-link">📸 View Chart ↗</a>`)
+            : ''}
         </div>`;
     }
 
@@ -1460,6 +1758,22 @@ function renderJournal() {
     html += `</tbody></table></div>`;
     container.innerHTML = html;
 }
+
+// ════════════════════════════════════════
+// LIGHTBOX
+// ════════════════════════════════════════
+function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightboxOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+    document.getElementById('lightboxOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+});
 
 // ════════════════════════════════════════
 // INIT
