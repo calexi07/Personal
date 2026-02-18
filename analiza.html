@@ -667,6 +667,119 @@
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.09); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(59,163,245,0.4); }
 
+        /* ── ECONOMIC CALENDAR ── */
+        .econ-toolbar {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .econ-filter-btn {
+            font-family: var(--font-body); font-size: 0.78em; font-weight: 600;
+            padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+            background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all 0.18s;
+        }
+        .econ-filter-btn:hover { border-color: var(--border-active); color: var(--text); }
+        .econ-filter-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+        .econ-filter-btn.red-active  { background: var(--red);    border-color: var(--red);    color: #fff; }
+        .econ-filter-btn.orange-active { background: var(--orange); border-color: var(--orange); color: #fff; }
+        .econ-table-wrap {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+        }
+        .econ-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        .econ-table thead tr { background: var(--surface2); border-bottom: 1px solid var(--border); }
+        .econ-table th {
+            padding: 11px 14px; text-align: left; font-size: 0.74em; font-weight: 600;
+            color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-family: var(--font-mono);
+        }
+        .econ-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .econ-table tr:last-child td { border-bottom: none; }
+        .econ-table tr:hover td { background: rgba(255,255,255,0.02); }
+        .econ-table tr.day-divider td {
+            background: var(--surface2); padding: 7px 14px;
+            font-family: var(--font-display); font-size: 0.82em; font-weight: 700;
+            color: var(--blue); letter-spacing: 0.3px; border-bottom: 1px solid var(--border);
+        }
+        .econ-time { font-family: var(--font-mono); font-size: 0.82em; color: var(--text-dim); white-space: nowrap; }
+        .econ-currency { font-family: var(--font-mono); font-size: 0.8em; font-weight: 700; }
+        .econ-currency.USD { color: #4ade80; }
+        .econ-currency.EUR { color: #60a5fa; }
+        .econ-currency.GBP { color: #c084fc; }
+        .econ-currency.JPY { color: #fbbf24; }
+        .econ-currency.AUD { color: #34d399; }
+        .econ-currency.NZD { color: #38bdf8; }
+        .econ-currency.CAD { color: #fb923c; }
+        .econ-currency.CHF { color: #f472b6; }
+        .econ-currency.CNY { color: #f87171; }
+        .econ-currency.ALL { color: var(--text-mid); }
+        .impact-dot {
+            display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+        }
+        .impact-high   { background: var(--red);    box-shadow: 0 0 6px rgba(248,114,114,0.5); }
+        .impact-medium { background: var(--orange);  box-shadow: 0 0 6px rgba(251,146,60,0.4); }
+        .impact-low    { background: #facc15;         box-shadow: 0 0 6px rgba(250,204,21,0.35); }
+        .impact-holiday{ background: var(--text-dim); }
+        .econ-event { font-size: 0.88em; color: var(--text); }
+        .econ-val { font-family: var(--font-mono); font-size: 0.82em; }
+        .econ-val.beat   { color: var(--green); }
+        .econ-val.miss   { color: var(--red); }
+        .econ-val.inline { color: var(--text-mid); }
+        .econ-val.empty  { color: var(--text-dim); }
+        .econ-loading, .econ-error {
+            text-align: center; padding: 60px 20px; color: var(--text-dim); font-size: 0.9em;
+        }
+
+        /* ── NEWS FEED ── */
+        .news-layout { display: grid; grid-template-columns: 1fr 340px; gap: 18px; align-items: start; }
+        @media(max-width:900px){ .news-layout { grid-template-columns: 1fr; } }
+        .news-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .news-card-header {
+            padding: 14px 18px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .news-card-title {
+            font-family: var(--font-display); font-size: 0.95em; font-weight: 700;
+        }
+        .news-refresh-btn {
+            font-size: 0.75em; font-weight: 600; color: var(--blue);
+            background: var(--blue-dim); border: 1px solid var(--border-active);
+            border-radius: 20px; padding: 4px 10px; cursor: pointer; transition: all 0.15s;
+        }
+        .news-refresh-btn:hover { background: var(--blue); color: #fff; }
+        .news-list { display: flex; flex-direction: column; }
+        .news-item {
+            padding: 14px 18px; border-bottom: 1px solid var(--border);
+            transition: background 0.15s; cursor: pointer;
+        }
+        .news-item:last-child { border-bottom: none; }
+        .news-item:hover { background: var(--surface2); }
+        .news-item-title {
+            font-size: 0.88em; font-weight: 600; color: var(--text);
+            line-height: 1.45; margin-bottom: 5px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .news-item-meta {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+        }
+        .news-source { font-size: 0.72em; color: var(--blue); font-family: var(--font-mono); }
+        .news-time   { font-size: 0.72em; color: var(--text-dim); font-family: var(--font-mono); }
+        .news-tag {
+            font-size: 0.65em; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+            background: var(--blue-dim); color: var(--blue); border: 1px solid var(--border-active);
+            text-transform: uppercase; letter-spacing: 0.4px;
+        }
+        .news-loading { padding: 40px; text-align: center; color: var(--text-dim); font-size: 0.88em; }
+
+        /* currency filter chips in news */
+        .news-filters { display: flex; gap: 7px; flex-wrap: wrap; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+        .news-chip {
+            font-family: var(--font-mono); font-size: 0.72em; font-weight: 600;
+            padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border);
+            background: var(--surface2); color: var(--text-dim); cursor: pointer; transition: all 0.15s;
+        }
+        .news-chip:hover { border-color: var(--border-active); color: var(--text); }
+        .news-chip.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
         @media (max-width: 768px) {
             .topbar { padding: 0 14px; }
             .main { padding: 16px 10px; }
@@ -718,6 +831,8 @@
             <nav style="display:flex;gap:4px;">
                 <button class="nav-pill active" id="btnDashboard" onclick="showView('dashboard')">Dashboard</button>
                 <button class="nav-pill" id="btnCalendar"  onclick="showView('calendar')">Calendar</button>
+                <button class="nav-pill" id="btnEvents"    onclick="showView('events')">📅 Events</button>
+                <button class="nav-pill" id="btnNews"      onclick="showView('news')">📰 News</button>
                 <button class="nav-pill" id="btnJournal"   onclick="showView('journal')">Journal</button>
             </nav>
         </div>
@@ -750,6 +865,61 @@
                 <h2 class="section-title">Analysis <span>Journal</span></h2>
             </div>
             <div id="journalContainer"></div>
+        </div>
+
+        <!-- ECONOMIC CALENDAR (EVENTS) -->
+        <div class="page" id="eventsView">
+            <div class="section-header">
+                <h2 class="section-title">Economic <span>Events</span></h2>
+                <span class="topbar-meta" id="econLastUpdated"></span>
+            </div>
+            <div class="econ-toolbar">
+                <span style="font-size:0.8em;color:var(--text-dim);font-family:var(--font-mono);">Impact:</span>
+                <button class="econ-filter-btn active" id="efAll"    onclick="setEconFilter('all')">All</button>
+                <button class="econ-filter-btn" id="efHigh"   onclick="setEconFilter('high')">🔴 High</button>
+                <button class="econ-filter-btn" id="efMed"    onclick="setEconFilter('medium')">🟠 Medium</button>
+                <button class="econ-filter-btn" id="efLow"    onclick="setEconFilter('low')">🟡 Low</button>
+                <span style="margin-left:auto;">
+                    <button class="econ-filter-btn" onclick="loadEconCalendar()" style="color:var(--blue);border-color:var(--border-active);">↻ Refresh</button>
+                </span>
+            </div>
+            <div class="econ-table-wrap">
+                <div id="econTableContainer"><div class="econ-loading"><div class="spinner" style="margin:0 auto 12px;width:30px;height:30px;border-width:2px;"></div>Loading economic events…</div></div>
+            </div>
+        </div>
+
+        <!-- NEWS -->
+        <div class="page" id="newsView">
+            <div class="section-header">
+                <h2 class="section-title">Forex <span>News</span></h2>
+            </div>
+            <div class="news-layout">
+                <!-- Main news feed -->
+                <div class="news-card">
+                    <div class="news-card-header">
+                        <span class="news-card-title">Latest Forex News</span>
+                        <button class="news-refresh-btn" onclick="loadNews()">↻ Refresh</button>
+                    </div>
+                    <div class="news-filters" id="newsFilters"></div>
+                    <div class="news-list" id="newsList"><div class="news-loading"><div class="spinner" style="margin:0 auto 10px;width:26px;height:26px;border-width:2px;"></div>Loading news…</div></div>
+                </div>
+                <!-- Side: market sentiment / quick stats -->
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div class="news-card">
+                        <div class="news-card-header">
+                            <span class="news-card-title">🗓 Today's High Impact</span>
+                        </div>
+                        <div id="todayHighImpact" class="news-list"><div class="news-loading" style="padding:24px;">Loading…</div></div>
+                    </div>
+                    <div class="news-card">
+                        <div class="news-card-header">
+                            <span class="news-card-title">📰 FX Wire</span>
+                            <button class="news-refresh-btn" onclick="loadFxWire()">↻</button>
+                        </div>
+                        <div class="news-list" id="fxWireList"><div class="news-loading" style="padding:24px;">Loading…</div></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1108,6 +1278,8 @@ function showView(view) {
     document.getElementById('btn' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
     if (view === 'calendar') renderCalendar();
     if (view === 'journal')  renderJournal();
+    if (view === 'events')   loadEconCalendar();
+    if (view === 'news')     { loadNews(); loadFxWire(); setTimeout(renderTodayHighImpact, 300); }
 }
 
 // ════════════════════════════════════════
@@ -1757,6 +1929,318 @@ function renderJournal() {
 
     html += `</tbody></table></div>`;
     container.innerHTML = html;
+}
+
+// ════════════════════════════════════════
+// VIEW ROUTING — extended
+// ════════════════════════════════════════
+const ALL_VIEWS = ['dashboard','calendar','events','news','journal'];
+
+// ════════════════════════════════════════
+// ECONOMIC CALENDAR
+// ════════════════════════════════════════
+let econData = [];
+let econFilter = 'all';
+
+async function loadEconCalendar() {
+    const container = document.getElementById('econTableContainer');
+    container.innerHTML = '<div class="econ-loading"><div class="spinner" style="margin:0 auto 12px;width:30px;height:30px;border-width:2px;"></div>Loading economic events…</div>';
+    document.getElementById('econLastUpdated').textContent = '';
+
+    // Forex Factory public JSON — no API key needed
+    const url = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json?version=' + Date.now();
+    try {
+        const res  = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        econData = await res.json();
+        document.getElementById('econLastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        renderEconCalendar();
+    } catch(e) {
+        console.warn('FF calendar fetch failed:', e);
+        container.innerHTML = `
+            <div class="econ-error">
+                <div style="font-size:2em;margin-bottom:12px;">📅</div>
+                <div style="font-weight:600;margin-bottom:8px;color:var(--text);">Could not load live calendar</div>
+                <div style="font-size:0.85em;line-height:1.6;">
+                    The Forex Factory calendar feed (<code>nfs.faireconomy.media</code>) is blocked or unavailable in your browser.<br><br>
+                    <strong>Try:</strong> Opening this file directly in your browser (not via a local server), or check if an <a href="https://www.forexfactory.com/calendar" target="_blank" style="color:var(--blue);">ad blocker is blocking the request</a>.
+                </div>
+            </div>`;
+    }
+}
+
+function setEconFilter(f) {
+    econFilter = f;
+    document.querySelectorAll('.econ-filter-btn[id^="ef"]').forEach(b => b.classList.remove('active','red-active','orange-active'));
+    const btn = document.getElementById('ef' + f.charAt(0).toUpperCase() + f.slice(1));
+    if (btn) btn.classList.add('active');
+    renderEconCalendar();
+}
+
+function renderEconCalendar() {
+    const container = document.getElementById('econTableContainer');
+    if (!econData.length) return;
+
+    const filtered = econData.filter(e => {
+        if (econFilter === 'all') return true;
+        return (e.impact || '').toLowerCase() === econFilter;
+    });
+
+    if (!filtered.length) {
+        container.innerHTML = '<div class="econ-loading">No events match the selected filter.</div>';
+        return;
+    }
+
+    // Group by date
+    const byDate = {};
+    filtered.forEach(e => {
+        const d = (e.date || '').split('T')[0];
+        if (!byDate[d]) byDate[d] = [];
+        byDate[d].push(e);
+    });
+
+    let html = `<table class="econ-table">
+        <thead><tr>
+            <th>Time</th>
+            <th>Currency</th>
+            <th>Impact</th>
+            <th>Event</th>
+            <th>Actual</th>
+            <th>Forecast</th>
+            <th>Previous</th>
+        </tr></thead>
+        <tbody>`;
+
+    const now = new Date();
+
+    Object.keys(byDate).sort().forEach(dateKey => {
+        const d = new Date(dateKey + 'T12:00:00');
+        const isToday = d.toDateString() === now.toDateString();
+        const label = isToday
+            ? `📍 Today — ${d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}`
+            : d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        html += `<tr class="day-divider"><td colspan="7">${label}</td></tr>`;
+
+        byDate[dateKey].forEach(ev => {
+            const impact = (ev.impact||'').toLowerCase();
+            const dotCls = impact === 'high' ? 'impact-high' : impact === 'medium' ? 'impact-medium' : impact === 'holiday' ? 'impact-holiday' : 'impact-low';
+            const cur    = ev.country || '—';
+
+            // Time
+            let timeStr = '—';
+            if (ev.date && ev.date.includes('T')) {
+                const t = new Date(ev.date);
+                timeStr = t.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+            } else if (ev.date) {
+                timeStr = 'All Day';
+            }
+
+            // Value colouring
+            const actual   = ev.actual   || '';
+            const forecast = ev.forecast || '';
+            const previous = ev.previous || '';
+
+            let actualCls = 'empty';
+            if (actual && forecast) {
+                const a = parseFloat(actual);
+                const f = parseFloat(forecast);
+                if (!isNaN(a) && !isNaN(f)) {
+                    actualCls = a > f ? 'beat' : a < f ? 'miss' : 'inline';
+                } else { actualCls = 'inline'; }
+            } else if (actual) { actualCls = 'inline'; }
+
+            html += `<tr>
+                <td class="econ-time">${timeStr}</td>
+                <td><span class="econ-currency ${cur}">${cur}</span></td>
+                <td><span class="impact-dot ${dotCls}" title="${ev.impact||''}"></span></td>
+                <td class="econ-event">${ev.title || '—'}</td>
+                <td class="econ-val ${actualCls}">${actual || '—'}</td>
+                <td class="econ-val empty">${forecast || '—'}</td>
+                <td class="econ-val empty">${previous || '—'}</td>
+            </tr>`;
+        });
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// ════════════════════════════════════════
+// NEWS FEED
+// ════════════════════════════════════════
+let allNewsItems = [];
+let newsFilterCurrency = 'ALL';
+
+const NEWS_CURRENCIES = ['ALL','USD','EUR','GBP','JPY','AUD','NZD','CAD','CHF','XAU'];
+
+// RSS feeds via rss2json proxy (free, no key needed for public RSS)
+const NEWS_FEEDS = [
+    { name: 'FXStreet',    url: 'https://www.fxstreet.com/rss/news',                      tags: ['FXStreet'] },
+    { name: 'ForexLive',   url: 'https://www.forexlive.com/feed/news',                     tags: ['ForexLive'] },
+    { name: 'DailyFX',     url: 'https://www.dailyfx.com/feeds/all',                       tags: ['DailyFX'] },
+    { name: 'Investing',   url: 'https://www.investing.com/rss/news_301.rss',              tags: ['Investing'] },
+];
+const RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+async function loadNews() {
+    document.getElementById('newsList').innerHTML = '<div class="news-loading"><div class="spinner" style="margin:0 auto 10px;width:26px;height:26px;border-width:2px;"></div>Loading news…</div>';
+    buildNewsFilters();
+
+    // Try feeds in order, collect results
+    const results = [];
+    const tryFeed = async (feed) => {
+        try {
+            const r = await fetch(RSS_PROXY + encodeURIComponent(feed.url) + '&count=20&api_key=', { signal: AbortSignal.timeout(6000) });
+            const j = await r.json();
+            if (j.status === 'ok' && j.items) {
+                j.items.forEach(item => {
+                    results.push({
+                        title:   item.title   || '',
+                        link:    item.link    || item.guid || '',
+                        source:  feed.name,
+                        pubDate: item.pubDate || '',
+                        tags:    detectCurrencies(item.title + ' ' + (item.description || ''))
+                    });
+                });
+            }
+        } catch(e) { console.warn('Feed failed:', feed.name, e); }
+    };
+
+    await Promise.allSettled(NEWS_FEEDS.map(f => tryFeed(f)));
+
+    // Sort by date desc, deduplicate by title
+    const seen = new Set();
+    allNewsItems = results
+        .filter(n => { const k = n.title.slice(0,60); if (seen.has(k)) return false; seen.add(k); return true; })
+        .sort((a,b) => new Date(b.pubDate||0) - new Date(a.pubDate||0));
+
+    if (!allNewsItems.length) {
+        document.getElementById('newsList').innerHTML = `
+            <div class="news-loading" style="padding:40px;">
+                <div style="font-size:1.6em;margin-bottom:10px;">📡</div>
+                <div style="font-weight:600;color:var(--text);margin-bottom:8px;">News feeds unavailable</div>
+                <div style="font-size:0.84em;line-height:1.6;">The RSS proxy could not be reached.<br>
+                Make sure you're online and check if an ad blocker is interfering.<br><br>
+                Direct links: <a href="https://www.fxstreet.com/news" target="_blank" style="color:var(--blue);">FXStreet</a> · 
+                <a href="https://www.forexlive.com" target="_blank" style="color:var(--blue);">ForexLive</a> · 
+                <a href="https://www.dailyfx.com/news" target="_blank" style="color:var(--blue);">DailyFX</a></div>
+            </div>`;
+        return;
+    }
+
+    renderNews();
+}
+
+function detectCurrencies(text) {
+    const upper = text.toUpperCase();
+    return NEWS_CURRENCIES.filter(c => c !== 'ALL' && upper.includes(c));
+}
+
+function buildNewsFilters() {
+    const wrap = document.getElementById('newsFilters');
+    wrap.innerHTML = NEWS_CURRENCIES.map(c =>
+        `<span class="news-chip ${c === newsFilterCurrency ? 'active' : ''}" onclick="setNewsFilter('${c}')">${c}</span>`
+    ).join('');
+}
+
+function setNewsFilter(c) {
+    newsFilterCurrency = c;
+    buildNewsFilters();
+    renderNews();
+}
+
+function renderNews() {
+    const list = document.getElementById('newsList');
+    const items = newsFilterCurrency === 'ALL'
+        ? allNewsItems
+        : allNewsItems.filter(n => n.tags.includes(newsFilterCurrency));
+
+    if (!items.length) {
+        list.innerHTML = `<div class="news-loading">No ${newsFilterCurrency} news found.</div>`;
+        return;
+    }
+
+    list.innerHTML = items.slice(0,40).map(n => {
+        const ago = timeAgo(n.pubDate);
+        const tagHtml = n.tags.slice(0,3).map(t => `<span class="news-tag">${t}</span>`).join('');
+        return `<div class="news-item" onclick="window.open('${n.link}','_blank')">
+            <div class="news-item-title">${escHtml(n.title)}</div>
+            <div class="news-item-meta">
+                <span class="news-source">${n.source}</span>
+                <span class="news-time">${ago}</span>
+                ${tagHtml}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function loadFxWire() {
+    const list = document.getElementById('fxWireList');
+    list.innerHTML = '<div class="news-loading" style="padding:20px;">Loading…</div>';
+    try {
+        const r = await fetch(RSS_PROXY + encodeURIComponent('https://www.forexlive.com/feed/technicalanalysis') + '&count=10', { signal: AbortSignal.timeout(5000) });
+        const j = await r.json();
+        if (j.status === 'ok' && j.items?.length) {
+            list.innerHTML = j.items.slice(0,8).map(item => {
+                const ago = timeAgo(item.pubDate);
+                return `<div class="news-item" onclick="window.open('${item.link||'#'}','_blank')">
+                    <div class="news-item-title">${escHtml(item.title||'')}</div>
+                    <div class="news-item-meta">
+                        <span class="news-source">ForexLive</span>
+                        <span class="news-time">${ago}</span>
+                    </div>
+                </div>`;
+            }).join('');
+        } else { throw new Error('no items'); }
+    } catch {
+        list.innerHTML = '<div class="news-loading" style="padding:20px;font-size:0.82em;">Could not load wire feed.</div>';
+    }
+}
+
+function renderTodayHighImpact() {
+    const box = document.getElementById('todayHighImpact');
+    if (!econData.length) {
+        box.innerHTML = '<div class="news-loading" style="padding:20px;font-size:0.82em;">Load the Events tab first.</div>';
+        return;
+    }
+    const today = new Date().toDateString();
+    const hi = econData.filter(e => {
+        if ((e.impact||'').toLowerCase() !== 'high') return false;
+        const d = new Date((e.date||'').split('T')[0] + 'T12:00:00');
+        return d.toDateString() === today;
+    });
+    if (!hi.length) {
+        box.innerHTML = '<div class="news-loading" style="padding:20px;font-size:0.82em;">No high-impact events today.</div>';
+        return;
+    }
+    box.innerHTML = hi.map(e => {
+        let timeStr = '—';
+        if (e.date?.includes('T')) timeStr = new Date(e.date).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+        return `<div class="news-item">
+            <div class="news-item-title" style="-webkit-line-clamp:1;">${e.title||'—'}</div>
+            <div class="news-item-meta">
+                <span class="news-source">${e.country||'—'}</span>
+                <span class="news-time">${timeStr}</span>
+                ${e.actual ? `<span class="news-tag" style="background:rgba(34,229,160,0.12);color:var(--green);border-color:rgba(34,229,160,0.25);">A: ${e.actual}</span>` : ''}
+                ${e.forecast ? `<span class="news-tag">F: ${e.forecast}</span>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return '';
+    const diff = Math.floor((Date.now() - d) / 1000);
+    if (diff < 60)   return diff + 's ago';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400)return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+}
+
+function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ════════════════════════════════════════
