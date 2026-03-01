@@ -363,6 +363,74 @@
             box-shadow: 0 4px 15px rgba(156,39,176,0.3);
         }
         .avm-open-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(156,39,176,0.5); }
+
+        /* chart images inside analysis modal */
+        .avm-chart-wrap {
+            margin-top: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(0,0,0,0.3);
+            line-height: 0;
+        }
+        .avm-chart-img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            display: block;
+            cursor: zoom-in;
+            transition: opacity 0.2s;
+        }
+        .avm-chart-img:hover { opacity: 0.88; }
+        .avm-chart-link {
+            display: inline-flex; align-items: center; gap: 5px;
+            margin-top: 9px;
+            font-size: 0.8em; font-weight: 600;
+            color: #42a5f5;
+            text-decoration: none;
+            padding: 5px 11px;
+            background: rgba(33,150,243,0.1);
+            border-radius: 6px;
+            border: 1px solid rgba(33,150,243,0.25);
+            transition: all 0.2s;
+        }
+        .avm-chart-link:hover { background: rgba(33,150,243,0.25); }
+
+        /* lightbox for zoomed chart */
+        #avmLightbox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.93);
+            z-index: 20000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+        #avmLightbox.open { display: flex; }
+        #avmLightboxImg {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+        .avm-lb-close {
+            position: absolute;
+            top: 18px; right: 22px;
+            color: #fff;
+            font-size: 1.8em;
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .avm-lb-close:hover { background: rgba(255,68,68,0.3); }
     </style>
 </head>
 <body>
@@ -1529,6 +1597,23 @@ function openAnalysisModal(analysisId) {
         });
 }
 
+function resolveImgSrc(url) {
+    if (!url) return null;
+    let src = url;
+    if (/imgur\.com\/([a-zA-Z0-9]+)$/.test(url)) src = url.replace('imgur.com/', 'i.imgur.com/') + '.jpg';
+    if (/gyazo\.com\/([a-zA-Z0-9]+)$/.test(url)) src = url.replace('gyazo.com/', 'i.gyazo.com/') + '.png';
+    return src;
+}
+
+function isEmbeddable(url) {
+    if (!url) return false;
+    return /\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i.test(url)
+        || url.includes('imgur.com') || url.includes('postimg.cc')
+        || url.includes('i.ibb.co') || url.includes('tradingview.com/x/')
+        || url.includes('prnt.sc') || url.includes('gyazo.com')
+        || url.includes('pbs.twimg.com');
+}
+
 function renderAnalysisModal(a) {
     const dateStr   = a.date ? new Date(a.date).toLocaleDateString('ro-RO', {weekday:'long', day:'2-digit', month:'long', year:'numeric'}) : '—';
     const biasClass = a.marketBias === 'Bullish' ? 'bullish' : a.marketBias === 'Bearish' ? 'bearish' : 'neutral';
@@ -1538,18 +1623,35 @@ function renderAnalysisModal(a) {
     document.getElementById('avmHeaderDate').textContent = dateStr;
 
     const timeframes = [
-        { key: 'weeklyAnalysis',    label: 'Weekly (W1)',        cls: 'tf-weekly', icon: '📅' },
-        { key: 'dailyAnalysis',     label: 'Daily (D1)',         cls: 'tf-daily',  icon: '📆' },
-        { key: 'fourHourAnalysis',  label: '4H',                 cls: 'tf-4h',     icon: '🕓' },
-        { key: 'oneHourAnalysis',   label: '1H',                 cls: 'tf-1h',     icon: '🕐' },
-        { key: 'executionAnalysis', label: 'Execuție (15m/5m)',  cls: 'tf-exec',   icon: '🎯' },
+        { textKey: 'weeklyAnalysis',   photoKey: 'weeklyPhoto',  label: 'Weekly (W1)',       cls: 'tf-weekly', icon: '📅' },
+        { textKey: 'dailyAnalysis',    photoKey: 'dailyPhoto',   label: 'Daily (D1)',        cls: 'tf-daily',  icon: '📆' },
+        { textKey: 'fourHAnalysis',    photoKey: 'fourHPhoto',   label: '4H',                cls: 'tf-4h',     icon: '🕓' },
+        { textKey: 'oneHAnalysis',     photoKey: 'oneHPhoto',    label: '1H',                cls: 'tf-1h',     icon: '🕐' },
     ];
 
     const tfsHtml = timeframes.map(tf => {
-        const content = a[tf.key] ? a[tf.key].trim() : '';
+        const text  = a[tf.textKey]  ? a[tf.textKey].trim()  : '';
+        const photo = a[tf.photoKey] ? a[tf.photoKey].trim() : '';
+        if (!text && !photo) return '';
+
+        const imgSrc    = resolveImgSrc(photo);
+        const embeddable = isEmbeddable(photo);
+
+        const imgHtml = photo
+            ? (embeddable
+                ? `<div class="avm-chart-wrap">
+                    <img class="avm-chart-img" src="${imgSrc}" alt="Chart" loading="lazy"
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';"
+                        onclick="avmOpenLightbox('${imgSrc}')">
+                    <a href="${photo}" target="_blank" class="avm-chart-link" style="display:none;">📸 Open Chart ↗</a>
+                   </div>
+                   <a href="${photo}" target="_blank" class="avm-chart-link">↗ Open in new tab</a>`
+                : `<a href="${photo}" target="_blank" class="avm-chart-link">📸 View Chart ↗</a>`)
+            : '';
+
         return `<div class="avm-tf-section">
             <div class="avm-tf-header ${tf.cls}">${tf.icon} ${tf.label}</div>
-            <div class="avm-tf-content ${content ? '' : 'avm-tf-empty'}">${content || 'Fără notițe.'}</div>
+            <div class="avm-tf-content ${text ? '' : 'avm-tf-empty'}">${text || '<em>Fără notițe.</em>'}${imgHtml}</div>
         </div>`;
     }).join('');
 
@@ -1610,6 +1712,25 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAnalysi
         <div class="avm-body" id="avmBody"></div>
     </div>
 </div>
+
+<!-- ══ CHART LIGHTBOX ══ -->
+<div id="avmLightbox" onclick="avmCloseLightbox()">
+    <button class="avm-lb-close" onclick="avmCloseLightbox()">✕</button>
+    <img id="avmLightboxImg" src="" alt="Chart">
+</div>
+
+<script>
+function avmOpenLightbox(src) {
+    document.getElementById('avmLightboxImg').src = src;
+    document.getElementById('avmLightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function avmCloseLightbox() {
+    document.getElementById('avmLightbox').classList.remove('open');
+    // don't restore scroll here — modal is still open
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') avmCloseLightbox(); });
+</script>
 
 </body>
 </html>
