@@ -1526,6 +1526,21 @@ select:hover { border-color: var(--glass-border-lit); }
     </div>
 </div>
 
+
+<!-- ══ DEPOSITS LIST MODAL (Personal) ══ -->
+<div class="modal-overlay" id="depositsListModal">
+    <div class="modal-box" style="max-width:560px;border-color:rgba(61,139,255,0.25);">
+        <div class="modal-header">
+            <span class="modal-title" style="color:var(--blue);">💳 Depozite & Retrageri — <span id="depositsListAccName" style="color:var(--blue);"></span></span>
+            <button class="modal-close" onclick="closeDepositsListModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div id="depositsListBody"></div>
+            <button onclick="openDepositModal(depositsListAccId)" style="width:100%;margin-top:16px;padding:10px;background:var(--blue-dim);border:1px solid rgba(61,139,255,0.25);border-radius:var(--radius-sm);color:var(--blue);font-family:var(--font-body);font-weight:600;cursor:pointer;font-size:0.85em;">➕ Adaugă Tranzacție</button>
+        </div>
+    </div>
+</div>
+
 <!-- ══ LOADING ══ -->
 <div class="loading-overlay active" id="loadingOverlay">
     <div style="text-align:center;">
@@ -1971,8 +1986,8 @@ function renderOverview() {
                     </div>
                     <div class="card-actions">
                         ${isLoggedIn ? `
-                        ${(acc.isPersonal || acc.type === 'Personal') ? `<button class="card-icon-btn" onclick="event.stopPropagation();openDepositModal('${acc.id}')" title="Depozit/Retragere" style="color:var(--blue);border-color:rgba(61,139,255,0.3);">＋</button>` : ''}
-                        <button class="card-icon-btn payout" onclick="event.stopPropagation();openPayoutsListModal('${acc.id}')" title="Payouts">💸</button>
+                        ${(acc.isPersonal || acc.type === 'Personal') ? `<button class="card-icon-btn" onclick="event.stopPropagation();openDepositsListModal('${acc.id}')" title="Depozite/Retrageri" style="color:var(--blue);border-color:rgba(61,139,255,0.3);">💳</button>` : ''}
+                        ${acc.type === 'Live' ? `<button class="card-icon-btn payout" onclick="event.stopPropagation();openPayoutsListModal('${acc.id}')" title="Payouts">💸</button>` : ''}
                         <button class="card-icon-btn" onclick="event.stopPropagation();openEditAccountModal('${acc.id}')" title="Editează" style="color:var(--blue);border-color:rgba(61,139,255,0.25);">✏️</button>
                         <button class="card-icon-btn danger" onclick="event.stopPropagation();deleteAccount('${acc.id}')" title="Șterge">🗑</button>` : ''}
                     </div>
@@ -2052,8 +2067,8 @@ function renderContextBar() {
         <div class="ctx-meta">Payouts: <strong style="color:var(--accent);">$${totalPayouts.toFixed(2)}</strong></div>
         <div class="ctx-spacer"></div>
         ${isLoggedIn ? `
-        ${(acc.isPersonal || acc.type === 'Personal') ? `<button onclick="openDepositModal('${acc.id}')" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--blue-dim);border:1px solid rgba(61,139,255,0.2);border-radius:var(--radius-sm);color:var(--blue);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;">➕ Depozit</button>` : ''}
-        <button onclick="openPayoutsListModal('${acc.id}')" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--accent-dim);border:1px solid rgba(0,229,160,0.2);border-radius:var(--radius-sm);color:var(--accent);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;">💸 Payouts</button>` : ''}
+        ${(acc.isPersonal || acc.type === 'Personal') ? `<button onclick="openDepositsListModal('${acc.id}')" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--blue-dim);border:1px solid rgba(61,139,255,0.2);border-radius:var(--radius-sm);color:var(--blue);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;">💳 Depozite</button>` : ''}
+        ${acc.type === 'Live' ? `<button onclick="openPayoutsListModal('${acc.id}')" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--accent-dim);border:1px solid rgba(0,229,160,0.2);border-radius:var(--radius-sm);color:var(--accent);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;">💸 Payouts</button>` : ''}` : ''}
     `;
     document.getElementById('dashTitle').textContent = `📊 ${acc.name} — Statistics`;
 }
@@ -2550,6 +2565,11 @@ function openDepositModal(accId) {
 function closeDepositModal() {
     document.getElementById('depositModal').classList.remove('open');
     depositTargetAccId = null;
+    // Re-open depositsListModal if it was open
+    if (depositsListAccId) {
+        renderDepositsListModal(depositsListAccId);
+        document.getElementById('depositsListModal').classList.add('open');
+    }
 }
 function setTxnType(type) {
     currentTxnType = type;
@@ -2598,6 +2618,7 @@ async function submitDeposit() {
     renderOverview();
     if (currentAccId === acc.id) { loadTradesFromSheet(); }
     alert(`${currentTxnType === 'deposit' ? 'Depozit' : 'Retragere'} de $${amount.toFixed(2)} înregistrat! ✅`);
+    if (depositsListAccId === acc.id) renderDepositsListModal(acc.id);
 }
 
 // ════════════════════════════════════════════════════════
@@ -2650,6 +2671,72 @@ function renderGlobalPayouts() {
 // ════════════════════════════════════════════════════════
 // ADD ACCOUNT — also support Personal type
 // ════════════════════════════════════════════════════════
+
+
+// ════════════════════════════════════════════════════════
+// DEPOSITS LIST MODAL (Personal Account)
+// ════════════════════════════════════════════════════════
+let depositsListAccId = null;
+
+function openDepositsListModal(accId) {
+    depositsListAccId = accId;
+    const acc = accounts.find(a => a.id === accId);
+    if (!acc) return;
+    document.getElementById('depositsListAccName').textContent = acc.name;
+    renderDepositsListModal(accId);
+    document.getElementById('depositsListModal').classList.add('open');
+}
+function closeDepositsListModal() {
+    document.getElementById('depositsListModal').classList.remove('open');
+    depositsListAccId = null;
+}
+function renderDepositsListModal(accId) {
+    const acc = accounts.find(a => a.id === accId);
+    if (!acc) return;
+    const body = document.getElementById('depositsListBody');
+    const txns = [...(acc.deposits || [])].reverse();
+
+    if (!txns.length) {
+        body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:0.88em;">Nicio tranzacție înregistrată.</div>';
+        return;
+    }
+
+    const totalDep = (acc.deposits||[]).filter(d=>d.type==='deposit').reduce((s,d)=>s+parseFloat(d.amount||0),0);
+    const totalWth = (acc.deposits||[]).filter(d=>d.type==='withdraw').reduce((s,d)=>s+parseFloat(d.amount||0),0);
+    const net = totalDep - totalWth;
+
+    body.innerHTML = txns.map((d, ri) => {
+        const realIdx = (acc.deposits||[]).length - 1 - ri;
+        const isDeposit = d.type === 'deposit';
+        return `<div class="txn-row ${d.type}">
+            <div class="txn-type-dot"></div>
+            <div class="txn-info">
+                <div class="txn-note">${d.note || (isDeposit ? 'Depozit' : 'Retragere')}</div>
+                <div class="txn-date">📅 ${d.date || '—'}</div>
+            </div>
+            <div class="txn-amount">${isDeposit ? '+' : '-'}$${parseFloat(d.amount).toFixed(2)}</div>
+            <button class="txn-del" onclick="deleteDeposit('${accId}', ${realIdx})" title="Șterge">✕</button>
+        </div>`;
+    }).join('') +
+    `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px;">
+        <div class="bal-chip" style="border-radius:var(--radius-sm);"><div class="bal-chip-label">Total Depozite</div><div class="bal-chip-value" style="color:var(--blue);">+$${totalDep.toFixed(2)}</div></div>
+        <div class="bal-chip" style="border-radius:var(--radius-sm);"><div class="bal-chip-label">Total Retrageri</div><div class="bal-chip-value" style="color:var(--accent);">-$${totalWth.toFixed(2)}</div></div>
+        <div class="bal-chip" style="border-radius:var(--radius-sm);"><div class="bal-chip-label">Net</div><div class="bal-chip-value" style="color:${net>=0?'var(--accent)':'var(--red)'};">${net>=0?'+':''}\$${net.toFixed(2)}</div></div>
+    </div>`;
+}
+
+async function deleteDeposit(accId, index) {
+    if (!confirm('Șterge această tranzacție?')) return;
+    const acc = accounts.find(a => a.id === accId);
+    if (!acc) return;
+    acc.deposits.splice(index, 1);
+    showLoading();
+    await saveAccountsRow(acc, false);
+    hideLoading();
+    renderDepositsListModal(accId);
+    renderOverview();
+    if (currentAccId === accId) renderStats();
+}
 
 </script>
 </body>
