@@ -1649,22 +1649,29 @@ async function loadAccounts() {
         const json = await res.json();
         hideLoading();
         if (json.result === 'success') {
-            accounts = (json.data || []).map(row => ({
-                id:          String(row.luna    || ''),
-                name:        String(row.data    || ''),
-                firm:        String(row.zi      || ''),
-                type:        String(row.pereche || ''),
-                balance:     parseFloat(row.sesiune) || 0,
-                payouts:     (() => { try { return JSON.parse(row.position || '[]'); } catch(e) { return []; } })(),
-                sheet:       String(row.wl      || ''),
-                // extended fields stored in unused trade cols
-                startDate:   String(row.r       || ''),
-                profitTarget:parseFloat(row.risk)  || 0,
-                maxDD:       parseFloat(row.profit)|| 0,
-                pairs:       String(row.tv      || ''),
-                deposits:    (() => { try { return JSON.parse(row.entryHour || '[]'); } catch(e) { return []; } })(),
-                isPersonal:  String(row.exitHour|| '') === '1',
-            })).filter(a => a.id);
+            accounts = (json.data || []).map(row => {
+                // All metadata is packed in partialCloses field
+                let meta = {};
+                try { meta = JSON.parse(row.partialCloses || '{}'); } catch(e) {}
+                // Legacy fallback: read from old individual fields if meta empty
+                const payouts  = meta.payouts  || (() => { try { return JSON.parse(row.position || '[]'); } catch(e) { return []; } })();
+                const deposits = meta.deposits || (() => { try { return JSON.parse(row.entryHour || '[]'); } catch(e) { return []; } })();
+                return {
+                    id:          String(row.luna    || ''),
+                    name:        String(row.data    || ''),
+                    firm:        String(row.zi      || ''),
+                    type:        String(row.pereche || ''),
+                    balance:     parseFloat(row.sesiune) || 0,
+                    sheet:       String(row.wl      || ''),
+                    payouts,
+                    deposits,
+                    startDate:   meta.startDate    || String(row.r      || ''),
+                    profitTarget:meta.profitTarget  || parseFloat(row.risk)   || 0,
+                    maxDD:       meta.maxDD         || parseFloat(row.profit) || 0,
+                    pairs:       meta.pairs         || String(row.tv    || ''),
+                    isPersonal:  meta.isPersonal    ? true : String(row.exitHour||'') === '1',
+                };
+            }).filter(a => a.id);
         }
     } catch(e) {
         hideLoading();
@@ -1675,25 +1682,29 @@ async function loadAccounts() {
 }
 
 async function saveAccountsRow(acc, isNew) {
-    // Persist one account row to the Accounts sheet
-    // We encode: luna=id, data=name, zi=firm, pereche=type, sesiune=balance, position=payoutsJSON, wl=sheet
+    // Pack ALL JSON/variable fields into partialCloses to avoid URL length limits
+    const meta = JSON.stringify({
+        payouts:     acc.payouts      || [],
+        deposits:    acc.deposits     || [],
+        startDate:   acc.startDate    || '',
+        profitTarget:acc.profitTarget || 0,
+        maxDD:       acc.maxDD        || 0,
+        pairs:       acc.pairs        || '',
+        isPersonal:  acc.isPersonal   ? 1 : 0,
+    });
     const params = {
-        luna:     acc.id,
-        data:     acc.name,
-        zi:       acc.firm,
-        pereche:  acc.type,
-        sesiune:  acc.balance,
-        position: JSON.stringify(acc.payouts  || []),
-        wl:       acc.sheet,
-        // extended fields
-        r:          acc.startDate    || '',
-        risk:       acc.profitTarget || '',
-        profit:     acc.maxDD        || '',
-        tv:         acc.pairs        || '',
-        entryHour:  JSON.stringify(acc.deposits || []),
-        exitHour:   acc.isPersonal ? '1' : '0',
-        // fill remaining
-        duration:'', entry:'', sl:'', tp:'', lotSize:'', partialCloses:'', linkedAnalysisId:'', linkedAnalysisUrl:''
+        luna:    acc.id,
+        data:    acc.name,
+        zi:      acc.firm,
+        pereche: acc.type,
+        sesiune: acc.balance,
+        wl:      acc.sheet,
+        // all other fields empty except partialCloses which carries metadata
+        position:'', r:'', risk:'', profit:'', tv:'',
+        entryHour:'', exitHour:'', duration:'', entry:'',
+        sl:'', tp:'', lotSize:'',
+        partialCloses: meta,
+        linkedAnalysisId:'', linkedAnalysisUrl:''
     };
     if (isNew) {
         params.action = 'add';
@@ -1703,7 +1714,12 @@ async function saveAccountsRow(acc, isNew) {
         params.id     = acc.id;
         params.sheet  = ACCOUNTS_SHEET;
     }
-    await fetch(`${GOOGLE_SCRIPT_URL}?${new URLSearchParams(params)}`);
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => qs.append(k, String(v)));
+    const res = await fetch(`${GOOGLE_SCRIPT_URL}?${qs.toString()}`);
+    const json = await res.json().catch(() => ({}));
+    if (json.result !== 'success') console.error('saveAccountsRow error:', json);
+    return json;
 }
 
 async function deleteAccountRow(accId) {
