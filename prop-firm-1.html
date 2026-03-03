@@ -1331,7 +1331,7 @@ select:hover { border-color: var(--glass-border-lit); }
             <div class="linked-analysis-section">
                 <div class="linked-section-title">🔗 Link Analysis — "A Random Trader"</div>
                 <div class="analysis-search-bar">
-                    <select id="analysisPairFilter" style="max-width:150px;"><option value="">Toate perechile</option><option>EUR/USD</option><option>GBP/USD</option><option>XAU/USD</option><option>USD/JPY</option><option>US100</option><option>GER40</option></select>
+                    <select id="analysisPairFilter" style="max-width:150px;"><option value="">Toate perechile</option><option>EUR/USD</option><option>GBP/USD</option><option>XAU/USD</option><option>USD/JPY</option><option>CHF/JPY</option><option>US100</option><option>GER40</option></select>
                     <input type="date" id="analysisDateFilter" style="max-width:165px;">
                     <button class="search-analyses-btn" onclick="searchAnalyses()">🔍 Caută</button>
                     <button class="search-analyses-btn" onclick="loadAllAnalyses()" style="background:rgba(61,139,255,0.1);border-color:rgba(61,139,255,0.25);color:var(--blue);">📥 Toate</button>
@@ -2382,7 +2382,55 @@ function calculatePartialCloses() {
 document.getElementById('entryHour').addEventListener('change',calculateDuration);
 document.getElementById('exitHour').addEventListener('change',calculateDuration);
 document.getElementById('lotSize').addEventListener('input',calculatePartialCloses);
-document.getElementById('pereche').addEventListener('change',()=>{ const v=document.getElementById('pereche').value; if(v&&v!=='Alta')document.getElementById('analysisPairFilter').value=v; });
+document.getElementById('pereche').addEventListener('change', async () => {
+    const v = document.getElementById('pereche').value;
+    const customV = document.getElementById('customPair').value.trim();
+    const pair = (v === 'Alta' ? customV : v);
+    if (!pair) return;
+
+    // Add pair to dropdown if not already there
+    const sel = document.getElementById('analysisPairFilter');
+    if (![...sel.options].some(o => o.value === pair)) {
+        const opt = document.createElement('option');
+        opt.value = opt.textContent = pair;
+        sel.appendChild(opt);
+    }
+    sel.value = pair;
+
+    // Auto-load analyses and filter to latest for this pair
+    const rd = document.getElementById('analysesResults');
+    if (!availableAnalyses.length) {
+        rd.innerHTML = '<div class="no-analyses-msg"><div style="display:inline-block;width:14px;height:14px;border:2px solid rgba(168,85,247,0.3);border-top-color:var(--purple);border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:6px;"></div>Se încarcă analize pentru ' + pair + '…</div>';
+        try {
+            const res = await fetch(ANALIZA_SCRIPT_URL, { signal: AbortSignal.timeout(10000) });
+            const json = await res.json();
+            availableAnalyses = Array.isArray(json) ? json : (json.data || []);
+        } catch(e) {
+            rd.innerHTML = '<div class="no-analyses-msg" style="color:var(--orange);">⚠️ Nu s-au putut încărca analizele.</div>';
+            return;
+        }
+    }
+    // Filter for this pair and show only latest (top 5 by date)
+    const filtered = availableAnalyses
+        .filter(a => (a.pair||'').toLowerCase() === pair.toLowerCase())
+        .sort((a,b) => new Date(b.date||0) - new Date(a.date||0))
+        .slice(0, 5);
+
+    if (!filtered.length) {
+        rd.innerHTML = `<div class="no-analyses-msg">Nicio analiză găsită pentru <strong style="color:var(--purple);">${pair}</strong>.</div>`;
+    } else {
+        renderAnalysesResults(filtered);
+        // Auto-select the latest one
+        selectLinkedAnalysis(filtered[0]);
+    }
+});
+
+// Also fire when custom pair is typed
+document.getElementById('customPair').addEventListener('blur', () => {
+    const pair = document.getElementById('customPair').value.trim();
+    if (!pair) return;
+    document.getElementById('pereche').dispatchEvent(new Event('change'));
+});
 
 // ════════════════════════════════════════════════════════
 // LINKED ANALYSIS
@@ -2394,7 +2442,9 @@ async function loadAllAnalyses() {
         const res=await fetch(ANALIZA_SCRIPT_URL,{signal:AbortSignal.timeout(10000)});
         const json=await res.json();
         availableAnalyses=Array.isArray(json)?json:(json.data||[]);
-        renderAnalysesResults(availableAnalyses);
+        // Default view: sorted by date, most recent first, latest 20
+        const sorted = [...availableAnalyses].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+        renderAnalysesResults(sorted.slice(0,20));
     } catch(e) { rd.innerHTML='<div class="no-analyses-msg" style="color:#ff9500;">⚠️ Nu s-au putut încărca. Verifică conexiunea.</div>'; }
 }
 function searchAnalyses() {
@@ -2406,6 +2456,10 @@ function applyAnalysisFilter(pf,df) {
     let f=availableAnalyses;
     if(pf)f=f.filter(a=>(a.pair||'').toLowerCase().includes(pf));
     if(df)f=f.filter(a=>(a.date||'').startsWith(df));
+    // Sort by date desc — most recent first
+    f = [...f].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+    // If filtering by pair only (no date), show only latest 5
+    if(pf && !df) f = f.slice(0,5);
     renderAnalysesResults(f);
 }
 // Map to store rendered analyses by index for safe onclick
