@@ -2408,16 +2408,21 @@ function applyAnalysisFilter(pf,df) {
     if(df)f=f.filter(a=>(a.date||'').startsWith(df));
     renderAnalysesResults(f);
 }
+// Map to store rendered analyses by index for safe onclick
+let _renderedAnalysesMap = {};
+
 function renderAnalysesResults(list) {
     const rd=document.getElementById('analysesResults');
     if(!list.length){rd.innerHTML='<div class="no-analyses-msg">Nicio analiză găsită.</div>';return;}
     const sorted=[...list].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
-    rd.innerHTML=sorted.slice(0,50).map(a=>{
+    _renderedAnalysesMap = {};
+    rd.innerHTML=sorted.slice(0,50).map((a, i)=>{
+        _renderedAnalysesMap[i] = a;
         const bc=a.marketBias==='Bullish'?'bias-bullish':a.marketBias==='Bearish'?'bias-bearish':'bias-neutral';
         const bi=a.marketBias==='Bullish'?'🟢':a.marketBias==='Bearish'?'🔴':'⚪';
         const isSel=linkedAnalysis&&linkedAnalysis.deleteId===a.deleteId;
         const ds=a.date?new Date(a.date).toLocaleDateString('ro-RO',{day:'2-digit',month:'short',year:'numeric'}):'—';
-        return `<div class="analysis-result-item ${isSel?'selected-analysis':''}" onclick="selectLinkedAnalysis(${JSON.stringify(a).replace(/"/g,'&quot;')})"><div><div class="analysis-item-pair">${a.pair||'—'}</div><div class="analysis-item-date">📅 ${ds} · ${a.day||''}</div></div><span class="analysis-item-bias ${bc}">${bi} ${a.marketBias||'—'}</span></div>`;
+        return `<div class="analysis-result-item ${isSel?'selected-analysis':''}" onclick="selectLinkedAnalysis(_renderedAnalysesMap[${i}])"><div><div class="analysis-item-pair">${a.pair||'—'}</div><div class="analysis-item-date">📅 ${ds} · ${a.day||''}</div></div><span class="analysis-item-bias ${bc}">${bi} ${a.marketBias||'—'}</span></div>`;
     }).join('');
 }
 function selectLinkedAnalysis(analysis) {
