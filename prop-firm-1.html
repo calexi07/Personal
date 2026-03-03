@@ -1061,7 +1061,99 @@ select:hover { border-color: var(--glass-border-lit); }
     th, td { padding: 8px 6px; }
     .form-container { padding: 20px; }
 }
-    </style>
+    
+/* ═══ EDIT ACCOUNT / PERSONAL ACCOUNT ═══ */
+#editAccountModal .modal-box  { max-width: 620px; border-color: rgba(61,139,255,0.25); }
+#editAccountModal .modal-title { color: var(--blue); }
+.personal-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:0.65em;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;background:var(--purple-dim);color:var(--purple);border:1px solid rgba(168,85,247,0.25); }
+
+/* deposit/withdraw row */
+.txn-row {
+    display:flex;align-items:center;gap:10px;
+    padding:10px 14px;
+    border-radius:var(--radius-sm);
+    margin-bottom:6px;
+    font-size:0.82em;
+}
+.txn-row.deposit  { background:rgba(61,139,255,0.05); border:1px solid rgba(61,139,255,0.15); }
+.txn-row.withdraw { background:rgba(0,229,160,0.04); border:1px solid rgba(0,229,160,0.1); }
+.txn-type-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+.txn-row.deposit  .txn-type-dot { background:var(--blue); box-shadow:0 0 6px var(--blue-glow); }
+.txn-row.withdraw .txn-type-dot { background:var(--accent); box-shadow:0 0 6px var(--accent-glow); }
+.txn-info { flex:1; }
+.txn-note { color:var(--text-secondary); }
+.txn-date { font-size:0.85em;color:var(--text-muted); }
+.txn-amount { font-family:var(--font-mono);font-weight:500; }
+.txn-row.deposit  .txn-amount { color:var(--blue); }
+.txn-row.withdraw .txn-amount { color:var(--accent); }
+.txn-del { width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:var(--red-dim);border:1px solid rgba(255,77,106,0.15);border-radius:5px;color:var(--red);cursor:pointer;font-size:0.75em;flex-shrink:0;transition:all var(--transition); }
+.txn-del:hover { background:rgba(255,77,106,0.2); }
+
+/* balance breakdown chip */
+.balance-breakdown {
+    display:flex;gap:0;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);
+    overflow:hidden; margin-bottom:14px;
+}
+.bal-chip { flex:1;padding:10px 12px;text-align:center;border-right:1px solid var(--glass-border); }
+.bal-chip:last-child { border-right:none; }
+.bal-chip-label { font-size:0.6em;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:4px; }
+.bal-chip-value { font-family:var(--font-mono);font-size:0.92em;font-weight:500; }
+
+/* global payouts modal */
+#globalPayoutsModal .modal-box { max-width:680px; }
+.gpayout-row {
+    display:grid;
+    grid-template-columns:1fr 140px 100px 28px;
+    align-items:center;gap:12px;
+    padding:11px 14px;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+    font-size:0.83em;
+    transition:background var(--transition);
+}
+.gpayout-row:hover { background:rgba(255,255,255,0.02); }
+.gpayout-row:last-child { border-bottom:none; }
+.gpayout-acc { color:var(--text-secondary);font-weight:500; }
+.gpayout-acc small { display:block;font-size:0.8em;color:var(--text-muted);margin-top:1px; }
+.gpayout-date { color:var(--text-muted);font-size:0.9em; }
+.gpayout-amount { font-family:var(--font-mono);color:var(--accent);font-weight:500;text-align:right; }
+.gpayout-header {
+    display:grid;grid-template-columns:1fr 140px 100px 28px;
+    gap:12px;padding:8px 14px 10px;
+    border-bottom:1px solid var(--glass-border);
+    font-size:0.68em;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);
+}
+.gpayout-summary {
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 14px;margin-top:8px;
+    background:rgba(0,229,160,0.05);
+    border:1px solid rgba(0,229,160,0.15);
+    border-radius:var(--radius-sm);
+}
+
+/* account details section in card */
+.card-details {
+    display:flex;flex-wrap:wrap;gap:6px;
+    margin-bottom:12px;
+}
+.card-detail-tag {
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 9px;border-radius:20px;
+    font-size:0.66em;font-weight:500;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--glass-border);
+    color:var(--text-muted);
+}
+
+
+.account-card.type-personal-card::before { background: linear-gradient(90deg, transparent, var(--purple), transparent); }
+.account-card.type-personal-card:hover   { box-shadow: 0 20px 60px rgba(168,85,247,0.1), 0 0 0 1px rgba(168,85,247,0.15); }
+.account-card.type-personal-card { background: linear-gradient(135deg, rgba(168,85,247,0.05) 0%, rgba(13,18,32,0.7) 60%); }
+.section-header-label.personal { color: var(--purple); background: var(--purple-dim); border: 1px solid rgba(168,85,247,0.2); }
+
+</style>
 </head>
 <body>
 <div class="container">
@@ -1117,6 +1209,9 @@ select:hover { border-color: var(--glass-border-lit); }
                     <div class="cum-stat-label">Payouts</div>
                     <div class="cum-stat-value" id="cumPayouts" style="color:var(--accent)">$0.00</div>
                 </div>
+                <div class="cum-stat" style="border-left:1px solid var(--glass-border);padding-left:20px;">
+                    <button onclick="openGlobalPayoutsModal()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent-dim);border:1px solid rgba(0,229,160,0.2);border-radius:var(--radius-sm);color:var(--accent);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;white-space:nowrap;transition:all var(--transition);" onmouseover="this.style.background='rgba(0,229,160,0.18)'" onmouseout="this.style.background='var(--accent-dim)'">💸 Vezi Toate Payoutsurile</button>
+                </div>
             </div>
         </div>
 
@@ -1158,6 +1253,7 @@ select:hover { border-color: var(--glass-border-lit); }
             </div>
             <div class="stats-grid">
                 <div class="stat-card blue"><div class="stat-label">Initial Balance</div><div class="stat-value" id="statInitialBalance">$0</div><div class="stat-subtext">Starting capital</div></div>
+                <div class="stat-card" id="statDepositsWrap" style="display:none;background:rgba(61,139,255,0.05);border-color:rgba(61,139,255,0.2);"><div class="stat-label">Depozite Nete</div><div class="stat-value" id="statDeposits" style="color:var(--blue);">$0</div><div class="stat-subtext">Personal account</div></div>
                 <div class="stat-card" id="statCurrentBalanceCard"><div class="stat-label">Current Balance</div><div class="stat-value" id="statCurrentBalance">$0</div><div class="stat-subtext" id="statCurrentBalanceSub">—</div></div>
                 <div class="stat-card" id="statProfit"><div class="stat-label">Net Profit</div><div class="stat-value" id="statProfitValue">$0</div><div class="stat-subtext">P&L</div></div>
                 <div class="stat-card positive"><div class="stat-label">Payouts</div><div class="stat-value" id="statPayouts">$0</div><div class="stat-subtext">Retrase</div></div>
@@ -1310,9 +1406,9 @@ select:hover { border-color: var(--glass-border-lit); }
         </div>
         <div class="modal-body">
             <div class="form-grid" style="margin-bottom:20px;">
-                <div class="form-group"><label>Firmă *</label><select id="accFirm"><option value="">Select</option><option>The5%ers</option><option>FTMO</option><option>MyForexFunds</option><option>TrueForexFunds</option><option>Funded Next</option><option>Andere</option></select></div>
+                <div class="form-group"><label>Firmă *</label><select id="accFirm"><option value="">Select</option><option>The5%ers</option><option>FTMO</option><option>MyForexFunds</option><option>TrueForexFunds</option><option>Funded Next</option><option>Personal</option><option>Andere</option></select></div>
                 <div class="form-group"><label>Nume Cont *</label><input type="text" id="accName" placeholder="ex: The5%ers #1"></div>
-                <div class="form-group"><label>Tip Cont *</label><select id="accType"><option value="">Select</option><option value="Challenge P1">⚡ Challenge Phase 1</option><option value="Challenge P2">🎯 Challenge Phase 2</option><option value="Live">✅ Live Account</option></select></div>
+                <div class="form-group"><label>Tip Cont *</label><select id="accType"><option value="">Select</option><option value="Challenge P1">⚡ Challenge Phase 1</option><option value="Challenge P2">🎯 Challenge Phase 2</option><option value="Live">✅ Live Account</option><option value="Personal">💼 Personal Account</option></select></div>
                 <div class="form-group"><label>Balanță Inițială ($) *</label><input type="number" step="0.01" id="accBalance" placeholder="10000"></div>
             </div>
             <button onclick="saveNewAccount()" class="save-btn">✅ Salvează Contul</button>
@@ -1369,6 +1465,65 @@ select:hover { border-color: var(--glass-border-lit); }
 <div id="avmLightbox" onclick="avmCloseLightbox()">
     <button class="avm-lb-close" onclick="avmCloseLightbox()">✕</button>
     <img id="avmLightboxImg" src="" alt="Chart">
+</div>
+
+
+<!-- ══ EDIT ACCOUNT MODAL ══ -->
+<div class="modal-overlay" id="editAccountModal">
+    <div class="modal-box" style="max-width:620px;border-color:rgba(61,139,255,0.25);">
+        <div class="modal-header">
+            <span class="modal-title" style="color:var(--blue);">✏️ Editează Contul</span>
+            <button class="modal-close" onclick="closeEditAccountModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editAccId">
+            <div class="form-grid" style="margin-bottom:18px;">
+                <div class="form-group"><label>Firmă *</label><select id="editAccFirm"><option value="">Select</option><option>The5%ers</option><option>FTMO</option><option>MyForexFunds</option><option>TrueForexFunds</option><option>Funded Next</option><option>Personal</option><option>Andere</option></select></div>
+                <div class="form-group"><label>Nume Cont *</label><input type="text" id="editAccName" placeholder="ex: The5%ers #1"></div>
+                <div class="form-group"><label>Tip Cont *</label><select id="editAccType"><option value="">Select</option><option value="Challenge P1">⚡ Challenge Phase 1</option><option value="Challenge P2">🎯 Challenge Phase 2</option><option value="Live">✅ Live Account</option><option value="Personal">💼 Personal Account</option></select></div>
+                <div class="form-group"><label>Balanță Inițială ($) *</label><input type="number" step="0.01" id="editAccBalance" placeholder="10000"></div>
+                <div class="form-group"><label>Data Începerii</label><input type="date" id="editAccStartDate"></div>
+                <div class="form-group"><label>Profit Target (%)</label><input type="number" step="0.1" id="editAccProfitTarget" placeholder="ex: 8"></div>
+                <div class="form-group"><label>Max Drawdown (%)</label><input type="number" step="0.1" id="editAccMaxDD" placeholder="ex: 10"></div>
+                <div class="form-group"><label>Perechi (separate prin virgulă)</label><input type="text" id="editAccPairs" placeholder="ex: XAU/USD, EUR/USD"></div>
+            </div>
+            <button onclick="saveEditAccount()" class="save-btn" style="border-color:rgba(61,139,255,0.35);color:var(--blue);background:linear-gradient(135deg,rgba(61,139,255,0.12),rgba(61,139,255,0.06));">💾 Salvează Modificările</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ DEPOSIT MODAL (Personal Account) ══ -->
+<div class="modal-overlay" id="depositModal">
+    <div class="modal-box" style="max-width:420px;border-color:rgba(61,139,255,0.25);">
+        <div class="modal-header">
+            <span class="modal-title" style="color:var(--blue);">➕ Adaugă / Retrage Fonduri</span>
+            <button class="modal-close" onclick="closeDepositModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:0.82em;color:var(--text-muted);margin-bottom:16px;">Cont: <strong id="depositAccName" style="color:var(--blue);"></strong></p>
+            <div style="display:flex;gap:8px;margin-bottom:18px;">
+                <button id="txnTypeDeposit" onclick="setTxnType('deposit')" style="flex:1;padding:10px;border-radius:var(--radius-sm);font-family:var(--font-display);font-weight:700;font-size:0.85em;cursor:pointer;transition:all var(--transition);background:var(--blue-dim);border:1px solid rgba(61,139,255,0.35);color:var(--blue);">➕ Depozit</button>
+                <button id="txnTypeWithdraw" onclick="setTxnType('withdraw')" style="flex:1;padding:10px;border-radius:var(--radius-sm);font-family:var(--font-display);font-weight:700;font-size:0.85em;cursor:pointer;transition:all var(--transition);background:transparent;border:1px solid var(--glass-border);color:var(--text-muted);">➖ Retragere</button>
+            </div>
+            <div class="form-group" style="margin-bottom:14px;"><label>Sumă ($)</label><input type="number" step="0.01" id="depositAmount" placeholder="500.00" style="font-family:var(--font-mono);font-size:1.1em;text-align:center;"></div>
+            <div class="form-group" style="margin-bottom:14px;"><label>Dată</label><input type="date" id="depositDate" style="width:100%;"></div>
+            <div class="form-group" style="margin-bottom:18px;"><label>Notă (opțional)</label><input type="text" id="depositNote" placeholder="ex: Transfer din cont X" style="width:100%;"></div>
+            <button class="save-btn" onclick="submitDeposit()" id="depositSubmitBtn" style="border-color:rgba(61,139,255,0.35);color:var(--blue);background:linear-gradient(135deg,rgba(61,139,255,0.12),rgba(61,139,255,0.06));">✅ Confirmă</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ GLOBAL PAYOUTS MODAL ══ -->
+<div class="modal-overlay" id="globalPayoutsModal">
+    <div class="modal-box" style="max-width:680px;">
+        <div class="modal-header">
+            <span class="modal-title">💸 Toate Payoutsurile</span>
+            <button class="modal-close" onclick="document.getElementById('globalPayoutsModal').classList.remove('open')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div id="globalPayoutsBody"></div>
+        </div>
+    </div>
 </div>
 
 <!-- ══ LOADING ══ -->
@@ -1495,13 +1650,20 @@ async function loadAccounts() {
         hideLoading();
         if (json.result === 'success') {
             accounts = (json.data || []).map(row => ({
-                id:       String(row.luna   || ''),   // reusing col mapping: luna=id
-                name:     String(row.data   || ''),
-                firm:     String(row.zi     || ''),
-                type:     String(row.pereche|| ''),
-                balance:  parseFloat(row.sesiune) || 0,
-                payouts:  (() => { try { return JSON.parse(row.position || '[]'); } catch(e) { return []; } })(),
-                sheet:    String(row.wl     || ''),
+                id:          String(row.luna    || ''),
+                name:        String(row.data    || ''),
+                firm:        String(row.zi      || ''),
+                type:        String(row.pereche || ''),
+                balance:     parseFloat(row.sesiune) || 0,
+                payouts:     (() => { try { return JSON.parse(row.position || '[]'); } catch(e) { return []; } })(),
+                sheet:       String(row.wl      || ''),
+                // extended fields stored in unused trade cols
+                startDate:   String(row.r       || ''),
+                profitTarget:parseFloat(row.risk)  || 0,
+                maxDD:       parseFloat(row.profit)|| 0,
+                pairs:       String(row.tv      || ''),
+                deposits:    (() => { try { return JSON.parse(row.entryHour || '[]'); } catch(e) { return []; } })(),
+                isPersonal:  String(row.exitHour|| '') === '1',
             })).filter(a => a.id);
         }
     } catch(e) {
@@ -1521,10 +1683,17 @@ async function saveAccountsRow(acc, isNew) {
         zi:       acc.firm,
         pereche:  acc.type,
         sesiune:  acc.balance,
-        position: JSON.stringify(acc.payouts || []),
+        position: JSON.stringify(acc.payouts  || []),
         wl:       acc.sheet,
-        // fill unused required cols
-        r:'', risk:'', profit:'', tv:'', entryHour:'', exitHour:'', duration:'', entry:'', sl:'', tp:'', lotSize:'', partialCloses:'', linkedAnalysisId:'', linkedAnalysisUrl:''
+        // extended fields
+        r:          acc.startDate    || '',
+        risk:       acc.profitTarget || '',
+        profit:     acc.maxDD        || '',
+        tv:         acc.pairs        || '',
+        entryHour:  JSON.stringify(acc.deposits || []),
+        exitHour:   acc.isPersonal ? '1' : '0',
+        // fill remaining
+        duration:'', entry:'', sl:'', tp:'', lotSize:'', partialCloses:'', linkedAnalysisId:'', linkedAnalysisUrl:''
     };
     if (isNew) {
         params.action = 'add';
@@ -1557,9 +1726,12 @@ async function saveNewAccount() {
     const balance = parseFloat(document.getElementById('accBalance').value);
     if (!firm || !name || !type || !balance) { alert('Completează toate câmpurile!'); return; }
 
-    const id    = 'ACC_' + Date.now();
-    const sheet = id; // each account gets its own sheet named by id
-    const acc   = { id, name, firm, type, balance, payouts: [], sheet };
+    const id         = 'ACC_' + Date.now();
+    const sheet      = id;
+    const isPersonal = type === 'Personal';
+    const acc = { id, name, firm, type, balance, payouts:[], sheet,
+                  startDate:'', profitTarget:0, maxDD:0, pairs:'',
+                  deposits:[], isPersonal };
     accounts.push(acc);
     showLoading();
     await saveAccountsRow(acc, true);
@@ -1596,7 +1768,15 @@ function openPayoutModal(accId) {
     document.getElementById('payoutNote').value = '';
     document.getElementById('payoutModal').classList.add('open');
 }
-function closePayoutModal() { document.getElementById('payoutModal').classList.remove('open'); payoutTargetAccId = null; }
+function closePayoutModal() {
+    document.getElementById('payoutModal').classList.remove('open');
+    payoutTargetAccId = null;
+    // Re-open payoutsList if it was open
+    if (payoutsListAccId) {
+        renderPayoutsListModal(payoutsListAccId);
+        document.getElementById('payoutsListModal').classList.add('open');
+    }
+}
 
 function openPayoutsListModal(accId) {
     payoutsListAccId = accId;
@@ -1659,14 +1839,17 @@ async function submitPayout() {
     const acc = accounts.find(a => a.id === payoutTargetAccId);
     if (!acc) return;
     acc.payouts = acc.payouts || [];
-    acc.payouts.push({ amount, date, note });
+    acc.payouts.push({ amount, date, note, balanceReset: acc.balance });
+    // Auto-reset currentBalance → initial balance after payout
+    // We do this by zeroing out the running profit via a synthetic deposit offset
+    // (actual balance stays the same; currentBalance is recalculated dynamically)
     showLoading();
     await saveAccountsRow(acc, false);
     hideLoading();
     closePayoutModal();
     renderOverview();
     if (currentAccId === acc.id) renderStats();
-    alert(`Payout de $${amount.toFixed(2)} înregistrat! 💸`);
+    alert(`Payout de $${amount.toFixed(2)} înregistrat! ✅\nBalanța a fost resetată la $${acc.balance.toFixed(2)}.`);
     if (payoutsListAccId === acc.id) renderPayoutsListModal(acc.id);
 }
 
@@ -1703,15 +1886,17 @@ function populateAccountSelect() {
 // OVERVIEW RENDER
 // ════════════════════════════════════════════════════════
 function typeClass(type) {
-    if (type === 'Live') return 'type-live-card';
+    if (type === 'Live')         return 'type-live-card';
     if (type === 'Challenge P1') return 'type-p1-card';
     if (type === 'Challenge P2') return 'type-p2-card';
+    if (type === 'Personal')     return 'type-personal-card';
     return '';
 }
 function typeBadge(type) {
     if (type === 'Live')         return '<span class="type-pill live">✅ Live</span>';
     if (type === 'Challenge P1') return '<span class="type-pill p1">⚡ Phase 1</span>';
     if (type === 'Challenge P2') return '<span class="type-pill p2">🎯 Phase 2</span>';
+    if (type === 'Personal')     return '<span class="type-pill" style="background:var(--purple-dim);color:var(--purple);border:1px solid rgba(168,85,247,0.25);">💼 Personal</span>';
     return `<span class="type-pill" style="background:rgba(255,255,255,0.05);color:#aaa;border:1px solid rgba(255,255,255,0.1);">${type}</span>`;
 }
 
@@ -1722,12 +1907,12 @@ function renderOverview() {
         updateCumulativeBanner();
         return;
     }
-    const groups = { 'Challenge P1': [], 'Challenge P2': [], 'Live': [] };
+    const groups = { 'Challenge P1': [], 'Challenge P2': [], 'Live': [], 'Personal': [] };
     accounts.forEach(a => { if (!groups[a.type]) groups[a.type] = []; groups[a.type].push(a); });
 
-    const groupOrder = ['Live','Challenge P2','Challenge P1'];
-    const groupLabelClass = { 'Live': 'live', 'Challenge P2': 'p2', 'Challenge P1': 'p1' };
-    const groupLabels = { 'Live': '✅ Live Accounts', 'Challenge P2': '🎯 Challenge — Phase 2', 'Challenge P1': '⚡ Challenge — Phase 1' };
+    const groupOrder = ['Live','Challenge P2','Challenge P1','Personal'];
+    const groupLabelClass = { 'Live': 'live', 'Challenge P2': 'p2', 'Challenge P1': 'p1', 'Personal': 'personal' };
+    const groupLabels = { 'Live': '✅ Live Accounts', 'Challenge P2': '🎯 Challenge — Phase 2', 'Challenge P1': '⚡ Challenge — Phase 1', 'Personal': '💼 Personal Accounts' };
 
     let html = '';
     groupOrder.forEach(gType => {
@@ -1760,11 +1945,19 @@ function renderOverview() {
                     <div>
                         <div class="card-firm">${acc.firm}</div>
                         <div class="card-name">${acc.name}</div>
-                        <div style="margin-top:6px;">${typeBadge(acc.type)}</div>
+                        <div style="margin-top:6px;">${typeBadge(acc.type)}${acc.isPersonal ? ' <span class=\"personal-badge\">💼 Personal</span>' : ''}</div>
+                        <div class="card-details" style="margin-top:10px;">
+                            ${acc.startDate ? `<span class="card-detail-tag">📅 ${acc.startDate}</span>` : ''}
+                            ${acc.profitTarget ? `<span class="card-detail-tag" style="color:var(--accent);border-color:rgba(0,229,160,0.2);">🎯 ${acc.profitTarget}% target</span>` : ''}
+                            ${acc.maxDD ? `<span class="card-detail-tag" style="color:var(--red);border-color:rgba(255,77,106,0.2);">🛡 ${acc.maxDD}% DD</span>` : ''}
+                            ${acc.pairs ? acc.pairs.split(',').slice(0,3).map(p=>`<span class="card-detail-tag">${p.trim()}</span>`).join('') : ''}
+                        </div>
                     </div>
                     <div class="card-actions">
                         ${isLoggedIn ? `
+                        ${acc.isPersonal ? `<button class="card-icon-btn" onclick="event.stopPropagation();openDepositModal('${acc.id}')" title="Depozit/Retragere" style="color:var(--blue);border-color:rgba(61,139,255,0.3);">＋</button>` : ''}
                         <button class="card-icon-btn payout" onclick="event.stopPropagation();openPayoutsListModal('${acc.id}')" title="Payouts">💸</button>
+                        <button class="card-icon-btn" onclick="event.stopPropagation();openEditAccountModal('${acc.id}')" title="Editează" style="color:var(--blue);border-color:rgba(61,139,255,0.25);">✏️</button>
                         <button class="card-icon-btn danger" onclick="event.stopPropagation();deleteAccount('${acc.id}')" title="Șterge">🗑</button>` : ''}
                     </div>
                 </div>
@@ -1801,9 +1994,12 @@ async function loadAllAccountStats() {
                 const closed = tds.filter(t=>['Win','Loss','Break Even'].includes(t.wl));
                 const wins   = closed.filter(t=>t.wl==='Win');
                 const losses = closed.filter(t=>t.wl==='Loss');
-                const profit = closed.reduce((s,t)=>s+(parseFloat(t.profit)||0),0);
+                const rawProfit = closed.reduce((s,t)=>s+(parseFloat(t.profit)||0),0);
                 const wr = (wins.length+losses.length)>0 ? ((wins.length/(wins.length+losses.length))*100).toFixed(1) : 0;
-                window._accStats[acc.id] = { profit, trades: closed.length, winRate: wr };
+                // calculate effective current balance (with payout reset logic)
+                const { current: currentBal } = calcCurrentBalance(acc, closed);
+                const profit = currentBal - acc.balance;
+                window._accStats[acc.id] = { profit, trades: closed.length, winRate: wr, currentBal };
             }
         } catch(e) {}
         renderOverview();
@@ -1839,7 +2035,9 @@ function renderContextBar() {
         <div class="ctx-meta">Balance: <strong>$${acc.balance.toLocaleString('en-US',{minimumFractionDigits:2})}</strong></div>
         <div class="ctx-meta">Payouts: <strong style="color:var(--accent);">$${totalPayouts.toFixed(2)}</strong></div>
         <div class="ctx-spacer"></div>
-        ${isLoggedIn ? `<button onclick="openPayoutsListModal('${acc.id}')" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--accent-dim);border:1px solid rgba(0,229,160,0.2);border-radius:var(--radius-sm);color:var(--accent);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;">💸 Payouts</button>` : ''}
+        ${isLoggedIn ? `
+        ${acc.isPersonal ? `<button onclick="openDepositModal('${acc.id}')" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--blue-dim);border:1px solid rgba(61,139,255,0.2);border-radius:var(--radius-sm);color:var(--blue);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;">➕ Depozit</button>` : ''}
+        <button onclick="openPayoutsListModal('${acc.id}')" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--accent-dim);border:1px solid rgba(0,229,160,0.2);border-radius:var(--radius-sm);color:var(--accent);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;">💸 Payouts</button>` : ''}
     `;
     document.getElementById('dashTitle').textContent = `📊 ${acc.name} — Statistics`;
 }
@@ -1905,10 +2103,37 @@ function deleteTrade(i) {
 // ════════════════════════════════════════════════════════
 // STATS / DASHBOARD
 // ════════════════════════════════════════════════════════
+function calcCurrentBalance(acc, closedTrades) {
+    // For prop accounts: balance resets after each payout
+    // currentBalance = initialBalance + tradeProfitSincLastPayout
+    // For personal: balance = initialBalance + deposits - payouts + profit
+    if (!acc) return { current: 0, tradeProfitSinceLastPayout: 0 };
+    const initialBalance = acc.balance;
+    const totalProfit = closedTrades.reduce((s,t)=>s+(parseFloat(t.profit)||0),0);
+    if (acc.isPersonal) {
+        const totalDeposits = (acc.deposits||[]).filter(d=>d.type==='deposit').reduce((s,d)=>s+parseFloat(d.amount||0),0);
+        const totalWithdraws = (acc.deposits||[]).filter(d=>d.type==='withdraw').reduce((s,d)=>s+parseFloat(d.amount||0),0);
+        const totalPayouts = (acc.payouts||[]).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+        return { current: initialBalance + totalDeposits - totalWithdraws - totalPayouts + totalProfit, tradeProfitSinceLastPayout: totalProfit };
+    }
+    // Prop: find last payout date, sum only trades after that
+    const sortedPayouts = [...(acc.payouts||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const lastPayout = sortedPayouts[0];
+    let profitSincePayout = totalProfit;
+    if (lastPayout && lastPayout.date) {
+        const lastDate = new Date(lastPayout.date);
+        profitSincePayout = closedTrades
+            .filter(t => { const d = new Date(t.data); return d > lastDate; })
+            .reduce((s,t)=>s+(parseFloat(t.profit)||0),0);
+    }
+    return { current: initialBalance + profitSincePayout, tradeProfitSinceLastPayout: profitSincePayout };
+}
+
 function renderStats() {
     const acc = accounts.find(a=>a.id===currentAccId);
     const initialBalance = acc ? acc.balance : 10000;
     const totalPayouts = acc ? (acc.payouts||[]).reduce((s,p)=>s+parseFloat(p.amount||0),0) : 0;
+    const totalDeposits = acc && acc.isPersonal ? (acc.deposits||[]).filter(d=>d.type==='deposit').reduce((s,d)=>s+parseFloat(d.amount||0),0) : 0;
 
     const closed = filteredTrades.filter(t=>['Win','Loss','Break Even'].includes(t.wl));
     const wins   = filteredTrades.filter(t=>t.wl==='Win');
@@ -1917,12 +2142,19 @@ function renderStats() {
 
     const totalProfit   = closed.reduce((s,t)=>s+(parseFloat(t.profit)||0),0);
     const winRate       = (wins.length+losses.length)>0?((wins.length/(wins.length+losses.length))*100).toFixed(1):0;
-    const currentBalance= initialBalance+totalProfit;
+    const { current: currentBalance } = calcCurrentBalance(acc, closed);
     const percentChange = ((currentBalance-initialBalance)/initialBalance*100).toFixed(2);
     const totalR        = closed.reduce((s,t)=>{ const r=parseFloat(t.r)||0; return s+(t.wl==='Loss'?-Math.abs(r):r); },0);
     const avgR          = closed.length?(totalR/closed.length).toFixed(2):0;
     const expectancy    = closed.length?(totalProfit/closed.length).toFixed(2):0;
 
+    // Show/hide deposits card for personal account
+    const depositsStatEl = document.getElementById('statDepositsWrap');
+    if (depositsStatEl) depositsStatEl.style.display = (acc && acc.isPersonal) ? '' : 'none';
+    if (acc && acc.isPersonal) {
+        const depEl = document.getElementById('statDeposits');
+        if (depEl) depEl.textContent = `$${totalDeposits.toFixed(2)}`;
+    }
     document.getElementById('statInitialBalance').textContent  = `$${initialBalance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
     document.getElementById('statCurrentBalance').textContent  = `$${currentBalance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
     document.getElementById('statProfitValue').textContent     = `$${totalProfit.toFixed(2)}`;
@@ -2232,6 +2464,177 @@ window.onload = () => {
     checkAuth();
     loadAccounts();
 };
+
+// ════════════════════════════════════════════════════════
+// EDIT ACCOUNT
+// ════════════════════════════════════════════════════════
+function openEditAccountModal(accId) {
+    const acc = accounts.find(a => a.id === accId);
+    if (!acc) return;
+    document.getElementById('editAccId').value          = accId;
+    document.getElementById('editAccFirm').value        = acc.firm        || '';
+    document.getElementById('editAccName').value        = acc.name        || '';
+    document.getElementById('editAccType').value        = acc.type        || '';
+    document.getElementById('editAccBalance').value     = acc.balance     || '';
+    document.getElementById('editAccStartDate').value   = acc.startDate   || '';
+    document.getElementById('editAccProfitTarget').value= acc.profitTarget|| '';
+    document.getElementById('editAccMaxDD').value       = acc.maxDD       || '';
+    document.getElementById('editAccPairs').value       = acc.pairs       || '';
+    document.getElementById('editAccountModal').classList.add('open');
+}
+function closeEditAccountModal() { document.getElementById('editAccountModal').classList.remove('open'); }
+
+async function saveEditAccount() {
+    const id    = document.getElementById('editAccId').value;
+    const acc   = accounts.find(a => a.id === id);
+    if (!acc) return;
+
+    const firm    = document.getElementById('editAccFirm').value;
+    const name    = document.getElementById('editAccName').value.trim();
+    const type    = document.getElementById('editAccType').value;
+    const balance = parseFloat(document.getElementById('editAccBalance').value);
+    if (!firm || !name || !type || !balance) { alert('Completează câmpurile obligatorii!'); return; }
+
+    acc.firm         = firm;
+    acc.name         = name;
+    acc.type         = type;
+    acc.balance      = balance;
+    acc.startDate    = document.getElementById('editAccStartDate').value;
+    acc.profitTarget = parseFloat(document.getElementById('editAccProfitTarget').value) || 0;
+    acc.maxDD        = parseFloat(document.getElementById('editAccMaxDD').value) || 0;
+    acc.pairs        = document.getElementById('editAccPairs').value;
+    acc.isPersonal   = type === 'Personal';
+
+    showLoading();
+    await saveAccountsRow(acc, false);
+    hideLoading();
+    closeEditAccountModal();
+    renderOverview();
+    if (currentAccId === id) renderContextBar();
+    alert('Contul a fost actualizat! ✅');
+}
+
+// ════════════════════════════════════════════════════════
+// DEPOSIT / WITHDRAW (Personal Account)
+// ════════════════════════════════════════════════════════
+let depositTargetAccId = null;
+let currentTxnType     = 'deposit';
+
+function openDepositModal(accId) {
+    depositTargetAccId = accId;
+    const acc = accounts.find(a => a.id === accId);
+    if (!acc) return;
+    document.getElementById('depositAccName').textContent = acc.name;
+    document.getElementById('depositAmount').value = '';
+    document.getElementById('depositDate').value   = new Date().toISOString().split('T')[0];
+    document.getElementById('depositNote').value   = '';
+    setTxnType('deposit');
+    document.getElementById('depositModal').classList.add('open');
+}
+function closeDepositModal() {
+    document.getElementById('depositModal').classList.remove('open');
+    depositTargetAccId = null;
+}
+function setTxnType(type) {
+    currentTxnType = type;
+    const depBtn = document.getElementById('txnTypeDeposit');
+    const wthBtn = document.getElementById('txnTypeWithdraw');
+    const subBtn = document.getElementById('depositSubmitBtn');
+    if (type === 'deposit') {
+        depBtn.style.background = 'var(--blue-dim)';
+        depBtn.style.borderColor = 'rgba(61,139,255,0.35)';
+        depBtn.style.color = 'var(--blue)';
+        wthBtn.style.background = 'transparent';
+        wthBtn.style.borderColor = 'var(--glass-border)';
+        wthBtn.style.color = 'var(--text-muted)';
+        subBtn.textContent = '✅ Confirmă Depozit';
+        subBtn.style.color = 'var(--blue)';
+        subBtn.style.borderColor = 'rgba(61,139,255,0.35)';
+        subBtn.style.background = 'linear-gradient(135deg,rgba(61,139,255,0.12),rgba(61,139,255,0.06))';
+    } else {
+        wthBtn.style.background = 'var(--accent-dim)';
+        wthBtn.style.borderColor = 'rgba(0,229,160,0.35)';
+        wthBtn.style.color = 'var(--accent)';
+        depBtn.style.background = 'transparent';
+        depBtn.style.borderColor = 'var(--glass-border)';
+        depBtn.style.color = 'var(--text-muted)';
+        subBtn.textContent = '✅ Confirmă Retragere';
+        subBtn.style.color = 'var(--accent)';
+        subBtn.style.borderColor = 'rgba(0,229,160,0.35)';
+        subBtn.style.background = 'linear-gradient(135deg,rgba(0,229,160,0.12),rgba(0,229,160,0.06))';
+    }
+}
+async function submitDeposit() {
+    const amount = parseFloat(document.getElementById('depositAmount').value);
+    const date   = document.getElementById('depositDate').value;
+    const note   = document.getElementById('depositNote').value.trim();
+    if (!amount || amount <= 0) { alert('Introdu o sumă validă!'); return; }
+    if (!date) { alert('Selectează data!'); return; }
+
+    const acc = accounts.find(a => a.id === depositTargetAccId);
+    if (!acc) return;
+    acc.deposits = acc.deposits || [];
+    acc.deposits.push({ type: currentTxnType, amount, date, note });
+    showLoading();
+    await saveAccountsRow(acc, false);
+    hideLoading();
+    closeDepositModal();
+    renderOverview();
+    if (currentAccId === acc.id) { loadTradesFromSheet(); }
+    alert(`${currentTxnType === 'deposit' ? 'Depozit' : 'Retragere'} de $${amount.toFixed(2)} înregistrat! ✅`);
+}
+
+// ════════════════════════════════════════════════════════
+// GLOBAL PAYOUTS LIST
+// ════════════════════════════════════════════════════════
+function openGlobalPayoutsModal() {
+    renderGlobalPayouts();
+    document.getElementById('globalPayoutsModal').classList.add('open');
+}
+
+function renderGlobalPayouts() {
+    const body = document.getElementById('globalPayoutsBody');
+    // Collect all payouts from all accounts with account info
+    const allPayouts = [];
+    accounts.forEach(acc => {
+        (acc.payouts || []).forEach(p => {
+            allPayouts.push({ ...p, accName: acc.name, accFirm: acc.firm, accType: acc.type, accId: acc.id });
+        });
+    });
+
+    if (!allPayouts.length) {
+        body.innerHTML = '<div style="text-align:center;padding:48px;color:var(--text-muted);">Niciun payout înregistrat.</div>';
+        return;
+    }
+
+    // Sort by date descending
+    allPayouts.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    const total = allPayouts.reduce((s,p) => s + parseFloat(p.amount||0), 0);
+
+    body.innerHTML = `
+        <div class="gpayout-header">
+            <span>Cont</span><span>Data</span><span style="text-align:right;">Sumă</span><span></span>
+        </div>
+        ${allPayouts.map((p, i) => `
+        <div class="gpayout-row">
+            <div class="gpayout-acc">
+                ${p.accName}
+                <small>${p.accFirm} · ${p.note || '—'}</small>
+            </div>
+            <div class="gpayout-date">${p.date || '—'}</div>
+            <div class="gpayout-amount">$${parseFloat(p.amount).toFixed(2)}</div>
+            <div></div>
+        </div>`).join('')}
+        <div class="gpayout-summary">
+            <span style="font-size:0.78em;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Total Payouts</span>
+            <span style="font-family:var(--font-mono);font-size:1.2em;color:var(--accent);font-weight:500;">$${total.toFixed(2)}</span>
+        </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// ADD ACCOUNT — also support Personal type
+// ════════════════════════════════════════════════════════
+
 </script>
 </body>
 </html>
