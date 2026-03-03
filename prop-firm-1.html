@@ -2504,9 +2504,11 @@ function renderAnalysesResults(list) {
     }).join('');
 }
 function selectLinkedAnalysis(analysis) {
+    console.log('[SELECT] analysis.deleteId =', analysis.deleteId, '| analysis =', analysis);
     linkedAnalysis=analysis;
     document.getElementById('linkedAnalysisId').value=analysis.deleteId||'';
     document.getElementById('linkedAnalysisUrl').value=ANALIZA_PAGE_URL;
+    console.log('[SELECT] field after set =', document.getElementById('linkedAnalysisId').value);
     const prev=document.getElementById('linkedAnalysisPreview');
     const ds=analysis.date?new Date(analysis.date).toLocaleDateString('ro-RO',{day:'2-digit',month:'short',year:'numeric'}):'—';
     const bi=analysis.marketBias==='Bullish'?'🟢':analysis.marketBias==='Bearish'?'🔴':'⚪';
@@ -2516,6 +2518,7 @@ function selectLinkedAnalysis(analysis) {
     renderAnalysesResults(availableAnalyses.length?availableAnalyses:[analysis]);
 }
 function clearLinkedAnalysis() {
+    console.log('[CLEAR] clearLinkedAnalysis called', new Error().stack?.split('\n')[2]);
     linkedAnalysis=null;
     document.getElementById('linkedAnalysisId').value='';
     document.getElementById('linkedAnalysisUrl').value='';
