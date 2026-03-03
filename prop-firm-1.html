@@ -2117,9 +2117,13 @@ function addTradeToSheet(trade) {
 
 function updateTradeInSheet(trade) {
     showLoading();
+    console.log('[UPDATE] linkedAnalysisId =', trade.linkedAnalysisId, '| id =', trade.id);
     const qs=new URLSearchParams({action:'update',sheet:currentSheet(),...trade});
     fetch(`${GOOGLE_SCRIPT_URL}?${qs}`)
-        .then(()=>{ hideLoading(); editingIndex=-1; clearForm(); showPage('table'); loadTradesFromSheet(); })
+        .then(r=>r.json()).then(json=>{
+            console.log('[UPDATE] response:', json);
+            hideLoading(); editingIndex=-1; clearForm(); showPage('table'); loadTradesFromSheet();
+        })
         .catch(err=>{ console.error(err); hideLoading(); alert('Update error'); });
 }
 
@@ -2302,13 +2306,31 @@ function editTrade(i) {
     document.getElementById('profitOverride').value='';
     if(trade.partialCloses){try{const pcs=JSON.parse(trade.partialCloses);pcs.forEach((pc,idx)=>{const px=`pc${idx+1}`;if(document.getElementById(`${px}_lot`)){document.getElementById(`${px}_lot`).value=pc.lot||'';document.getElementById(`${px}_price`).value=pc.price||'';document.getElementById(`${px}_profit`).value=pc.profit||'';}})}catch(e){}}
     clearLinkedAnalysis();
-    if(trade.linkedAnalysisId){document.getElementById('linkedAnalysisId').value=trade.linkedAnalysisId;document.getElementById('linkedAnalysisUrl').value=trade.linkedAnalysisUrl||ANALIZA_PAGE_URL;const prev=document.getElementById('linkedAnalysisPreview');document.getElementById('previewPair').textContent=trade.pereche||'—';document.getElementById('previewMeta').innerHTML=`<strong>ID:</strong> ${trade.linkedAnalysisId}`;prev.classList.add('visible');linkedAnalysis={deleteId:trade.linkedAnalysisId};}
+    const _savedLinkedId  = trade.linkedAnalysisId  || '';
+    const _savedLinkedUrl = trade.linkedAnalysisUrl || ANALIZA_PAGE_URL;
+    const _savedPair      = trade.pereche || '—';
+    // Suppress auto-analysis load while we restore the saved link
+    window._suppressAnalysisAutoLoad = true;
+    if (_savedLinkedId) {
+        setTimeout(() => {
+            document.getElementById('linkedAnalysisId').value  = _savedLinkedId;
+            document.getElementById('linkedAnalysisUrl').value = _savedLinkedUrl;
+            const prev = document.getElementById('linkedAnalysisPreview');
+            document.getElementById('previewPair').textContent = _savedPair;
+            document.getElementById('previewMeta').innerHTML   = `<strong>ID:</strong> ${_savedLinkedId}<br><small style="color:var(--text-muted);">Analiza link-uită — apasă ↗ pentru a vedea</small>`;
+            prev.classList.add('visible');
+            linkedAnalysis = { deleteId: _savedLinkedId };
+            window._suppressAnalysisAutoLoad = false;
+        }, 300);
+    } else {
+        setTimeout(() => { window._suppressAnalysisAutoLoad = false; }, 300);
+    }
     setTimeout(()=>calculatePartialCloses(),100);
     showPage('form');
 }
 
 function clearForm() {
-    document.querySelectorAll('#formPage input:not([readonly]),#formPage select').forEach(el=>el.value='');
+    document.querySelectorAll('#formPage input:not([readonly]):not([type="hidden"]),#formPage select').forEach(el=>el.value='');
     document.getElementById('customPairGroup').style.display='none';
     ['pc1','pc2','pc3'].forEach(px=>['_lot','_price','_profit'].forEach(s=>document.getElementById(px+s).value=''));
     document.getElementById('totalPartialProfit').textContent='$0.00';
@@ -2383,10 +2405,13 @@ document.getElementById('entryHour').addEventListener('change',calculateDuration
 document.getElementById('exitHour').addEventListener('change',calculateDuration);
 document.getElementById('lotSize').addEventListener('input',calculatePartialCloses);
 document.getElementById('pereche').addEventListener('change', async () => {
+    if (window._suppressAnalysisAutoLoad) return;
     const v = document.getElementById('pereche').value;
     const customV = document.getElementById('customPair').value.trim();
     const pair = (v === 'Alta' ? customV : v);
     if (!pair) return;
+    // Don't auto-search when editing an existing trade (would overwrite linked analysis)
+    if (editingIndex >= 0) return;
 
     // Add pair to dropdown if not already there
     const sel = document.getElementById('analysisPairFilter');
@@ -2427,6 +2452,7 @@ document.getElementById('pereche').addEventListener('change', async () => {
 
 // Also fire when custom pair is typed
 document.getElementById('customPair').addEventListener('blur', () => {
+    if (window._suppressAnalysisAutoLoad) return;
     const pair = document.getElementById('customPair').value.trim();
     if (!pair) return;
     document.getElementById('pereche').dispatchEvent(new Event('change'));
