@@ -2319,7 +2319,7 @@ function editTrade(i) {
         document.getElementById('previewPair').textContent = _savedPair;
         document.getElementById('previewMeta').innerHTML   = `<strong>ID:</strong> ${_savedLinkedId}<br><small style="color:var(--text-muted);">Analiza link-uită — apasă ↗ pentru a vedea</small>`;
         prev.classList.add('visible');
-        linkedAnalysis = { deleteId: _savedLinkedId };
+        linkedAnalysis = { rowNumber: _savedLinkedId };
     }
     // Release flag immediately after sync setup — user can now select a new analysis freely
     window._suppressAnalysisAutoLoad = false;
@@ -2487,26 +2487,26 @@ function applyAnalysisFilter(pf,df) {
     renderAnalysesResults(f);
 }
 // Map to store rendered analyses by index for safe onclick
-let _renderedAnalysesMap = {};
+window._renderedAnalysesMap = {};
 
 function renderAnalysesResults(list) {
     const rd=document.getElementById('analysesResults');
     if(!list.length){rd.innerHTML='<div class="no-analyses-msg">Nicio analiză găsită.</div>';return;}
     const sorted=[...list].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
-    _renderedAnalysesMap = {};
+    window._renderedAnalysesMap = {};
     rd.innerHTML=sorted.slice(0,50).map((a, i)=>{
-        _renderedAnalysesMap[i] = a;
+        window._renderedAnalysesMap[i] = a;
         const bc=a.marketBias==='Bullish'?'bias-bullish':a.marketBias==='Bearish'?'bias-bearish':'bias-neutral';
         const bi=a.marketBias==='Bullish'?'🟢':a.marketBias==='Bearish'?'🔴':'⚪';
-        const isSel=linkedAnalysis&&linkedAnalysis.deleteId===a.deleteId;
+        const isSel=linkedAnalysis&&linkedAnalysis.rowNumber===a.rowNumber;
         const ds=a.date?new Date(a.date).toLocaleDateString('ro-RO',{day:'2-digit',month:'short',year:'numeric'}):'—';
-        return `<div class="analysis-result-item ${isSel?'selected-analysis':''}" onclick="selectLinkedAnalysis(_renderedAnalysesMap[${i}])"><div><div class="analysis-item-pair">${a.pair||'—'}</div><div class="analysis-item-date">📅 ${ds} · ${a.day||''}</div></div><span class="analysis-item-bias ${bc}">${bi} ${a.marketBias||'—'}</span></div>`;
+        return `<div class="analysis-result-item ${isSel?'selected-analysis':''}" onclick="selectLinkedAnalysis(window._renderedAnalysesMap[${i}])"><div><div class="analysis-item-pair">${a.pair||'—'}</div><div class="analysis-item-date">📅 ${ds} · ${a.day||''}</div></div><span class="analysis-item-bias ${bc}">${bi} ${a.marketBias||'—'}</span></div>`;
     }).join('');
 }
 function selectLinkedAnalysis(analysis) {
-    console.log('[SELECT] analysis.deleteId =', analysis.deleteId, '| analysis =', analysis);
+    console.log('[SELECT] analysis.rowNumber =', analysis.rowNumber, '| analysis =', analysis);
     linkedAnalysis=analysis;
-    document.getElementById('linkedAnalysisId').value=analysis.deleteId||'';
+    document.getElementById('linkedAnalysisId').value=analysis.rowNumber||'';
     document.getElementById('linkedAnalysisUrl').value=ANALIZA_PAGE_URL;
     console.log('[SELECT] field after set =', document.getElementById('linkedAnalysisId').value);
     const prev=document.getElementById('linkedAnalysisPreview');
@@ -2525,7 +2525,7 @@ function clearLinkedAnalysis() {
     document.getElementById('linkedAnalysisPreview').classList.remove('visible');
     if(availableAnalyses.length)renderAnalysesResults(availableAnalyses);
 }
-function openLinkedAnalysis() { if(!linkedAnalysis||!linkedAnalysis.deleteId)return; openAnalysisModal(linkedAnalysis.deleteId); }
+function openLinkedAnalysis() { if(!linkedAnalysis||!linkedAnalysis.rowNumber)return; openAnalysisModal(linkedAnalysis.rowNumber); }
 
 // ════════════════════════════════════════════════════════
 // ANALYSIS VIEW MODAL
@@ -2536,7 +2536,7 @@ function openAnalysisModal(analysisId) {
     document.getElementById('avmHeaderPair').textContent='...';
     document.getElementById('avmHeaderDate').textContent='';
     document.getElementById('avmBody').innerHTML='<div class="avm-loading"><div class="avm-spinner"></div><div>Se încarcă analiza...</div></div>';
-    const doRender=list=>{ const a=list.find(x=>String(x.deleteId)===String(analysisId)); if(!a)throw new Error('Analiza nu a fost găsită (ID: '+analysisId+')'); renderAnalysisModal(a); };
+    const doRender=list=>{ const a=list.find(x=>String(x.rowNumber)===String(analysisId)); if(!a)throw new Error('Analiza nu a fost găsită (ID: '+analysisId+')'); renderAnalysisModal(a); };
     if(availableAnalyses&&availableAnalyses.length>0){try{doRender(availableAnalyses);return;}catch(e){}}
     fetch(ANALIZA_SCRIPT_URL,{signal:AbortSignal.timeout(12000)}).then(r=>r.json()).then(json=>{ availableAnalyses=Array.isArray(json)?json:(json.data||[]); doRender(availableAnalyses); }).catch(err=>{ document.getElementById('avmBody').innerHTML=`<div class="avm-error">⚠️ ${err.message||'Eroare la încărcare.'}<br><small style="color:#888;margin-top:8px;display:block;">Verifică conexiunea sau dezactivează ad-blocker-ul.</small></div>`; });
 }
