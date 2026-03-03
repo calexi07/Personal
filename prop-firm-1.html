@@ -2309,22 +2309,20 @@ function editTrade(i) {
     const _savedLinkedId  = trade.linkedAnalysisId  || '';
     const _savedLinkedUrl = trade.linkedAnalysisUrl || ANALIZA_PAGE_URL;
     const _savedPair      = trade.pereche || '—';
-    // Suppress auto-analysis load while we restore the saved link
+    // Suppress auto-analysis load ONLY during the synchronous pair setValue below
     window._suppressAnalysisAutoLoad = true;
+    // Restore saved linked analysis immediately (sync)
     if (_savedLinkedId) {
-        setTimeout(() => {
-            document.getElementById('linkedAnalysisId').value  = _savedLinkedId;
-            document.getElementById('linkedAnalysisUrl').value = _savedLinkedUrl;
-            const prev = document.getElementById('linkedAnalysisPreview');
-            document.getElementById('previewPair').textContent = _savedPair;
-            document.getElementById('previewMeta').innerHTML   = `<strong>ID:</strong> ${_savedLinkedId}<br><small style="color:var(--text-muted);">Analiza link-uită — apasă ↗ pentru a vedea</small>`;
-            prev.classList.add('visible');
-            linkedAnalysis = { deleteId: _savedLinkedId };
-            window._suppressAnalysisAutoLoad = false;
-        }, 300);
-    } else {
-        setTimeout(() => { window._suppressAnalysisAutoLoad = false; }, 300);
+        document.getElementById('linkedAnalysisId').value  = _savedLinkedId;
+        document.getElementById('linkedAnalysisUrl').value = _savedLinkedUrl;
+        const prev = document.getElementById('linkedAnalysisPreview');
+        document.getElementById('previewPair').textContent = _savedPair;
+        document.getElementById('previewMeta').innerHTML   = `<strong>ID:</strong> ${_savedLinkedId}<br><small style="color:var(--text-muted);">Analiza link-uită — apasă ↗ pentru a vedea</small>`;
+        prev.classList.add('visible');
+        linkedAnalysis = { deleteId: _savedLinkedId };
     }
+    // Release flag immediately after sync setup — user can now select a new analysis freely
+    window._suppressAnalysisAutoLoad = false;
     setTimeout(()=>calculatePartialCloses(),100);
     showPage('form');
 }
