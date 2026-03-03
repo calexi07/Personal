@@ -1669,7 +1669,7 @@ async function loadAccounts() {
                     profitTarget:meta.profitTarget  || parseFloat(row.risk)   || 0,
                     maxDD:       meta.maxDD         || parseFloat(row.profit) || 0,
                     pairs:       meta.pairs         || String(row.tv    || ''),
-                    isPersonal:  meta.isPersonal    ? true : String(row.exitHour||'') === '1',
+                    isPersonal:  String(row.pereche||'') === 'Personal' || meta.isPersonal ? true : String(row.exitHour||'') === '1',
                 };
             }).filter(a => a.id);
         }
@@ -1690,7 +1690,7 @@ async function saveAccountsRow(acc, isNew) {
         profitTarget:acc.profitTarget || 0,
         maxDD:       acc.maxDD        || 0,
         pairs:       acc.pairs        || '',
-        isPersonal:  acc.isPersonal   ? 1 : 0,
+        isPersonal:  (acc.isPersonal || acc.type === 'Personal') ? 1 : 0,
     });
     const params = {
         luna:    acc.id,
@@ -1961,7 +1961,7 @@ function renderOverview() {
                     <div>
                         <div class="card-firm">${acc.firm}</div>
                         <div class="card-name">${acc.name}</div>
-                        <div style="margin-top:6px;">${typeBadge(acc.type)}${acc.isPersonal ? ' <span class=\"personal-badge\">💼 Personal</span>' : ''}</div>
+                        <div style="margin-top:6px;">${typeBadge(acc.type)}${(acc.isPersonal || acc.type === 'Personal') ? ' <span class=\"personal-badge\">💼 Personal</span>' : ''}</div>
                         <div class="card-details" style="margin-top:10px;">
                             ${acc.startDate ? `<span class="card-detail-tag">📅 ${acc.startDate}</span>` : ''}
                             ${acc.profitTarget ? `<span class="card-detail-tag" style="color:var(--accent);border-color:rgba(0,229,160,0.2);">🎯 ${acc.profitTarget}% target</span>` : ''}
@@ -1971,7 +1971,7 @@ function renderOverview() {
                     </div>
                     <div class="card-actions">
                         ${isLoggedIn ? `
-                        ${acc.isPersonal ? `<button class="card-icon-btn" onclick="event.stopPropagation();openDepositModal('${acc.id}')" title="Depozit/Retragere" style="color:var(--blue);border-color:rgba(61,139,255,0.3);">＋</button>` : ''}
+                        ${(acc.isPersonal || acc.type === 'Personal') ? `<button class="card-icon-btn" onclick="event.stopPropagation();openDepositModal('${acc.id}')" title="Depozit/Retragere" style="color:var(--blue);border-color:rgba(61,139,255,0.3);">＋</button>` : ''}
                         <button class="card-icon-btn payout" onclick="event.stopPropagation();openPayoutsListModal('${acc.id}')" title="Payouts">💸</button>
                         <button class="card-icon-btn" onclick="event.stopPropagation();openEditAccountModal('${acc.id}')" title="Editează" style="color:var(--blue);border-color:rgba(61,139,255,0.25);">✏️</button>
                         <button class="card-icon-btn danger" onclick="event.stopPropagation();deleteAccount('${acc.id}')" title="Șterge">🗑</button>` : ''}
@@ -2052,7 +2052,7 @@ function renderContextBar() {
         <div class="ctx-meta">Payouts: <strong style="color:var(--accent);">$${totalPayouts.toFixed(2)}</strong></div>
         <div class="ctx-spacer"></div>
         ${isLoggedIn ? `
-        ${acc.isPersonal ? `<button onclick="openDepositModal('${acc.id}')" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--blue-dim);border:1px solid rgba(61,139,255,0.2);border-radius:var(--radius-sm);color:var(--blue);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;">➕ Depozit</button>` : ''}
+        ${(acc.isPersonal || acc.type === 'Personal') ? `<button onclick="openDepositModal('${acc.id}')" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--blue-dim);border:1px solid rgba(61,139,255,0.2);border-radius:var(--radius-sm);color:var(--blue);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;">➕ Depozit</button>` : ''}
         <button onclick="openPayoutsListModal('${acc.id}')" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--accent-dim);border:1px solid rgba(0,229,160,0.2);border-radius:var(--radius-sm);color:var(--accent);font-family:var(--font-body);font-size:0.78em;font-weight:600;cursor:pointer;">💸 Payouts</button>` : ''}
     `;
     document.getElementById('dashTitle').textContent = `📊 ${acc.name} — Statistics`;
@@ -2126,7 +2126,7 @@ function calcCurrentBalance(acc, closedTrades) {
     if (!acc) return { current: 0, tradeProfitSinceLastPayout: 0 };
     const initialBalance = acc.balance;
     const totalProfit = closedTrades.reduce((s,t)=>s+(parseFloat(t.profit)||0),0);
-    if (acc.isPersonal) {
+    if (acc.isPersonal || acc.type === 'Personal') {
         const totalDeposits = (acc.deposits||[]).filter(d=>d.type==='deposit').reduce((s,d)=>s+parseFloat(d.amount||0),0);
         const totalWithdraws = (acc.deposits||[]).filter(d=>d.type==='withdraw').reduce((s,d)=>s+parseFloat(d.amount||0),0);
         const totalPayouts = (acc.payouts||[]).reduce((s,p)=>s+parseFloat(p.amount||0),0);
@@ -2149,7 +2149,7 @@ function renderStats() {
     const acc = accounts.find(a=>a.id===currentAccId);
     const initialBalance = acc ? acc.balance : 10000;
     const totalPayouts = acc ? (acc.payouts||[]).reduce((s,p)=>s+parseFloat(p.amount||0),0) : 0;
-    const totalDeposits = acc && acc.isPersonal ? (acc.deposits||[]).filter(d=>d.type==='deposit').reduce((s,d)=>s+parseFloat(d.amount||0),0) : 0;
+    const totalDeposits = acc && (acc.isPersonal || acc.type === 'Personal') ? (acc.deposits||[]).filter(d=>d.type==='deposit').reduce((s,d)=>s+parseFloat(d.amount||0),0) : 0;
 
     const closed = filteredTrades.filter(t=>['Win','Loss','Break Even'].includes(t.wl));
     const wins   = filteredTrades.filter(t=>t.wl==='Win');
@@ -2166,8 +2166,8 @@ function renderStats() {
 
     // Show/hide deposits card for personal account
     const depositsStatEl = document.getElementById('statDepositsWrap');
-    if (depositsStatEl) depositsStatEl.style.display = (acc && acc.isPersonal) ? '' : 'none';
-    if (acc && acc.isPersonal) {
+    if (depositsStatEl) depositsStatEl.style.display = (acc && (acc.isPersonal || acc.type === 'Personal')) ? '' : 'none';
+    if (acc && (acc.isPersonal || acc.type === 'Personal')) {
         const depEl = document.getElementById('statDeposits');
         if (depEl) depEl.textContent = `$${totalDeposits.toFixed(2)}`;
     }
