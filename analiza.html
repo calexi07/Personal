@@ -328,6 +328,40 @@
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.09); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(59,163,245,0.4); }
 
+
+        /* ══ ACTIVE / INACTIVE SECTIONS ══ */
+        .status-sections { display: flex; flex-direction: column; gap: 22px; margin-bottom: 30px; }
+        .status-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        .status-section-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 18px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; transition: background 0.2s; }
+        .status-section-header:hover { background: var(--surface2); }
+        .status-section-title { display: flex; align-items: center; gap: 9px; font-family: var(--font-display); font-size: 0.95em; font-weight: 700; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .status-dot.active { background: var(--green); box-shadow: 0 0 6px rgba(34,229,160,0.6); }
+        .status-dot.inactive { background: var(--orange); box-shadow: 0 0 6px rgba(251,146,60,0.5); }
+        .status-dot.missing { background: var(--text-dim); }
+        .status-section-meta { display: flex; align-items: center; gap: 10px; }
+        .status-count { font-family: var(--font-mono); font-size: 0.75em; color: var(--text-dim); }
+        .status-toggle { font-size: 0.75em; color: var(--text-dim); transition: transform 0.2s; }
+        .status-toggle.collapsed { transform: rotate(-90deg); }
+        .status-section-body { padding: 14px 16px; }
+        .status-section-body.hidden { display: none; }
+        .status-mini-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+        .smini { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+        .smini:hover { border-color: rgba(59,163,245,0.3); transform: translateY(-1px); }
+        .smini.active-card { border-color: rgba(34,229,160,0.25); background: rgba(34,229,160,0.04); }
+        .smini.active-card:hover { border-color: rgba(34,229,160,0.5); box-shadow: 0 4px 16px rgba(34,229,160,0.1); }
+        .smini.stale-card { border-color: rgba(251,146,60,0.2); background: rgba(251,146,60,0.03); }
+        .smini.stale-card:hover { border-color: rgba(251,146,60,0.45); }
+        .smini.missing-card { border-color: var(--border); opacity: 0.65; }
+        .smini.missing-card:hover { opacity: 1; border-color: rgba(59,163,245,0.3); }
+        .smini-pair { font-family: var(--font-display); font-weight: 700; font-size: 0.88em; letter-spacing: -0.3px; }
+        .smini-date { font-family: var(--font-mono); font-size: 0.62em; color: var(--text-dim); }
+        .smini-bias { font-size: 0.65em; font-weight: 600; }
+        .smini-age { font-family: var(--font-mono); font-size: 0.6em; position: absolute; top: 7px; right: 9px; }
+        .smini-age.fresh { color: var(--green); }
+        .smini-age.stale { color: var(--orange); }
+        .smini-age.missing { color: var(--text-dim); }
+
         @media (max-width: 768px) { .topbar { padding: 0 14px; } .main { padding: 16px 10px; } .wizard-pair-grid { grid-template-columns: repeat(3, 1fr); } .form-row, .form-row.triple { grid-template-columns: 1fr; } .pair-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 480px) { .pair-grid { grid-template-columns: 1fr; } }
     </style>
@@ -392,6 +426,9 @@
                 <h2 class="section-title">Market <span>Dashboard</span></h2>
                 <button class="btn btn-add" onclick="openAddModal(null)" style="padding:8px 14px; font-size:0.8em;">➕ New</button>
             </div>
+            <!-- ══ ACTIVE / INACTIVE STATUS SECTIONS ══ -->
+            <div class="status-sections" id="statusSections"></div>
+
             <div class="tab-strip" id="categoryTabs"></div>
             <div class="pair-grid" id="pairGrid"></div>
         </div>
@@ -745,7 +782,113 @@ function loadAnalyses() {
 }
 
 // DASHBOARD
-function renderDashboard() { renderCategoryTabs(); renderPairGrid(); }
+
+function isActiveAnalysis(analysis) {
+    if (!analysis) return false;
+    const days = daysBetween(analysis.date);
+    return days !== null && days <= 2;
+}
+
+function renderStatusSections() {
+    const container = document.getElementById('statusSections');
+    if (!container) return;
+
+    const active  = []; // pairs with analysis <= 2 days old
+    const stale   = []; // pairs with analysis > 2 days old
+    const missing = []; // pairs with no analysis at all
+
+    ALL_PAIRS.forEach(pair => {
+        const latest = getLatestAnalysis(pair);
+        if (!latest) {
+            missing.push({ pair });
+        } else {
+            const days = daysBetween(latest.date);
+            if (days !== null && days <= 2) {
+                active.push({ pair, analysis: latest, days });
+            } else {
+                stale.push({ pair, analysis: latest, days });
+            }
+        }
+    });
+
+    // Sort stale by days (most stale first)
+    stale.sort((a,b) => (b.days||0) - (a.days||0));
+
+    function miniCard(item, type) {
+        const latest = item.analysis;
+        const idx = latest ? allAnalyses.indexOf(latest) : -1;
+        const biasIcon = latest ? (latest.marketBias==='Bullish'?'🟢':latest.marketBias==='Bearish'?'🔴':'⚪') : '';
+        const biasColor = latest ? (latest.marketBias==='Bullish'?'var(--green)':latest.marketBias==='Bearish'?'var(--red)':'var(--text-dim)') : 'var(--text-dim)';
+        const dateStr = latest ? fmtDate(latest.date) : '—';
+        const ageStr = item.days !== undefined ? (item.days === 0 ? 'today' : item.days+'d ago') : 'never';
+        const ageCls = type === 'active' ? 'fresh' : type === 'stale' ? 'stale' : 'missing';
+        const cardCls = type === 'active' ? 'active-card' : type === 'stale' ? 'stale-card' : 'missing-card';
+        const onclick = idx >= 0
+            ? `openViewModal(${idx})`
+            : `openAddModal('${item.pair}')`;
+        return `<div class="smini ${cardCls}" onclick="${onclick}" title="${item.pair} — ${ageStr}">
+            <span class="smini-age ${ageCls}">${ageStr}</span>
+            <div class="smini-pair">${item.pair}</div>
+            <div class="smini-date">${dateStr}</div>
+            ${latest ? `<div class="smini-bias" style="color:${biasColor};">${biasIcon} ${latest.marketBias||'—'}</div>` : '<div class="smini-bias" style="color:var(--text-dim);">— No analysis</div>'}
+        </div>`;
+    }
+
+    const inactiveAll = [...stale, ...missing];
+
+    container.innerHTML = `
+        <!-- ACTIVE -->
+        <div class="status-section">
+            <div class="status-section-header" onclick="toggleStatusSection('active')">
+                <div class="status-section-title">
+                    <div class="status-dot active"></div>
+                    Analize Active
+                    <span style="font-size:0.78em;font-weight:400;color:var(--text-dim);">actualizate în ultimele 2 zile</span>
+                </div>
+                <div class="status-section-meta">
+                    <span class="status-count">${active.length} perechi</span>
+                    <span class="status-toggle" id="toggle-active">▼</span>
+                </div>
+            </div>
+            <div class="status-section-body" id="body-active">
+                ${active.length
+                    ? `<div class="status-mini-grid">${active.map(i => miniCard(i,'active')).join('')}</div>`
+                    : `<div style="padding:16px 0;text-align:center;color:var(--text-dim);font-size:0.84em;">Nicio analiză activă. Adaugă una!</div>`
+                }
+            </div>
+        </div>
+
+        <!-- INACTIVE -->
+        <div class="status-section">
+            <div class="status-section-header" onclick="toggleStatusSection('inactive')">
+                <div class="status-section-title">
+                    <div class="status-dot inactive"></div>
+                    Analize Inactive / Lipsă
+                    <span style="font-size:0.78em;font-weight:400;color:var(--text-dim);">neactualizate sau fără analiză</span>
+                </div>
+                <div class="status-section-meta">
+                    <span class="status-count">${inactiveAll.length} perechi</span>
+                    <span class="status-toggle collapsed" id="toggle-inactive">▼</span>
+                </div>
+            </div>
+            <div class="status-section-body hidden" id="body-inactive">
+                ${inactiveAll.length
+                    ? `<div class="status-mini-grid">${inactiveAll.map(i => miniCard(i, i.analysis ? 'stale' : 'missing')).join('')}</div>`
+                    : `<div style="padding:16px 0;text-align:center;color:var(--green);font-size:0.84em;">✅ Toate perechile sunt actualizate!</div>`
+                }
+            </div>
+        </div>
+    `;
+}
+
+function toggleStatusSection(id) {
+    const body   = document.getElementById('body-' + id);
+    const toggle = document.getElementById('toggle-' + id);
+    body.classList.toggle('hidden');
+    toggle.classList.toggle('collapsed');
+}
+
+function renderDashboard() { renderStatusSections(); renderCategoryTabs(); renderPairGrid(); }
 function renderCategoryTabs() {
     const container = document.getElementById('categoryTabs');
     container.innerHTML = '';
