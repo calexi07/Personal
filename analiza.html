@@ -723,20 +723,55 @@ let alertPollTimer = null;
 
 // Logica de validitate: tip alertă → impact pe bias
 const ALERT_IMPACT = {
-  // Alertele astea invalideaza analiza Bearish (confirma Bullish)
-  supply_invalidated:  { invalidates: 'Bearish', severity: 'danger', icon: '❌' },
-  bos_bullish:         { invalidates: 'Bearish', severity: 'danger', icon: '💥' },
-  choch_bullish:       { invalidates: 'Bearish', severity: 'danger', icon: '🔄' },
-  fractal_break_up:    { invalidates: 'Bearish', severity: 'warn',   icon: '⚡' },
-  // Alertele astea invalideaza analiza Bullish (confirma Bearish)
-  demand_invalidated:  { invalidates: 'Bullish', severity: 'danger', icon: '❌' },
-  bos_bearish:         { invalidates: 'Bullish', severity: 'danger', icon: '💥' },
-  choch_bearish:       { invalidates: 'Bullish', severity: 'danger', icon: '🔄' },
-  fractal_break_down:  { invalidates: 'Bullish', severity: 'warn',   icon: '⚡' },
-  // Neutre — doar informative
-  key_level_hit:       { invalidates: null, severity: 'info', icon: '📍' },
-  structure_break:     { invalidates: null, severity: 'warn', icon: '⚠️' },
-  ema_cross:           { invalidates: null, severity: 'info', icon: 'ℹ️' },
+  // ── INVALIDĂRI DIRECTE ──
+  // Supply invalidat → analiză Bearish devine invalidă (prețul a rupt supply-ul în sus)
+  supply_invalidated:        { invalidates: 'Bearish', severity: 'danger', icon: '❌', label: 'Supply Invalidat' },
+  // Demand invalidat → analiză Bullish devine invalidă (prețul a rupt demand-ul în jos)
+  demand_invalidated:        { invalidates: 'Bullish', severity: 'danger', icon: '❌', label: 'Demand Invalidat' },
+
+  // ── FRACTAL BREAKS ──
+  // Bullish fractal break → poate invalida Bearish SAU confirma continuitate Bullish
+  bullish_fractal_break:     { invalidates: 'Bearish', severity: 'warn',   icon: '⚡', label: 'Bullish Fractal Break' },
+  bullish_fractal_break_w1:  { invalidates: 'Bearish', severity: 'danger', icon: '⚡', label: 'Bullish Fractal Break W1' },
+  bullish_fractal_break_d1:  { invalidates: 'Bearish', severity: 'danger', icon: '⚡', label: 'Bullish Fractal Break D1' },
+  bullish_fractal_break_4h:  { invalidates: 'Bearish', severity: 'warn',   icon: '⚡', label: 'Bullish Fractal Break 4H' },
+  bullish_fractal_break_1h:  { invalidates: 'Bearish', severity: 'warn',   icon: '⚡', label: 'Bullish Fractal Break 1H' },
+  // Bearish fractal break → poate invalida Bullish SAU confirma continuitate Bearish
+  bearish_fractal_break:     { invalidates: 'Bullish', severity: 'warn',   icon: '⚡', label: 'Bearish Fractal Break' },
+  bearish_fractal_break_w1:  { invalidates: 'Bullish', severity: 'danger', icon: '⚡', label: 'Bearish Fractal Break W1' },
+  bearish_fractal_break_d1:  { invalidates: 'Bullish', severity: 'danger', icon: '⚡', label: 'Bearish Fractal Break D1' },
+  bearish_fractal_break_4h:  { invalidates: 'Bullish', severity: 'warn',   icon: '⚡', label: 'Bearish Fractal Break 4H' },
+  bearish_fractal_break_1h:  { invalidates: 'Bullish', severity: 'warn',   icon: '⚡', label: 'Bearish Fractal Break 1H' },
+
+  // ── INFORMATIVE (setup posibil) ──
+  // Lichiditate luată → nu invalidează, dar anunță posibile setupuri
+  lichiditate_luata:         { invalidates: null, severity: 'info', icon: '💧', label: 'Lichiditate Luată' },
+  lichiditate_luata_w1:      { invalidates: null, severity: 'info', icon: '💧', label: 'Lichiditate Luată W1' },
+  lichiditate_luata_d1:      { invalidates: null, severity: 'info', icon: '💧', label: 'Lichiditate Luată D1' },
+  lichiditate_luata_4h:      { invalidates: null, severity: 'info', icon: '💧', label: 'Lichiditate Luată 4H' },
+  lichiditate_luata_1h:      { invalidates: null, severity: 'info', icon: '💧', label: 'Lichiditate Luată 1H' },
+  // Intrare în supply → posibil setup Bearish
+  intrare_supply:            { invalidates: null, severity: 'info', icon: '🔴', label: 'Intrare în Supply' },
+  intrare_supply_w1:         { invalidates: null, severity: 'info', icon: '🔴', label: 'Intrare în Supply W1' },
+  intrare_supply_d1:         { invalidates: null, severity: 'info', icon: '🔴', label: 'Intrare în Supply D1' },
+  intrare_supply_4h:         { invalidates: null, severity: 'info', icon: '🔴', label: 'Intrare în Supply 4H' },
+  intrare_supply_1h:         { invalidates: null, severity: 'info', icon: '🔴', label: 'Intrare în Supply 1H' },
+  // Intrare în demand → posibil setup Bullish
+  intrare_demand:            { invalidates: null, severity: 'info', icon: '🟢', label: 'Intrare în Demand' },
+  intrare_demand_w1:         { invalidates: null, severity: 'info', icon: '🟢', label: 'Intrare în Demand W1' },
+  intrare_demand_d1:         { invalidates: null, severity: 'info', icon: '🟢', label: 'Intrare în Demand D1' },
+  intrare_demand_4h:         { invalidates: null, severity: 'info', icon: '🟢', label: 'Intrare în Demand 4H' },
+  intrare_demand_1h:         { invalidates: null, severity: 'info', icon: '🟢', label: 'Intrare în Demand 1H' },
+
+  // ── COMPATIBILITATE (tipuri vechi) ──
+  fractal_break_up:          { invalidates: 'Bearish', severity: 'warn',   icon: '⚡', label: 'Fractal Break Up' },
+  fractal_break_down:        { invalidates: 'Bullish', severity: 'warn',   icon: '⚡', label: 'Fractal Break Down' },
+  key_level_hit:             { invalidates: null,      severity: 'info',   icon: '📍', label: 'Key Level Hit' },
+  structure_break:           { invalidates: null,      severity: 'warn',   icon: '⚠️', label: 'Structure Break' },
+  bos_bullish:               { invalidates: 'Bearish', severity: 'danger', icon: '💥', label: 'BOS Bullish' },
+  bos_bearish:               { invalidates: 'Bullish', severity: 'danger', icon: '💥', label: 'BOS Bearish' },
+  choch_bullish:             { invalidates: 'Bearish', severity: 'danger', icon: '🔄', label: 'CHoCH Bullish' },
+  choch_bearish:             { invalidates: 'Bullish', severity: 'danger', icon: '🔄', label: 'CHoCH Bearish' },
 };
 
 function startAlertPolling() {
@@ -793,8 +828,8 @@ function getValidityForPair(pair, bias) {
 }
 
 function updatePairCardAlerts() {
-  // Re-render doar pair grid-ul dacă e pe dashboard
   if (document.getElementById('dashboardView').classList.contains('active')) {
+    renderStatusSections();
     renderPairGrid();
   }
 }
@@ -819,11 +854,11 @@ function showAlertToast(alert) {
   div.className = `tv-alert-item ${severity}`;
   div.innerHTML = `
     <div class="tv-alert-icon">${icon}</div>
-    <div class="tv-alert-body">
+    <div class="tv-alert-body" onclick="navigateToAlert('${alert.pair}')" style="cursor:pointer;" title="Click pentru a deschide analiza">
       <div class="tv-alert-title">Alert on <span class="tv-alert-pair">${alert.pair}</span> ${alert.tf ? '<span style="color:var(--text-dim);font-size:0.85em;">· ' + alert.tf + '</span>' : ''}</div>
       <div class="tv-alert-msg">${alert.message}</div>
       ${validityHtml}
-      <div class="tv-alert-time">${timeStr}</div>
+      <div class="tv-alert-time">${timeStr} · <span style="color:var(--blue);font-size:0.9em;">Click pentru analiză →</span></div>
     </div>
     <button class="tv-alert-close" onclick="dismissAlertToast(this, '${alert.id}')">×</button>`;
 
@@ -939,6 +974,7 @@ function addToNotifPanel(alert, impact) {
     if (empty) empty.remove();
 
     const icon      = impact.icon || '📡';
+    const label     = impact.label || alert.type;
     const severity  = impact.severity || 'info';
     const dotColor  = severity === 'danger' ? 'var(--red)' : severity === 'warn' ? 'var(--orange)' : 'var(--blue)';
     const timeStr   = alert.time ? new Date(alert.time).toLocaleTimeString('ro-RO', {hour:'2-digit',minute:'2-digit'}) : 'acum';
@@ -947,21 +983,46 @@ function addToNotifPanel(alert, impact) {
     if (impact.invalidates) {
         msgText = `Analiza ${impact.invalidates} pe ${alert.pair} a devenit invalidă`;
     } else {
-        msgText = alert.message || alert.type;
+        msgText = `${label} — posibil setup pe ${alert.pair}`;
     }
 
     const item = document.createElement('div');
     item.className = 'notif-item unread';
     item.dataset.alertId = alert.id;
+    item.style.cursor = 'pointer';
     item.innerHTML = `
         <div class="notif-dot" style="background:${dotColor};flex-shrink:0;margin-top:5px;"></div>
-        <div style="flex:1;min-width:0;">
-            <div class="notif-item-pair">${icon} ${alert.pair} ${alert.tf ? '· ' + alert.tf : ''}</div>
+        <div style="flex:1;min-width:0;" onclick="navigateToAlert('${alert.pair}')">
+            <div class="notif-item-pair">${icon} ${alert.pair} ${alert.tf ? '<span style=\'color:var(--text-dim);font-size:0.85em;\'>· ' + alert.tf + '</span>' : ''}</div>
             <div class="notif-item-msg">${msgText}</div>
             <div class="notif-item-time">${timeStr}</div>
         </div>
         <button onclick="dismissFromPanel(this,'${alert.id}')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1em;padding:0 2px;line-height:1;">×</button>`;
     list.prepend(item);
+}
+
+function navigateToAlert(pair) {
+    // Normalizează perechea
+    let normPair = pair.replace('/', '');
+    if (normPair.length === 6) normPair = normPair.slice(0,3) + '/' + normPair.slice(3);
+    else normPair = pair;
+
+    // Închide notif panel
+    document.getElementById('notifPanel').classList.remove('open');
+
+    // Găsește ultima analiză pentru pereche
+    const latest = getLatestAnalysis(normPair);
+    if (latest) {
+        const idx = allAnalyses.indexOf(latest);
+        if (idx >= 0) {
+            showView('dashboard');
+            setTimeout(() => openViewModal(idx), 150);
+            return;
+        }
+    }
+    // Dacă nu există analiză, deschide add modal
+    showView('dashboard');
+    setTimeout(() => openAddModal(normPair), 150);
 }
 
 function dismissFromPanel(btn, alertId) {
