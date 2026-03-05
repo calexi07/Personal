@@ -21,17 +21,6 @@
             background-image: radial-gradient(ellipse 70% 45% at 15% 0%, rgba(59,163,245,0.07) 0%, transparent 65%), radial-gradient(ellipse 45% 35% at 85% 100%, rgba(34,211,238,0.05) 0%, transparent 65%); }
 
         /* TICKER */
-        .ticker-bar { background: linear-gradient(90deg, #0a1628, #0d1c35, #0a1628); border-bottom: 1px solid rgba(251,146,60,0.2); height: 34px; overflow: hidden; display: flex; align-items: center; position: relative; }
-        .ticker-label { background: var(--orange); color: #1a0a00; font-family: var(--font-mono); font-size: 0.68em; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; padding: 0 14px; height: 100%; display: flex; align-items: center; flex-shrink: 0; z-index: 2; }
-        .ticker-fade-l { position: absolute; left: 80px; top: 0; bottom: 0; width: 40px; background: linear-gradient(to right, #0a1628, transparent); z-index: 1; pointer-events: none; }
-        .ticker-track { display: flex; animation: ticker-run 35s linear infinite; white-space: nowrap; padding-left: 20px; }
-        .ticker-track:hover { animation-play-state: paused; cursor: default; }
-        .ticker-item { font-family: var(--font-mono); font-size: 0.75em; color: var(--text-mid); padding: 0 28px 0 0; display: flex; align-items: center; gap: 7px; }
-        .ticker-item .t-pair { color: var(--orange); font-weight: 500; }
-        .ticker-item .t-warn { color: var(--orange); font-size: 0.85em; }
-        .ticker-item .t-ok { color: var(--green); }
-        .ticker-sep { color: rgba(255,255,255,0.12); margin-right: 28px; font-size: 0.9em; }
-        @keyframes ticker-run { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
         /* TOPBAR */
         .topbar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 62px; background: rgba(14,21,32,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
@@ -359,6 +348,36 @@
         ::-webkit-scrollbar-thumb:hover { background: rgba(59,163,245,0.4); }
 
 
+
+        /* ══ TV-STYLE ALERT POPUP ══ */
+        .tv-alert-popup { position: fixed; top: 72px; right: 16px; z-index: 99990;
+            display: flex; flex-direction: column; gap: 8px; max-width: 360px; pointer-events: none; }
+        .tv-alert-item { background: #1a2235; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+            padding: 13px 14px; display: flex; gap: 10px; align-items: flex-start; pointer-events: all;
+            animation: tvSlideIn 0.3s cubic-bezier(0.34,1.3,0.64,1);
+            box-shadow: 0 8px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04); min-width: 300px; }
+        .tv-alert-item.warn   { border-left: 3px solid var(--orange); }
+        .tv-alert-item.danger { border-left: 3px solid var(--red); }
+        .tv-alert-item.info   { border-left: 3px solid var(--blue); }
+        @keyframes tvSlideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+        .tv-alert-icon { font-size: 1.3em; flex-shrink: 0; }
+        .tv-alert-body { flex: 1; min-width: 0; }
+        .tv-alert-title { font-family: var(--font-display); font-weight: 700; font-size: 0.88em;
+            color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+        .tv-alert-pair { color: var(--blue); }
+        .tv-alert-msg { font-size: 0.8em; color: var(--text-mid); line-height: 1.45; }
+        .tv-alert-validity { font-size: 0.73em; font-weight: 600; margin-top: 5px;
+            padding: 3px 8px; border-radius: 10px; display: inline-block; }
+        .tv-alert-validity.invalid { background: rgba(248,114,114,0.15); color: var(--red); }
+        .tv-alert-validity.warning { background: rgba(251,146,60,0.15); color: var(--orange); }
+        .tv-alert-validity.info    { background: rgba(59,163,245,0.1); color: var(--blue); }
+        .tv-alert-time { font-family: var(--font-mono); font-size: 0.65em; color: var(--text-dim); margin-top: 4px; }
+        .tv-alert-close { background: rgba(255,255,255,0.06); border: none; color: var(--text-dim);
+            cursor: pointer; font-size: 0.9em; width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            transition: all 0.15s; line-height: 1; }
+        .tv-alert-close:hover { background: rgba(248,114,114,0.2); color: var(--red); }
+
         /* ══ ACTIVE / INACTIVE SECTIONS ══ */
         .status-sections { display: flex; flex-direction: column; gap: 22px; margin-bottom: 30px; }
         .status-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
@@ -383,6 +402,9 @@
         .smini.stale-card { border-color: rgba(251,146,60,0.2); background: rgba(251,146,60,0.03); }
         .smini.stale-card:hover { border-color: rgba(251,146,60,0.45); }
         .smini.missing-card { border-color: var(--border); opacity: 0.65; }
+        .smini.invalid-card { border-color: rgba(248,114,114,0.35); background: rgba(248,114,114,0.05); }
+        .smini.invalid-card:hover { border-color: rgba(248,114,114,0.6); box-shadow: 0 4px 16px rgba(248,114,114,0.12); }
+        .smini-alert-info { font-size: 0.6em; color: var(--red); font-weight: 600; margin-top: 2px; }
         .smini.missing-card:hover { opacity: 1; border-color: rgba(59,163,245,0.3); }
         .smini-pair { font-family: var(--font-display); font-weight: 700; font-size: 0.88em; letter-spacing: -0.3px; }
         .smini-date { font-family: var(--font-mono); font-size: 0.62em; color: var(--text-dim); }
@@ -398,16 +420,6 @@
 </head>
 <body>
 
-    <!-- TICKER BAR -->
-    <div class="ticker-bar">
-        <div class="ticker-label">⚠ Alerts</div>
-        <div class="ticker-fade-l"></div>
-        <div class="ticker-track" id="tickerTrack">
-            <span id="tickerInner"></span>
-            <span id="tickerClone"></span>
-        </div>
-    </div>
-
     <!-- TOPBAR -->
     <header class="topbar">
         <div class="topbar-brand">
@@ -415,7 +427,6 @@
             <h1>A Random Trader</h1>
         </div>
         <div class="topbar-right">
-            <span class="topbar-meta" id="topbarMeta"></span>
             <div class="notif-wrapper" id="notifWrapper">
                 <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()" title="Notifications">
                     🔔
@@ -423,12 +434,14 @@
                 </button>
                 <div class="notif-panel" id="notifPanel">
                     <div class="notif-header">
-                        <span class="notif-header-title">Notifications</span>
-                        <button class="notif-mark-read" onclick="markAllRead()">Mark all read</button>
+                        <span class="notif-header-title">🔔 Alerte TradingView</span>
+                        <button class="notif-mark-read" onclick="markAllAlertsRead()">Șterge toate</button>
                     </div>
-                    <div class="notif-list" id="notifList"></div>
+                    <div class="notif-list" id="notifList">
+                        <div class="notif-empty">Nicio alertă nouă</div>
+                    </div>
                     <div class="notif-footer">
-                        <button class="notif-footer-btn" onclick="toggleNotifPanel()">Close</button>
+                        <button class="notif-footer-btn" onclick="toggleNotifPanel()">Închide</button>
                     </div>
                 </div>
             </div>
@@ -642,7 +655,10 @@
         </div>
     </div>
 
-    <!-- TV ALERTS PANEL -->
+    <!-- TV ALERT POPUPS (stil TradingView) -->
+    <div class="tv-alert-popup" id="tvAlertPopup"></div>
+
+    <!-- OLD ALERTS PANEL (păstrat pentru compatibilitate) -->
     <div class="alerts-panel" id="alertsPanel"></div>
 
     <!-- TOAST -->
@@ -784,27 +800,41 @@ function updatePairCardAlerts() {
 }
 
 function showAlertToast(alert) {
-  const impact   = ALERT_IMPACT[alert.type] || { severity: 'warn', icon: '📡' };
-  const severity = impact.severity;
-  const icon     = impact.icon;
-  const timeStr  = alert.time ? new Date(alert.time).toLocaleTimeString('ro-RO', {hour:'2-digit',minute:'2-digit'}) : 'acum';
+  const impact    = ALERT_IMPACT[alert.type] || { severity: 'info', icon: '📡' };
+  const severity  = impact.severity;
+  const icon      = impact.icon;
+  const timeStr   = alert.time ? new Date(alert.time).toLocaleTimeString('ro-RO', {hour:'2-digit',minute:'2-digit'}) : 'acum';
+
+  // Determină textul de validitate
+  let validityHtml = '';
+  if (impact.invalidates) {
+    validityHtml = `<div class="tv-alert-validity invalid">❌ Analiză ${impact.invalidates} invalidată</div>`;
+  } else if (severity === 'warn') {
+    validityHtml = `<div class="tv-alert-validity warning">⚠️ Verifică analiza</div>`;
+  } else {
+    validityHtml = `<div class="tv-alert-validity info">ℹ️ Informativ</div>`;
+  }
 
   const div = document.createElement('div');
-  div.className = `alert-toast-item ${severity}`;
+  div.className = `tv-alert-item ${severity}`;
   div.innerHTML = `
-    <div class="ati-icon">${icon}</div>
-    <div class="ati-body">
-      <div class="ati-pair">${alert.pair} ${alert.tf ? '· ' + alert.tf : ''}</div>
-      <div class="ati-msg">${alert.message}</div>
-      <div class="ati-time">${timeStr}</div>
+    <div class="tv-alert-icon">${icon}</div>
+    <div class="tv-alert-body">
+      <div class="tv-alert-title">Alert on <span class="tv-alert-pair">${alert.pair}</span> ${alert.tf ? '<span style="color:var(--text-dim);font-size:0.85em;">· ' + alert.tf + '</span>' : ''}</div>
+      <div class="tv-alert-msg">${alert.message}</div>
+      ${validityHtml}
+      <div class="tv-alert-time">${timeStr}</div>
     </div>
-    <button class="ati-close" onclick="dismissAlertToast(this, '${alert.id}')">×</button>`;
+    <button class="tv-alert-close" onclick="dismissAlertToast(this, '${alert.id}')">×</button>`;
 
-  const panel = document.getElementById('alertsPanel');
-  panel.prepend(div);
+  const popup = document.getElementById('tvAlertPopup');
+  popup.prepend(div);
 
-  // Auto-dismiss după 8 secunde
-  setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
+  // Auto-dismiss după 10 secunde
+  setTimeout(() => { if (div.parentNode) { div.style.opacity='0'; div.style.transform='translateX(20px)'; div.style.transition='all 0.3s'; setTimeout(()=>div.remove(), 300); } }, 10000);
+
+  // Adaugă și în notif panel
+  addToNotifPanel(alert, impact);
 }
 
 async function dismissAlertToast(btn, alertId) {
@@ -896,40 +926,67 @@ function buildAlerts() {
     return alerts;
 }
 
-function buildTicker() {
-    const alerts = buildAlerts();
-    const makeHtml = () => {
-        if (!alerts.length) return `<span class="ticker-item"><span class="t-ok">✓</span> All pairs up to date</span>`;
-        return alerts.map(a => `<span class="ticker-item"><span class="t-warn">⚠</span> <span class="t-pair">${a.pair}</span> — ${a.msg}</span><span class="ticker-sep">|</span>`).join('');
-    };
-    const html = makeHtml();
-    document.getElementById('tickerInner').innerHTML = html;
-    document.getElementById('tickerClone').innerHTML = html;
-    document.getElementById('topbarMeta').textContent = alerts.length ? `${alerts.length} pairs need attention` : 'All pairs current';
-    buildNotifPanel(alerts);
-}
+
 
 function buildNotifPanel(alerts) {
-    const readSet = getReadSet();
-    const unread  = alerts.filter(a => !readSet.has(a.key));
-    const badge   = document.getElementById('notifBadge');
-    const btn     = document.getElementById('notifBtn');
-    if (unread.length) { badge.textContent = unread.length > 9 ? '9+' : unread.length; badge.classList.remove('hidden'); btn.classList.add('has-alerts'); }
-    else { badge.classList.add('hidden'); btn.classList.remove('has-alerts'); }
+    // Această funcție e păstrată pentru compatibilitate dar nu mai populează notif panel-ul
+    // Notif panel-ul e acum populat de addToNotifPanel() cu alerte TV
+}
+
+function addToNotifPanel(alert, impact) {
     const list = document.getElementById('notifList');
-    if (!alerts.length) { list.innerHTML = `<div class="notif-empty"><div class="icon">✅</div>All pairs are up to date!</div>`; return; }
-    list.innerHTML = alerts.map(a => {
-        const isUnread = !readSet.has(a.key);
-        const icon = a.type === 'missing' ? '📭' : '🕐';
-        return `<div class="notif-item ${isUnread ? 'unread' : ''}" onclick="notifItemClick('${a.pair}', '${a.key}')">
-            <div class="notif-dot ${isUnread ? '' : 'read'}"></div>
-            <div style="flex:1; min-width:0;">
-                <div class="notif-item-pair">${icon} ${a.pair}</div>
-                <div class="notif-item-msg">${a.msg}</div>
-                <div class="notif-item-time">${a.detail}</div>
-            </div>
-        </div>`;
-    }).join('');
+    const empty = list.querySelector('.notif-empty');
+    if (empty) empty.remove();
+
+    const icon      = impact.icon || '📡';
+    const severity  = impact.severity || 'info';
+    const dotColor  = severity === 'danger' ? 'var(--red)' : severity === 'warn' ? 'var(--orange)' : 'var(--blue)';
+    const timeStr   = alert.time ? new Date(alert.time).toLocaleTimeString('ro-RO', {hour:'2-digit',minute:'2-digit'}) : 'acum';
+
+    let msgText = '';
+    if (impact.invalidates) {
+        msgText = `Analiza ${impact.invalidates} pe ${alert.pair} a devenit invalidă`;
+    } else {
+        msgText = alert.message || alert.type;
+    }
+
+    const item = document.createElement('div');
+    item.className = 'notif-item unread';
+    item.dataset.alertId = alert.id;
+    item.innerHTML = `
+        <div class="notif-dot" style="background:${dotColor};flex-shrink:0;margin-top:5px;"></div>
+        <div style="flex:1;min-width:0;">
+            <div class="notif-item-pair">${icon} ${alert.pair} ${alert.tf ? '· ' + alert.tf : ''}</div>
+            <div class="notif-item-msg">${msgText}</div>
+            <div class="notif-item-time">${timeStr}</div>
+        </div>
+        <button onclick="dismissFromPanel(this,'${alert.id}')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1em;padding:0 2px;line-height:1;">×</button>`;
+    list.prepend(item);
+}
+
+function dismissFromPanel(btn, alertId) {
+    const item = btn.closest('.notif-item');
+    if (item) item.remove();
+    if (!document.getElementById('notifList').children.length) {
+        document.getElementById('notifList').innerHTML = '<div class="notif-empty">Nicio alertă nouă</div>';
+    }
+    dismissAlertToast(null, alertId);
+}
+
+async function markAllAlertsRead() {
+    const items = document.querySelectorAll('#notifList .notif-item');
+    items.forEach(i => i.remove());
+    document.getElementById('notifList').innerHTML = '<div class="notif-empty">Nicio alertă nouă</div>';
+    document.getElementById('notifBadge').classList.add('hidden');
+    document.getElementById('notifBtn').classList.remove('has-alerts');
+    // Șterge toate din popup
+    document.getElementById('tvAlertPopup').innerHTML = '';
+    // Marchează toate ca citite în cache
+    for (const a of alertsCache.filter(x => !x.read)) {
+        try { await fetch(GS_URL, { method: 'POST', body: JSON.stringify({ action: 'clearAlert', id: a.id }) }); } catch(e) {}
+    }
+    alertsCache = alertsCache.map(a => ({...a, read: true}));
+    updatePairCardAlerts();
 }
 
 function notifItemClick(pair, key) {
@@ -960,8 +1017,8 @@ function loadAnalyses() {
     showLoading();
     fetch(GS_URL)
         .then(r => r.json())
-        .then(res => { hideLoading(); allAnalyses = Array.isArray(res) ? res : (res.data || []); renderDashboard(); buildTicker(); })
-        .catch(err => { console.error(err); hideLoading(); toast('Failed to load data', '❌'); allAnalyses = []; renderDashboard(); buildTicker(); });
+        .then(res => { hideLoading(); allAnalyses = Array.isArray(res) ? res : (res.data || []); renderDashboard(); }
+        .catch(err => { console.error(err); hideLoading(); toast('Failed to load data', '❌'); allAnalyses = []; renderDashboard(); };
 }
 
 // DASHBOARD
@@ -976,14 +1033,21 @@ function renderStatusSections() {
     const container = document.getElementById('statusSections');
     if (!container) return;
 
-    const active  = []; // pairs with analysis <= 2 days old
-    const stale   = []; // pairs with analysis > 2 days old
-    const missing = []; // pairs with no analysis at all
+    const active    = [];
+    const stale     = [];
+    const missing   = [];
+    const invalid   = [];
 
     ALL_PAIRS.forEach(pair => {
         const latest = getLatestAnalysis(pair);
+        // Verifică dacă e invalidată prin alerte TV
+        const validity = latest ? getValidityForPair(pair, latest.marketBias) : null;
+        const isInvalidated = validity && validity.invalidated;
+
         if (!latest) {
             missing.push({ pair });
+        } else if (isInvalidated) {
+            invalid.push({ pair, analysis: latest, days: daysBetween(latest.date), validity });
         } else {
             const days = daysBetween(latest.date);
             if (days !== null && days <= 2) {
@@ -994,7 +1058,6 @@ function renderStatusSections() {
         }
     });
 
-    // Sort stale by days (most stale first)
     stale.sort((a,b) => (b.days||0) - (a.days||0));
 
     function miniCard(item, type) {
@@ -1003,17 +1066,20 @@ function renderStatusSections() {
         const biasIcon = latest ? (latest.marketBias==='Bullish'?'🟢':latest.marketBias==='Bearish'?'🔴':'⚪') : '';
         const biasColor = latest ? (latest.marketBias==='Bullish'?'var(--green)':latest.marketBias==='Bearish'?'var(--red)':'var(--text-dim)') : 'var(--text-dim)';
         const dateStr = latest ? fmtDate(latest.date) : '—';
-        const ageStr = item.days !== undefined ? (item.days === 0 ? 'today' : item.days+'d ago') : 'never';
-        const ageCls = type === 'active' ? 'fresh' : type === 'stale' ? 'stale' : 'missing';
-        const cardCls = type === 'active' ? 'active-card' : type === 'stale' ? 'stale-card' : 'missing-card';
-        const onclick = idx >= 0
-            ? `openViewModal(${idx})`
-            : `openAddModal('${item.pair}')`;
+        const ageStr = item.days !== undefined ? (item.days === 0 ? 'azi' : item.days+'z ago') : 'niciodată';
+        const ageCls = type === 'active' ? 'fresh' : type === 'invalid' ? 'stale' : type === 'stale' ? 'stale' : 'missing';
+        const cardCls = type === 'active' ? 'active-card' : type === 'invalid' ? 'invalid-card' : type === 'stale' ? 'stale-card' : 'missing-card';
+        const onclick = idx >= 0 ? `openViewModal(${idx})` : `openAddModal('${item.pair}')`;
+        // Alert info pentru invalidate
+        const alertInfo = type === 'invalid' && item.validity
+            ? `<div class="smini-alert-info">⚠ ${item.validity.count} alertă${item.validity.count>1?'':''}</div>`
+            : '';
         return `<div class="smini ${cardCls}" onclick="${onclick}" title="${item.pair} — ${ageStr}">
             <span class="smini-age ${ageCls}">${ageStr}</span>
             <div class="smini-pair">${item.pair}</div>
             <div class="smini-date">${dateStr}</div>
-            ${latest ? `<div class="smini-bias" style="color:${biasColor};">${biasIcon} ${latest.marketBias||'—'}</div>` : '<div class="smini-bias" style="color:var(--text-dim);">— No analysis</div>'}
+            ${latest ? `<div class="smini-bias" style="color:${biasColor};">${biasIcon} ${latest.marketBias||'—'}</div>` : '<div class="smini-bias" style="color:var(--text-dim);">— Fără analiză</div>'}
+            ${alertInfo}
         </div>`;
     }
 
@@ -1040,6 +1106,25 @@ function renderStatusSections() {
                 }
             </div>
         </div>
+
+        <!-- INVALIDATE -->
+        ${invalid.length ? `
+        <div class="status-section" style="border-color:rgba(248,114,114,0.25);">
+            <div class="status-section-header" onclick="toggleStatusSection('invalid')" style="background:rgba(248,114,114,0.04);">
+                <div class="status-section-title">
+                    <div class="status-dot" style="background:var(--red);box-shadow:0 0 6px rgba(248,114,114,0.6);"></div>
+                    Analize Invalidate
+                    <span style="font-size:0.78em;font-weight:400;color:var(--text-dim);">alertă TV a schimbat structura</span>
+                </div>
+                <div class="status-section-meta">
+                    <span class="status-count" style="color:var(--red);">${invalid.length} perechi</span>
+                    <span class="status-toggle" id="toggle-invalid">▼</span>
+                </div>
+            </div>
+            <div class="status-section-body" id="body-invalid">
+                <div class="status-mini-grid">${invalid.map(i => miniCard(i,'invalid')).join('')}</div>
+            </div>
+        </div>` : ''}
 
         <!-- INACTIVE -->
         <div class="status-section">
