@@ -1017,8 +1017,8 @@ function loadAnalyses() {
     showLoading();
     fetch(GS_URL)
         .then(r => r.json())
-        .then(res => { hideLoading(); allAnalyses = Array.isArray(res) ? res : (res.data || []); renderDashboard(); }
-        .catch(err => { console.error(err); hideLoading(); toast('Failed to load data', '❌'); allAnalyses = []; renderDashboard(); };
+        .then(res => { hideLoading(); allAnalyses = Array.isArray(res) ? res : (res.data || []); renderDashboard(); })
+        .catch(err => { console.error(err); hideLoading(); toast('Failed to load data', '❌'); allAnalyses = []; renderDashboard(); });
 }
 
 // DASHBOARD
