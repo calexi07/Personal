@@ -820,14 +820,28 @@ async function fetchAlerts() {
   } catch(e) { /* silently fail */ }
 }
 
-function getAlertsForPair(pair) {
+function getAlertsForPair(pair, afterTime) {
   // Normalizează: EUR/USD, EURUSD → același format
   const norm = p => p.replace('/', '').toUpperCase();
-  return alertsCache.filter(a => norm(a.pair) === norm(pair) && !a.read);
+  return alertsCache.filter(a => {
+    if (norm(a.pair) !== norm(pair)) return false;
+    if (a.read) return false;
+    // Dacă avem un afterTime (createdAt al ultimei analize),
+    // ignorăm alertele care au apărut ÎNAINTE sau LA MOMENTUL analizei
+    if (afterTime) {
+      const alertTs = new Date(a.time).getTime();
+      const analysisTs = new Date(afterTime).getTime();
+      if (alertTs <= analysisTs) return false;
+    }
+    return true;
+  });
 }
 
-function getValidityForPair(pair, bias) {
-  const alerts = getAlertsForPair(pair);
+function getValidityForPair(pair, bias, analysis) {
+  // Pasăm createdAt-ul analizei ca afterTime
+  // → alertele mai vechi decât analiza sunt ignorate
+  const afterTime = analysis ? (analysis.createdAt || analysis.date) : null;
+  const alerts = getAlertsForPair(pair, afterTime);
   if (!alerts.length) return null;
 
   let worstSeverity = null;
@@ -912,8 +926,9 @@ function updateNotifBadgeFromAlerts(newAlerts) {
   }
 }
 
-function buildAlertTagsForPair(pair, bias) {
-  const alerts = getAlertsForPair(pair);
+function buildAlertTagsForPair(pair, bias, analysis) {
+  const afterTime = analysis ? (analysis.createdAt || analysis.date) : null;
+  const alerts = getAlertsForPair(pair, afterTime);
   if (!alerts.length) return '';
   return alerts.slice(0, 2).map(a => {
     const impact = ALERT_IMPACT[a.type] || {};
@@ -923,8 +938,8 @@ function buildAlertTagsForPair(pair, bias) {
   }).join('');
 }
 
-function buildValidityBadge(pair, bias) {
-  const validity = getValidityForPair(pair, bias);
+function buildValidityBadge(pair, bias, analysis) {
+  const validity = getValidityForPair(pair, bias, analysis);
   if (!validity) return `<span class="validity-badge valid">✅ Validă</span>`;
   if (validity.invalidated) return `<span class="validity-badge invalid">❌ Invalidată (${validity.count} alerte)</span>`;
   if (validity.severity === 'warn') return `<span class="validity-badge warning">⚠️ Verifică (${validity.count} alerte)</span>`;
@@ -1243,7 +1258,7 @@ function renderStatusSections() {
     ALL_PAIRS.forEach(pair => {
         const latest = getLatestAnalysis(pair);
         // Verifică dacă e invalidată prin alerte TV
-        const validity = latest ? getValidityForPair(pair, latest.marketBias) : null;
+        const validity = latest ? getValidityForPair(pair, latest.marketBias, latest) : null;
         const isInvalidated = validity && validity.invalidated;
 
         if (!latest) {
@@ -1391,7 +1406,7 @@ function buildPairCard(pair, analysis, totalCount) {
     if (analysis) {
         const biasIcon = analysis.marketBias === 'Bullish' ? '🟢' : analysis.marketBias === 'Bearish' ? '🔴' : '⚪';
         const badgeCls = analysis.marketBias === 'Bullish' ? 'badge-bullish' : analysis.marketBias === 'Bearish' ? 'badge-bearish' : 'badge-neutral';
-        const alertTags = buildAlertTagsForPair(pair, analysis.marketBias);
+        const alertTags = buildAlertTagsForPair(pair, analysis.marketBias, analysis);
         metaHTML = `<div class="card-date">📅 ${fmtDate(analysis.date)}</div>
             <div class="card-badges">
                 <span class="badge ${badgeCls}">${biasIcon} ${analysis.marketBias||'—'}</span>
@@ -1600,7 +1615,7 @@ function openViewModal(idx) {
             <div class="view-pair-name">${a.pair}</div>
             <span class="badge ${biasClass}">${biasIcon} ${a.marketBias||'—'}</span>
             ${a.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade">💰 Trade</span>' : ''}
-            ${buildValidityBadge(a.pair, a.marketBias)}
+            ${buildValidityBadge(a.pair, a.marketBias, a)}
             <span style="font-family:var(--font-mono); font-size:0.76em; color:var(--text-dim); margin-left:auto;">${fmtDate(a.date)} · ${a.day||''}</span>
         </div>
         ${tfBlock('📅 Weekly','var(--orange)',a.weeklyAnalysis,a.weeklyPhoto)}
