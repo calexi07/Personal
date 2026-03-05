@@ -451,6 +451,7 @@
                 <button class="nav-pill" id="btnEvents"    onclick="showView('events')">📅 Events</button>
                 <button class="nav-pill" id="btnNews"      onclick="showView('news')">📰 News</button>
                 <button class="nav-pill" id="btnJournal"   onclick="showView('journal')">Journal</button>
+                <button class="nav-pill" id="btnAlerts" onclick="showView('alerts')" style="color:var(--orange);border-color:rgba(251,146,60,0.35);">📡 Alerte</button>
                 <button class="nav-pill journal-btn"
                     onclick="window.open('https://calexi07.github.io/Personal/prop-firm-1.html','_blank')"
                     title="Deschide Trading Journal în tab nou">
@@ -539,6 +540,15 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- ALERTE PAGE -->
+        <div class="page" id="alertsView">
+            <div class="section-header">
+                <h2 class="section-title">📡 Alerte <span>TradingView</span></h2>
+                <span style="font-family:var(--font-mono);font-size:0.76em;color:var(--text-dim);">Webhook URL → scriptul tău de analize</span>
+            </div>
+            <div id="alertsPageContent"></div>
         </div>
     </div>
 
@@ -724,10 +734,18 @@ let alertPollTimer = null;
 // Logica de validitate: tip alertă → impact pe bias
 const ALERT_IMPACT = {
   // ── INVALIDĂRI DIRECTE ──
-  // Supply invalidat → analiză Bearish devine invalidă (prețul a rupt supply-ul în sus)
+  // Supply invalidat → analiză Bearish devine invalidă
   supply_invalidated:        { invalidates: 'Bearish', severity: 'danger', icon: '❌', label: 'Supply Invalidat' },
-  // Demand invalidat → analiză Bullish devine invalidă (prețul a rupt demand-ul în jos)
+  supply_invalidated_w1:     { invalidates: 'Bearish', severity: 'danger', icon: '❌', label: 'Supply Invalidat W1' },
+  supply_invalidated_d1:     { invalidates: 'Bearish', severity: 'danger', icon: '❌', label: 'Supply Invalidat D1' },
+  supply_invalidated_4h:     { invalidates: 'Bearish', severity: 'danger', icon: '❌', label: 'Supply Invalidat 4H' },
+  supply_invalidated_1h:     { invalidates: 'Bearish', severity: 'warn',   icon: '❌', label: 'Supply Invalidat 1H' },
+  // Demand invalidat → analiză Bullish devine invalidă
   demand_invalidated:        { invalidates: 'Bullish', severity: 'danger', icon: '❌', label: 'Demand Invalidat' },
+  demand_invalidated_w1:     { invalidates: 'Bullish', severity: 'danger', icon: '❌', label: 'Demand Invalidat W1' },
+  demand_invalidated_d1:     { invalidates: 'Bullish', severity: 'danger', icon: '❌', label: 'Demand Invalidat D1' },
+  demand_invalidated_4h:     { invalidates: 'Bullish', severity: 'danger', icon: '❌', label: 'Demand Invalidat 4H' },
+  demand_invalidated_1h:     { invalidates: 'Bullish', severity: 'warn',   icon: '❌', label: 'Demand Invalidat 1H' },
 
   // ── FRACTAL BREAKS ──
   // Bullish fractal break → poate invalida Bearish SAU confirma continuitate Bullish
@@ -1066,11 +1084,134 @@ function showView(view) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-pill:not(.journal-btn)').forEach(b => b.classList.remove('active'));
     document.getElementById(view + 'View').classList.add('active');
-    document.getElementById('btn' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
+    const btnEl = document.getElementById('btn' + view.charAt(0).toUpperCase() + view.slice(1));
+    if (btnEl) btnEl.classList.add('active');
     if (view === 'calendar') renderCalendar();
     if (view === 'journal')  renderJournal();
     if (view === 'events')   loadEconCalendar();
     if (view === 'news')     { loadNews(); loadFxWire(); setTimeout(renderTodayHighImpact, 300); }
+    if (view === 'alerts')   renderAlertsPage();
+}
+
+
+function renderAlertsPage() {
+    const container = document.getElementById('alertsPageContent');
+    if (!container) return;
+
+    const ALERT_ROWS = [
+        { cat: '💧 Lichiditate Luată', rows: [
+            { label: 'Lichiditate Luată W1', type: 'lichiditate_luata_w1', tf: 'W1', severity: 'info', effect: 'Posibil setup — fără invalidare' },
+            { label: 'Lichiditate Luată D1', type: 'lichiditate_luata_d1', tf: 'D1', severity: 'info', effect: 'Posibil setup — fără invalidare' },
+            { label: 'Lichiditate Luată 4H', type: 'lichiditate_luata_4h', tf: '4H', severity: 'info', effect: 'Posibil setup — fără invalidare' },
+            { label: 'Lichiditate Luată 1H', type: 'lichiditate_luata_1h', tf: '1H', severity: 'info', effect: 'Posibil setup — fără invalidare' },
+        ]},
+        { cat: '⚡ Bullish Fractal Break', rows: [
+            { label: 'Bullish Fractal Break W1', type: 'bullish_fractal_break_w1', tf: 'W1', severity: 'danger', effect: 'Invalidare analiză Bearish' },
+            { label: 'Bullish Fractal Break D1', type: 'bullish_fractal_break_d1', tf: 'D1', severity: 'danger', effect: 'Invalidare analiză Bearish' },
+            { label: 'Bullish Fractal Break 4H', type: 'bullish_fractal_break_4h', tf: '4H', severity: 'warn',   effect: 'Posibilă invalidare Bearish' },
+            { label: 'Bullish Fractal Break 1H', type: 'bullish_fractal_break_1h', tf: '1H', severity: 'warn',   effect: 'Posibilă invalidare Bearish' },
+        ]},
+        { cat: '⚡ Bearish Fractal Break', rows: [
+            { label: 'Bearish Fractal Break W1', type: 'bearish_fractal_break_w1', tf: 'W1', severity: 'danger', effect: 'Invalidare analiză Bullish' },
+            { label: 'Bearish Fractal Break D1', type: 'bearish_fractal_break_d1', tf: 'D1', severity: 'danger', effect: 'Invalidare analiză Bullish' },
+            { label: 'Bearish Fractal Break 4H', type: 'bearish_fractal_break_4h', tf: '4H', severity: 'warn',   effect: 'Posibilă invalidare Bullish' },
+            { label: 'Bearish Fractal Break 1H', type: 'bearish_fractal_break_1h', tf: '1H', severity: 'warn',   effect: 'Posibilă invalidare Bullish' },
+        ]},
+        { cat: '🔴 Intrare în Supply', rows: [
+            { label: 'Intrare în Supply W1', type: 'intrare_supply_w1', tf: 'W1', severity: 'info', effect: 'Posibil setup Bearish' },
+            { label: 'Intrare în Supply D1', type: 'intrare_supply_d1', tf: 'D1', severity: 'info', effect: 'Posibil setup Bearish' },
+            { label: 'Intrare în Supply 4H', type: 'intrare_supply_4h', tf: '4H', severity: 'info', effect: 'Posibil setup Bearish' },
+            { label: 'Intrare în Supply 1H', type: 'intrare_supply_1h', tf: '1H', severity: 'info', effect: 'Posibil setup Bearish' },
+        ]},
+        { cat: '🟢 Intrare în Demand', rows: [
+            { label: 'Intrare în Demand W1', type: 'intrare_demand_w1', tf: 'W1', severity: 'info', effect: 'Posibil setup Bullish' },
+            { label: 'Intrare în Demand D1', type: 'intrare_demand_d1', tf: 'D1', severity: 'info', effect: 'Posibil setup Bullish' },
+            { label: 'Intrare în Demand 4H', type: 'intrare_demand_4h', tf: '4H', severity: 'info', effect: 'Posibil setup Bullish' },
+            { label: 'Intrare în Demand 1H', type: 'intrare_demand_1h', tf: '1H', severity: 'info', effect: 'Posibil setup Bullish' },
+        ]},
+        { cat: '❌ Supply Invalidat', rows: [
+            { label: 'Supply Invalidat W1', type: 'supply_invalidated_w1', tf: 'W1', severity: 'danger', effect: 'Invalidare analiză Bearish' },
+            { label: 'Supply Invalidat D1', type: 'supply_invalidated_d1', tf: 'D1', severity: 'danger', effect: 'Invalidare analiză Bearish' },
+            { label: 'Supply Invalidat 4H', type: 'supply_invalidated_4h', tf: '4H', severity: 'danger', effect: 'Invalidare analiză Bearish' },
+            { label: 'Supply Invalidat 1H', type: 'supply_invalidated_1h', tf: '1H', severity: 'warn',   effect: 'Posibilă invalidare Bearish' },
+        ]},
+        { cat: '❌ Demand Invalidat', rows: [
+            { label: 'Demand Invalidat W1', type: 'demand_invalidated_w1', tf: 'W1', severity: 'danger', effect: 'Invalidare analiză Bullish' },
+            { label: 'Demand Invalidat D1', type: 'demand_invalidated_d1', tf: 'D1', severity: 'danger', effect: 'Invalidare analiză Bullish' },
+            { label: 'Demand Invalidat 4H', type: 'demand_invalidated_4h', tf: '4H', severity: 'danger', effect: 'Invalidare analiză Bullish' },
+            { label: 'Demand Invalidat 1H', type: 'demand_invalidated_1h', tf: '1H', severity: 'warn',   effect: 'Posibilă invalidare Bullish' },
+        ]},
+    ];
+
+    const sevLabel = { danger: '❌ Invalidare', warn: '⚠️ Posibil', info: 'ℹ️ Info' };
+
+    let tableRows = '';
+    ALERT_ROWS.forEach(group => {
+        tableRows += `<tr class="cat-row"><td colspan="4">${group.cat}</td></tr>`;
+        group.rows.forEach(r => {
+            const msg = JSON.stringify({"pair": "EURUSD", "type": r.type, "tf": r.tf, "price": "{{close}}"});
+            tableRows += `<tr>
+                <td style="color:var(--text);">${r.label}</td>
+                <td>
+                    <span class="alert-type-chip" onclick="copyAlertType(this, '${r.type}')" title="Click să copiezi">
+                        ${r.type} <span style="opacity:0.4;font-size:0.85em;">📋</span>
+                    </span>
+                </td>
+                <td><span class="severity-pill ${r.severity}">${sevLabel[r.severity]}</span></td>
+                <td style="color:var(--text-dim);font-size:0.84em;">${r.effect}</td>
+            </tr>`;
+        });
+    });
+
+    container.innerHTML = `
+        <!-- WEBHOOK URL -->
+        <div class="webhook-box">
+            <div class="webhook-label">Webhook URL — copiază și pune în TradingView</div>
+            <div class="webhook-url">
+                <span>${GS_URL}</span>
+                <button class="copy-url-btn" onclick="copyWebhookUrl(this)">📋 Copiază</button>
+            </div>
+            <div class="msg-example">
+                <div style="color:var(--text-dim);font-size:0.85em;margin-bottom:6px;">Exemplu mesaj alertă în TradingView:</div>
+                {<span class="key">"pair"</span>: <span class="val">"EURUSD"</span>, <span class="key">"type"</span>: <span class="val">"supply_invalidated_4h"</span>, <span class="key">"tf"</span>: <span class="val">"4H"</span>, <span class="key">"price"</span>: <span class="num">{{close}}</span>}
+                <div style="margin-top:8px;color:var(--text-dim);font-size:0.88em;">💡 <strong style="color:var(--text-mid);">pair</strong> = simbolul perechii &nbsp;·&nbsp; <strong style="color:var(--text-mid);">type</strong> = din tabelul de mai jos &nbsp;·&nbsp; <strong style="color:var(--text-mid);">tf</strong> = timeframe-ul alertei</div>
+            </div>
+        </div>
+
+        <!-- TABEL ALERTE -->
+        <div class="alerts-table-wrap">
+            <table class="alerts-table">
+                <thead>
+                    <tr>
+                        <th>Tip alertă</th>
+                        <th>Valoare "type" (click să copiezi)</th>
+                        <th>Severitate</th>
+                        <th>Efect pe analiză</th>
+                    </tr>
+                </thead>
+                <tbody>${tableRows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+function copyAlertType(el, type) {
+    navigator.clipboard.writeText(type).then(() => {
+        el.classList.add('copied');
+        el.innerHTML = type + ' <span style="opacity:0.7;font-size:0.85em;">✓</span>';
+        setTimeout(() => {
+            el.classList.remove('copied');
+            el.innerHTML = type + ' <span style="opacity:0.4;font-size:0.85em;">📋</span>';
+        }, 1800);
+    });
+}
+
+function copyWebhookUrl(btn) {
+    navigator.clipboard.writeText(GS_URL).then(() => {
+        btn.textContent = '✓ Copiat!';
+        btn.style.background = 'var(--green)';
+        setTimeout(() => { btn.textContent = '📋 Copiază'; btn.style.background = ''; }, 2000);
+    });
 }
 
 // LOAD DATA
