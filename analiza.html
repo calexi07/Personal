@@ -671,6 +671,19 @@
     <!-- OLD ALERTS PANEL (păstrat pentru compatibilitate) -->
     <div class="alerts-panel" id="alertsPanel"></div>
 
+    <!-- ALERT DETAIL MODAL -->
+    <div class="modal-overlay" id="alertDetailModal">
+        <div class="modal-box" style="max-width:520px;">
+            <button class="modal-close" onclick="closeModal('alertDetailModal')">×</button>
+            <h2 class="modal-title" id="alertDetailTitle">Alerte active</h2>
+            <p class="modal-subtitle" id="alertDetailSub"></p>
+            <div id="alertDetailList"></div>
+            <div style="padding-top:16px;border-top:1px solid var(--border);margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
+                <button onclick="closeModal('alertDetailModal')" class="btn-cancel-form" style="flex:0;padding:9px 18px;">Închide</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST -->
     <div class="alert-toast hidden" id="toast">
         <span class="toast-icon" id="toastIcon"></span>
@@ -941,9 +954,10 @@ function buildAlertTagsForPair(pair, bias, analysis) {
 function buildValidityBadge(pair, bias, analysis) {
   const validity = getValidityForPair(pair, bias, analysis);
   if (!validity) return `<span class="validity-badge valid">✅ Validă</span>`;
-  if (validity.invalidated) return `<span class="validity-badge invalid">❌ Invalidată (${validity.count} alerte)</span>`;
-  if (validity.severity === 'warn') return `<span class="validity-badge warning">⚠️ Verifică (${validity.count} alerte)</span>`;
-  return `<span class="validity-badge valid">✅ Validă · ${validity.count} alerte</span>`;
+  const clickAttr = `onclick="event.stopPropagation(); openAlertDetailModal('${pair}', ${analysis ? 'allAnalyses[' + allAnalyses.indexOf(analysis) + ']' : 'null'})" style="cursor:pointer;" title="Click pentru detalii alerte"`;
+  if (validity.invalidated) return `<span class="validity-badge invalid" ${clickAttr}>❌ Invalidată · ${validity.count} alerte ↗</span>`;
+  if (validity.severity === 'warn') return `<span class="validity-badge warning" ${clickAttr}>⚠️ Verifică · ${validity.count} alerte ↗</span>`;
+  return `<span class="validity-badge valid" ${clickAttr}>✅ Validă · ${validity.count} alerte ↗</span>`;
 }
 
 // ══ Cache for journal trades ══
@@ -1178,7 +1192,38 @@ function renderAlertsPage() {
         });
     });
 
+    // Secțiunea alerte active
+    const unreadAlerts = alertsCache.filter(a => !a.read);
+    const activeAlertsHtml = unreadAlerts.length
+        ? unreadAlerts.map(a => {
+            const impact = ALERT_IMPACT[a.type] || { severity: 'info', icon: '📡', label: a.type };
+            const dotColor = impact.severity === 'danger' ? 'var(--red)' : impact.severity === 'warn' ? 'var(--orange)' : 'var(--blue)';
+            const timeStr = a.time ? new Date(a.time).toLocaleTimeString('ro-RO', {hour:'2-digit', minute:'2-digit'}) : '—';
+            const label = impact.label || a.type;
+            return `<div class="active-alert-row">
+                <div class="aar-dot" style="background:${dotColor};"></div>
+                <div class="aar-pair">${a.pair}</div>
+                <div class="aar-type">${label} ${a.tf ? '· ' + a.tf : ''} ${a.price ? '@ ' + a.price : ''}</div>
+                <div class="aar-time">${timeStr}</div>
+                <button class="aar-del" onclick="deleteAlert('${a.id}')">🗑 Șterge</button>
+            </div>`;
+        }).join('')
+        : `<div class="aar-empty">✅ Nicio alertă activă</div>`;
+
     container.innerHTML = `
+        <!-- ALERTE ACTIVE -->
+        <div class="active-alerts-section">
+            <div class="active-alerts-header">
+                <span class="active-alerts-title">
+                    <span style="width:8px;height:8px;border-radius:50%;background:var(--orange);box-shadow:0 0 6px rgba(251,146,60,0.5);display:inline-block;"></span>
+                    Alerte Active
+                    <span style="font-family:var(--font-mono);font-size:0.75em;font-weight:400;color:var(--text-dim);">${unreadAlerts.length} necitite</span>
+                </span>
+                ${unreadAlerts.length ? `<button onclick="markAllAlertsRead()" style="font-size:0.76em;font-weight:600;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;">Șterge toate</button>` : ''}
+            </div>
+            <div class="active-alerts-list">${activeAlertsHtml}</div>
+        </div>
+
         <!-- WEBHOOK URL -->
         <div class="webhook-box">
             <div class="webhook-label">Webhook URL — copiază și pune în TradingView</div>
@@ -1208,6 +1253,82 @@ function renderAlertsPage() {
             </table>
         </div>
     `;
+}
+
+function openAlertDetailModal(pair, analysis) {
+    const afterTime = analysis ? (analysis.createdAt || analysis.date) : null;
+    const alerts = getAlertsForPair(pair, afterTime).filter(a => {
+        const impact = ALERT_IMPACT[a.type];
+        return impact && impact.invalidates;
+    });
+
+    document.getElementById('alertDetailTitle').textContent = `⚠ Alerte pe ${pair}`;
+    document.getElementById('alertDetailSub').textContent = `${alerts.length} alertă${alerts.length !== 1 ? '' : ''} care afectează analiza`;
+
+    const list = document.getElementById('alertDetailList');
+    if (!alerts.length) {
+        list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:0.84em;">Nicio alertă de invalidare găsită.</div>`;
+    } else {
+        list.innerHTML = alerts.map(a => {
+            const impact = ALERT_IMPACT[a.type] || { severity: 'info', icon: '📡', label: a.type };
+            const dotColor = impact.severity === 'danger' ? 'var(--red)' : 'var(--orange)';
+            const timeStr = a.time ? new Date(a.time).toLocaleString('ro-RO', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+            const priceStr = a.price ? `@ ${a.price}` : '';
+            const invalidatesText = impact.invalidates ? `Invalidează analiză ${impact.invalidates}` : 'Informativ';
+            return `<div class="alert-detail-row">
+                <div class="adr-icon">${impact.icon}</div>
+                <div class="adr-body">
+                    <div class="adr-label">${impact.label || a.type} ${a.tf ? '· ' + a.tf : ''}</div>
+                    <div class="adr-meta">
+                        <span>🕐 ${timeStr}</span>
+                        ${priceStr ? `<span>💰 ${priceStr}</span>` : ''}
+                        <span style="color:${dotColor};">${invalidatesText}</span>
+                    </div>
+                </div>
+                <button class="adr-del" onclick="deleteAlertFromModal('${a.id}', '${pair}')">🗑 Șterge</button>
+            </div>`;
+        }).join('');
+    }
+
+    openModal('alertDetailModal');
+}
+
+async function deleteAlertFromModal(alertId, pair) {
+    await deleteAlert(alertId);
+    // Re-deschide modalul actualizat dacă mai sunt alerte
+    closeModal('alertDetailModal');
+    const latest = getLatestAnalysis(pair);
+    const remaining = getAlertsForPair(pair, latest ? (latest.createdAt || latest.date) : null)
+        .filter(a => { const imp = ALERT_IMPACT[a.type]; return imp && imp.invalidates; });
+    if (remaining.length > 0) {
+        setTimeout(() => openAlertDetailModal(pair, latest), 100);
+    }
+}
+
+async function deleteAlert(alertId) {
+    // Marchează ca citit în sheet (refolosim clearAlert)
+    try {
+        await fetch(GS_URL, { method: 'POST', body: JSON.stringify({ action: 'clearAlert', id: alertId }) });
+    } catch(e) {}
+    // Scoate din cache
+    alertsCache = alertsCache.map(a => a.id === alertId ? {...a, read: true} : a);
+    // Scoate din popup TV dacă e vizibil
+    const popup = document.getElementById('tvAlertPopup');
+    popup.querySelectorAll('.tv-alert-item').forEach(el => {
+        if (el.querySelector(`[onclick*="${alertId}"]`)) el.remove();
+    });
+    // Scoate din notif panel
+    document.querySelectorAll(`#notifList .notif-item`).forEach(el => {
+        if (el.dataset.alertId === alertId) el.remove();
+    });
+    if (!document.getElementById('notifList').children.length) {
+        document.getElementById('notifList').innerHTML = '<div class="notif-empty">Nicio alertă nouă</div>';
+    }
+    updateNotifBadgeFromAlerts(alertsCache.filter(a => !a.read));
+    updatePairCardAlerts();
+    // Re-render pagina de alerte
+    renderAlertsPage();
+    toast('Alertă ștearsă', '🗑️');
 }
 
 function copyAlertType(el, type) {
@@ -1288,8 +1409,9 @@ function renderStatusSections() {
         const cardCls = type === 'active' ? 'active-card' : type === 'invalid' ? 'invalid-card' : type === 'stale' ? 'stale-card' : 'missing-card';
         const onclick = idx >= 0 ? `openViewModal(${idx})` : `openAddModal('${item.pair}')`;
         // Alert info pentru invalidate
+        const analysisIdx = latest ? allAnalyses.indexOf(latest) : -1;
         const alertInfo = type === 'invalid' && item.validity
-            ? `<div class="smini-alert-info">⚠ ${item.validity.count} alertă${item.validity.count>1?'':''}</div>`
+            ? `<div class="smini-alert-info" onclick="event.stopPropagation(); openAlertDetailModal('${item.pair}', ${analysisIdx >= 0 ? 'allAnalyses[' + analysisIdx + ']' : 'null'})" style="cursor:pointer;text-decoration:underline;text-underline-offset:2px;" title="Vezi alerte">⚠ ${item.validity.count} alertă${item.validity.count>1?'':''} · detalii ↗</div>`
             : '';
         return `<div class="smini ${cardCls}" onclick="${onclick}" title="${item.pair} — ${ageStr}">
             <span class="smini-age ${ageCls}">${ageStr}</span>
