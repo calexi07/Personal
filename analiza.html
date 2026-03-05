@@ -314,6 +314,36 @@
         .news-chip:hover { border-color: var(--border-active); color: var(--text); }
         .news-chip.active { background: var(--blue); border-color: var(--blue); color: #fff; }
 
+
+        /* ══ TV ALERTS ══ */
+        .alert-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 0.62em; font-weight: 700;
+            padding: 3px 8px; border-radius: 10px; border: 1px solid; white-space: nowrap; animation: alertPulse 2s ease infinite; }
+        .alert-tag.warn  { background: rgba(251,146,60,0.12); color: var(--orange); border-color: rgba(251,146,60,0.35); }
+        .alert-tag.danger{ background: rgba(248,114,114,0.12); color: var(--red);    border-color: rgba(248,114,114,0.35); }
+        .alert-tag.info  { background: rgba(59,163,245,0.1);  color: var(--blue);   border-color: rgba(59,163,245,0.3); }
+        @keyframes alertPulse { 0%,100%{opacity:1} 50%{opacity:0.65} }
+
+        .alerts-panel { position: fixed; bottom: 22px; left: 22px; z-index: 8888; display: flex; flex-direction: column; gap: 8px; max-width: 340px; pointer-events: none; }
+        .alert-toast-item { background: var(--surface); border: 1px solid rgba(251,146,60,0.4); border-radius: var(--radius);
+            padding: 12px 14px; display: flex; gap: 11px; align-items: flex-start; pointer-events: all;
+            animation: slideInLeft 0.3s cubic-bezier(0.34,1.3,0.64,1); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+        .alert-toast-item.danger { border-color: rgba(248,114,114,0.45); }
+        .alert-toast-item.info   { border-color: rgba(59,163,245,0.35); }
+        @keyframes slideInLeft { from{opacity:0;transform:translateX(-18px)} to{opacity:1;transform:translateX(0)} }
+        .ati-icon { font-size: 1.2em; flex-shrink: 0; margin-top: 1px; }
+        .ati-body { flex: 1; min-width: 0; }
+        .ati-pair { font-family: var(--font-display); font-weight: 700; font-size: 0.9em; margin-bottom: 2px; }
+        .ati-msg  { font-size: 0.78em; color: var(--text-mid); line-height: 1.4; }
+        .ati-time { font-family: var(--font-mono); font-size: 0.65em; color: var(--text-dim); margin-top: 3px; }
+        .ati-close { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1em; padding: 0; flex-shrink: 0; line-height: 1; transition: color 0.15s; }
+        .ati-close:hover { color: var(--text); }
+
+        .validity-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72em; font-weight: 700;
+            padding: 4px 10px; border-radius: 20px; border: 1px solid; }
+        .validity-badge.valid   { background: rgba(34,229,160,0.1); color: var(--green); border-color: rgba(34,229,160,0.3); }
+        .validity-badge.warning { background: rgba(251,146,60,0.1); color: var(--orange); border-color: rgba(251,146,60,0.3); }
+        .validity-badge.invalid { background: rgba(248,114,114,0.1); color: var(--red); border-color: rgba(248,114,114,0.3); }
+
         /* ══ LINKED TRADES SECTION (in view modal) ══ */
         .linked-trades-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
         .linked-trades-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -612,6 +642,9 @@
         </div>
     </div>
 
+    <!-- TV ALERTS PANEL -->
+    <div class="alerts-panel" id="alertsPanel"></div>
+
     <!-- TOAST -->
     <div class="alert-toast hidden" id="toast">
         <span class="toast-icon" id="toastIcon"></span>
@@ -664,6 +697,156 @@ let selectedBias = '';
 let selectedType = 'Analysis Only';
 let confirmCallback = null;
 let editingDeleteId = null;
+
+
+// ══ TV ALERTS ══
+const POLL_INTERVAL = 30000; // 30 secunde
+let alertsCache = [];
+let lastAlertId = null;
+let alertPollTimer = null;
+
+// Logica de validitate: tip alertă → impact pe bias
+const ALERT_IMPACT = {
+  // Alertele astea invalideaza analiza Bearish (confirma Bullish)
+  supply_invalidated:  { invalidates: 'Bearish', severity: 'danger', icon: '❌' },
+  bos_bullish:         { invalidates: 'Bearish', severity: 'danger', icon: '💥' },
+  choch_bullish:       { invalidates: 'Bearish', severity: 'danger', icon: '🔄' },
+  fractal_break_up:    { invalidates: 'Bearish', severity: 'warn',   icon: '⚡' },
+  // Alertele astea invalideaza analiza Bullish (confirma Bearish)
+  demand_invalidated:  { invalidates: 'Bullish', severity: 'danger', icon: '❌' },
+  bos_bearish:         { invalidates: 'Bullish', severity: 'danger', icon: '💥' },
+  choch_bearish:       { invalidates: 'Bullish', severity: 'danger', icon: '🔄' },
+  fractal_break_down:  { invalidates: 'Bullish', severity: 'warn',   icon: '⚡' },
+  // Neutre — doar informative
+  key_level_hit:       { invalidates: null, severity: 'info', icon: '📍' },
+  structure_break:     { invalidates: null, severity: 'warn', icon: '⚠️' },
+  ema_cross:           { invalidates: null, severity: 'info', icon: 'ℹ️' },
+};
+
+function startAlertPolling() {
+  fetchAlerts();
+  alertPollTimer = setInterval(fetchAlerts, POLL_INTERVAL);
+}
+
+async function fetchAlerts() {
+  try {
+    const r = await fetch(GS_URL + '?action=getAlerts', { signal: AbortSignal.timeout(8000) });
+    const j = await r.json();
+    if (!j.success || !j.alerts) return;
+
+    const newAlerts = j.alerts.filter(a => !a.read);
+    alertsCache = j.alerts;
+
+    // Detectează alerte noi față de ultima verificare
+    if (lastAlertId !== null) {
+      const fresh = newAlerts.filter(a => a.id > lastAlertId);
+      fresh.forEach(a => showAlertToast(a));
+    }
+
+    if (newAlerts.length > 0) lastAlertId = newAlerts[0].id;
+    else if (lastAlertId === null) lastAlertId = j.alerts[0]?.id || '0';
+
+    updateNotifBadgeFromAlerts(newAlerts);
+    updatePairCardAlerts();
+  } catch(e) { /* silently fail */ }
+}
+
+function getAlertsForPair(pair) {
+  // Normalizează: EUR/USD, EURUSD → același format
+  const norm = p => p.replace('/', '').toUpperCase();
+  return alertsCache.filter(a => norm(a.pair) === norm(pair) && !a.read);
+}
+
+function getValidityForPair(pair, bias) {
+  const alerts = getAlertsForPair(pair);
+  if (!alerts.length) return null;
+
+  let worstSeverity = null;
+  let invalidated   = false;
+
+  alerts.forEach(a => {
+    const impact = ALERT_IMPACT[a.type];
+    if (!impact) return;
+    if (impact.invalidates === bias) invalidated = true;
+    if (impact.severity === 'danger') worstSeverity = 'danger';
+    else if (impact.severity === 'warn' && worstSeverity !== 'danger') worstSeverity = 'warn';
+    else if (!worstSeverity) worstSeverity = 'info';
+  });
+
+  return { invalidated, severity: worstSeverity, count: alerts.length };
+}
+
+function updatePairCardAlerts() {
+  // Re-render doar pair grid-ul dacă e pe dashboard
+  if (document.getElementById('dashboardView').classList.contains('active')) {
+    renderPairGrid();
+  }
+}
+
+function showAlertToast(alert) {
+  const impact   = ALERT_IMPACT[alert.type] || { severity: 'warn', icon: '📡' };
+  const severity = impact.severity;
+  const icon     = impact.icon;
+  const timeStr  = alert.time ? new Date(alert.time).toLocaleTimeString('ro-RO', {hour:'2-digit',minute:'2-digit'}) : 'acum';
+
+  const div = document.createElement('div');
+  div.className = `alert-toast-item ${severity}`;
+  div.innerHTML = `
+    <div class="ati-icon">${icon}</div>
+    <div class="ati-body">
+      <div class="ati-pair">${alert.pair} ${alert.tf ? '· ' + alert.tf : ''}</div>
+      <div class="ati-msg">${alert.message}</div>
+      <div class="ati-time">${timeStr}</div>
+    </div>
+    <button class="ati-close" onclick="dismissAlertToast(this, '${alert.id}')">×</button>`;
+
+  const panel = document.getElementById('alertsPanel');
+  panel.prepend(div);
+
+  // Auto-dismiss după 8 secunde
+  setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
+}
+
+async function dismissAlertToast(btn, alertId) {
+  const item = btn.closest('.alert-toast-item');
+  if (item) item.remove();
+  // Marchează ca citit în sheet
+  try {
+    await fetch(GS_URL, { method: 'POST', body: JSON.stringify({ action: 'clearAlert', id: alertId }) });
+    alertsCache = alertsCache.map(a => a.id === alertId ? {...a, read: true} : a);
+    updatePairCardAlerts();
+  } catch(e) {}
+}
+
+function updateNotifBadgeFromAlerts(newAlerts) {
+  // Adaugă alertele ca notificări în bell-ul existent
+  const badge = document.getElementById('notifBadge');
+  const count = newAlerts.length;
+  if (count > 0) {
+    badge.textContent = count > 9 ? '9+' : count;
+    badge.classList.remove('hidden');
+    document.getElementById('notifBtn').classList.add('has-alerts');
+  }
+}
+
+function buildAlertTagsForPair(pair, bias) {
+  const alerts = getAlertsForPair(pair);
+  if (!alerts.length) return '';
+  return alerts.slice(0, 2).map(a => {
+    const impact = ALERT_IMPACT[a.type] || {};
+    const sev    = impact.severity || 'info';
+    const icon   = impact.icon || '📡';
+    return `<span class="alert-tag ${sev}">${icon} ${a.message || a.type}</span>`;
+  }).join('');
+}
+
+function buildValidityBadge(pair, bias) {
+  const validity = getValidityForPair(pair, bias);
+  if (!validity) return `<span class="validity-badge valid">✅ Validă</span>`;
+  if (validity.invalidated) return `<span class="validity-badge invalid">❌ Invalidată (${validity.count} alerte)</span>`;
+  if (validity.severity === 'warn') return `<span class="validity-badge warning">⚠️ Verifică (${validity.count} alerte)</span>`;
+  return `<span class="validity-badge valid">✅ Validă · ${validity.count} alerte</span>`;
+}
 
 // ══ Cache for journal trades ══
 let journalTradesCache = null;
@@ -921,12 +1104,14 @@ function buildPairCard(pair, analysis, totalCount) {
     if (analysis) {
         const biasIcon = analysis.marketBias === 'Bullish' ? '🟢' : analysis.marketBias === 'Bearish' ? '🔴' : '⚪';
         const badgeCls = analysis.marketBias === 'Bullish' ? 'badge-bullish' : analysis.marketBias === 'Bearish' ? 'badge-bearish' : 'badge-neutral';
+        const alertTags = buildAlertTagsForPair(pair, analysis.marketBias);
         metaHTML = `<div class="card-date">📅 ${fmtDate(analysis.date)}</div>
             <div class="card-badges">
                 <span class="badge ${badgeCls}">${biasIcon} ${analysis.marketBias||'—'}</span>
                 ${analysis.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade">💰 Trade</span>' : ''}
                 ${totalCount > 1 ? `<span class="badge badge-latest">Latest of ${totalCount}</span>` : ''}
-            </div>`;
+            </div>
+            ${alertTags ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${alertTags}</div>` : ''}`;
     } else { metaHTML = `<div class="card-date" style="font-style:italic;">No analysis yet</div><div class="card-badges"><span class="badge badge-nodata">—</span></div>`; }
     const analysisIdx = analysis ? allAnalyses.indexOf(analysis) : -1;
     div.innerHTML = `<div class="card-strip"></div>
@@ -1128,6 +1313,7 @@ function openViewModal(idx) {
             <div class="view-pair-name">${a.pair}</div>
             <span class="badge ${biasClass}">${biasIcon} ${a.marketBias||'—'}</span>
             ${a.tradeStatus === 'Trade Taken' ? '<span class="badge badge-trade">💰 Trade</span>' : ''}
+            ${buildValidityBadge(a.pair, a.marketBias)}
             <span style="font-family:var(--font-mono); font-size:0.76em; color:var(--text-dim); margin-left:auto;">${fmtDate(a.date)} · ${a.day||''}</span>
         </div>
         ${tfBlock('📅 Weekly','var(--orange)',a.weeklyAnalysis,a.weeklyPhoto)}
@@ -1447,7 +1633,7 @@ function closeLightbox() { document.getElementById('lightboxOverlay').classList.
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
 // INIT
-window.onload = () => { loadAnalyses(); };
+window.onload = () => { loadAnalyses(); startAlertPolling(); };
 </script>
 </body>
 </html>
