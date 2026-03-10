@@ -1552,6 +1552,28 @@ select:hover { border-color: var(--glass-border-lit); }
         </div>
 
     </div><!-- end tablePage -->
+    <!-- ══ PNL DAY MODAL ══ -->
+    <div class="pnl-modal-overlay" id="pnlDayModal">
+        <div class="pnl-modal-box">
+            <div class="pnl-modal-head">
+                <div>
+                    <div class="pnl-modal-date" id="pnlDayModalTitle">—</div>
+                    <div class="pnl-modal-sub" id="pnlDayModalSub">—</div>
+                </div>
+                <button class="pnl-modal-close" onclick="closePnlModal()">×</button>
+            </div>
+            <div class="pnl-modal-body" id="pnlDayTrades"></div>
+            <div class="pnl-milestone-section">
+                <div class="pnl-ms-title">🏆 Milestone-uri</div>
+                <div class="pnl-ms-tags" id="pnlMilestoneList"></div>
+                <div class="pnl-ms-input-row">
+                    <input class="pnl-ms-input" id="pnlMilestoneInput" placeholder="ex: Payout primit, Cont trecut..." maxlength="120" onkeydown="if(event.key==='Enter') saveMilestone()">
+                    <button class="pnl-ms-btn" onclick="saveMilestone()">✓ Adaugă</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ══ FORM PAGE ══ -->
     <div id="formPage" class="page">
         <div class="form-container glass">
@@ -3480,8 +3502,11 @@ function deleteMilestone(dateKey, idx) {
 function closePnlModal() {
     document.getElementById('pnlDayModal').classList.remove('open');
 }
-document.getElementById('pnlDayModal').addEventListener('click', function(e) {
-    if (e.target === this) closePnlModal();
+document.addEventListener('DOMContentLoaded', function() {
+    const pnlModal = document.getElementById('pnlDayModal');
+    if (pnlModal) pnlModal.addEventListener('click', function(e) {
+        if (e.target === this) closePnlModal();
+    });
 });
 
 </script>
