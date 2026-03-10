@@ -1157,16 +1157,16 @@ select:hover { border-color: var(--glass-border-lit); }
 /* ══════════════════════════════════════════════
    PNL CALENDAR — Premium Design
 ══════════════════════════════════════════════ */
-.journal-split {
+.journal-top-split {
     display: grid;
     grid-template-columns: 420px 1fr;
     gap: 20px;
     align-items: start;
 }
-@media(max-width:1200px){ .journal-split { grid-template-columns: 360px 1fr; } }
-@media(max-width:960px){  .journal-split { grid-template-columns: 1fr; } }
+@media(max-width:1200px){ .journal-top-split { grid-template-columns: 360px 1fr; } }
+@media(max-width:960px){  .journal-top-split { grid-template-columns: 1fr; } }
 
-.pnl-panel { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 16px; }
+.pnl-panel { display: flex; flex-direction: column; gap: 16px; }
 
 /* ── Card shell ── */
 .pnl-card {
@@ -1449,37 +1449,35 @@ select:hover { border-color: var(--glass-border-lit); }
     <div id="tablePage" class="page">
         <div class="account-context-bar glass" id="accountContextBar"></div>
 
-        <div class="journal-split">
+        <!-- ── TOP: Calendar + Stats side by side ── -->
+        <div class="journal-top-split">
 
-        <!-- ══ LEFT: PNL CALENDAR PANEL ══ -->
-        <div class="pnl-panel">
-            <div class="pnl-card">
-                <!-- Month nav -->
-                <div class="pnl-month-nav">
-                    <button class="pnl-nav-btn" onclick="pnlNavMonth(-1)">&#9664;</button>
-                    <div style="flex:1;text-align:center;">
-                        <div class="pnl-month-title" id="pnlMonthLabel">—</div>
+            <!-- LEFT: PNL Calendar -->
+            <div class="pnl-panel">
+                <div class="pnl-card">
+                    <div class="pnl-month-nav">
+                        <button class="pnl-nav-btn" onclick="pnlNavMonth(-1)">&#9664;</button>
+                        <div style="flex:1;text-align:center;">
+                            <div class="pnl-month-title" id="pnlMonthLabel">—</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <select class="pnl-acc-select" id="pnlAccountSelect" onchange="renderPnlCalendar()">
+                                <option value="all">Toate conturile</option>
+                            </select>
+                            <button class="pnl-nav-btn" onclick="pnlNavMonth(1)">&#9654;</button>
+                        </div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <select class="pnl-acc-select" id="pnlAccountSelect" onchange="renderPnlCalendar()">
-                            <option value="all">Toate conturile</option>
-                        </select>
-                        <button class="pnl-nav-btn" onclick="pnlNavMonth(1)">&#9654;</button>
+                    <div class="pnl-summary-strip" id="pnlMonthSummary"></div>
+                    <div class="pnl-cal-inner">
+                        <div class="pnl-daynames" id="pnlDayNames"></div>
+                        <div id="pnlCalGrid"></div>
                     </div>
-                </div>
-                <!-- Summary strip -->
-                <div class="pnl-summary-strip" id="pnlMonthSummary"></div>
-                <!-- Calendar -->
-                <div class="pnl-cal-inner">
-                    <div class="pnl-daynames" id="pnlDayNames"></div>
-                    <div id="pnlCalGrid"></div>
                 </div>
             </div>
-        </div>
 
-        <!-- ══ RIGHT: FILTERS + STATS + TABLE ══ -->
-        <div style="min-width:0;">
-        <!-- Filters -->
+            <!-- RIGHT: Filters + Stats -->
+            <div style="min-width:0;display:flex;flex-direction:column;gap:16px;">
+                <!-- Filters -->
         <div class="filters-box glass">
             <div class="filters-header">
                 <span class="filters-title">⚡ Filters</span>
@@ -1494,8 +1492,7 @@ select:hover { border-color: var(--glass-border-lit); }
                 <div class="form-group"><label>✅ Status</label><select id="filterStatus" onchange="applyFilters()"><option value="">All</option><option>Win</option><option>Loss</option><option>Break Even</option><option>Open</option></select></div>
             </div>
         </div>
-
-        <!-- Dashboard -->
+                <!-- Dashboard -->
         <div class="dashboard glass">
             <div class="dashboard-header">
                 <div class="dashboard-title" id="dashTitle">Statistics</div>
@@ -1515,7 +1512,11 @@ select:hover { border-color: var(--glass-border-lit); }
                 <div class="stat-card negative"><div class="stat-label">Losses</div><div class="stat-value" id="statLosses">0</div></div>
             </div>
         </div>
+            </div>
 
+        </div><!-- end top split -->
+
+        <!-- ── BOTTOM: Full-width table ── -->
         <!-- Table -->
         <div class="table-container glass">
             <div class="table-header">
@@ -1551,36 +1552,6 @@ select:hover { border-color: var(--glass-border-lit); }
             </div>
         </div>
 
-        </div><!-- end right col -->
-        </div><!-- end journal-split -->
-    </div><!-- end tablePage -->
-
-    <!-- ══ PNL DAY DETAIL MODAL ══ -->
-    <div id="pnlDayModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9999;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
-        <div style="background:#151e2e;border:1px solid rgba(59,163,245,0.3);border-radius:16px;padding:24px;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;animation:modalIn 0.25s ease;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                <div>
-                    <div style="font-family:'Syne',sans-serif;font-size:1.15em;font-weight:700;" id="pnlDayModalTitle">—</div>
-                    <div style="font-size:0.78em;color:#6e7e98;margin-top:2px;" id="pnlDayModalSub">—</div>
-                </div>
-                <button onclick="document.getElementById('pnlDayModal').style.display='none'" style="width:28px;height:28px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:50%;color:#6e7e98;cursor:pointer;font-size:1em;">×</button>
-            </div>
-            <!-- Trades list -->
-            <div id="pnlDayTrades" style="margin-bottom:16px;"></div>
-            <!-- Milestone section -->
-            <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
-                <div style="font-size:0.78em;font-weight:600;color:#6e7e98;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">🏆 Milestone-uri</div>
-                <div id="pnlMilestoneList" style="margin-bottom:8px;"></div>
-                <div class="milestone-input-wrap">
-                    <input class="milestone-input" id="pnlMilestoneInput" placeholder="ex: Payout primit, Cont trecut..." maxlength="120">
-                    <button class="milestone-save-btn" onclick="saveMilestone()">✓ Adaugă</button>
-                </div>
-            </div>
-        </div>
-
-        </div><!-- end right col -->
-
-        </div><!-- end journal-split -->
     </div><!-- end tablePage -->
     <!-- ══ FORM PAGE ══ -->
     <div id="formPage" class="page">
