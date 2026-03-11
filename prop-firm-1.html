@@ -2387,7 +2387,7 @@ function addTradeToSheet(trade) {
     showLoading();
     const qs=new URLSearchParams({action:'add',sheet:currentSheet(),...trade});
     fetch(`${GOOGLE_SCRIPT_URL}?${qs}`)
-        .then(()=>{ hideLoading(); clearForm(); showPage('table'); loadTradesFromSheet(); })
+        .then(()=>{ hideLoading(); clearForm(); showPage('table'); pnlInvalidateCache(currentAccId); loadTradesFromSheet(); })
         .catch(err=>{ console.error(err); hideLoading(); alert('Save error'); });
 }
 
@@ -2398,7 +2398,7 @@ function updateTradeInSheet(trade) {
     fetch(`${GOOGLE_SCRIPT_URL}?${qs}`)
         .then(r=>r.json()).then(json=>{
             console.log('[UPDATE] response:', json);
-            hideLoading(); editingIndex=-1; clearForm(); showPage('table'); loadTradesFromSheet();
+            hideLoading(); editingIndex=-1; clearForm(); showPage('table'); pnlInvalidateCache(currentAccId); loadTradesFromSheet();
         })
         .catch(err=>{ console.error(err); hideLoading(); alert('Update error'); });
 }
@@ -3211,43 +3211,51 @@ function populatePnlAccountSelect() {
 }
 
 // ── Get trades for calendar (all accounts or specific) ──
-async function getPnlTradesForMonth(year, month) {
+// ── PNL Cache: { accId -> { trades: [], fetchedAt: timestamp } } ──
+const pnlCache = {};
+const PNL_CACHE_TTL = 5 * 60 * 1000; // 5 minute TTL
+
+async function fetchAccTrades(acc) {
+    const now = Date.now();
+    const cached = pnlCache[acc.id];
+    if (cached && (now - cached.fetchedAt) < PNL_CACHE_TTL) {
+        return cached.trades;
+    }
+    // If this is the currently loaded account, use in-memory trades
+    if (acc.id === currentAccId && trades && trades.length) {
+        const t = trades.map(t => ({ ...t, _accName: acc.name, _balance: parseFloat(acc.balance) || 10000 }));
+        pnlCache[acc.id] = { trades: t, fetchedAt: now };
+        return t;
+    }
+    try {
+        const r = await fetch(`${GOOGLE_SCRIPT_URL}?action=get&sheet=${acc.sheet}`);
+        const j = await r.json();
+        if (j.result === 'success') {
+            const t = (j.data || []).map(t => ({ ...t, _accName: acc.name, _balance: parseFloat(acc.balance) || 10000 }));
+            pnlCache[acc.id] = { trades: t, fetchedAt: now };
+            return t;
+        }
+    } catch(e) {}
+    return [];
+}
+
+// Invalidate cache for an account (call after adding/editing trades)
+function pnlInvalidateCache(accId) {
+    if (accId) delete pnlCache[accId];
+    else Object.keys(pnlCache).forEach(k => delete pnlCache[k]);
+}
+
+async function getAllPnlTrades() {
     const sel = document.getElementById('pnlAccountSelect');
     const accId = sel ? sel.value : 'all';
+    const accsToFetch = accId === 'all' ? (accounts || []) : (accounts || []).filter(a => a.id === accId);
+    const results = await Promise.all(accsToFetch.map(fetchAccTrades));
+    return results.flat();
+}
 
-    const allTrades = [];
-
-    if (accId === 'all') {
-        // Fetch all accounts
-        await Promise.all((accounts || []).map(async acc => {
-            try {
-                const r = await fetch(`${GOOGLE_SCRIPT_URL}?action=get&sheet=${acc.sheet}`);
-                const j = await r.json();
-                if (j.result === 'success') {
-                    (j.data || []).forEach(t => allTrades.push({ ...t, _accName: acc.name, _balance: parseFloat(acc.balance) || 10000 }));
-                }
-            } catch(e) {}
-        }));
-    } else {
-        // Use current trades if same account, otherwise fetch
-        const acc = (accounts || []).find(a => a.id === accId);
-        if (acc) {
-            if (accId === currentAccId && trades && trades.length) {
-                trades.forEach(t => allTrades.push({ ...t, _accName: acc.name, _balance: parseFloat(acc.balance) || 10000 }));
-            } else {
-                try {
-                    const r = await fetch(`${GOOGLE_SCRIPT_URL}?action=get&sheet=${acc.sheet}`);
-                    const j = await r.json();
-                    if (j.result === 'success') {
-                        (j.data || []).forEach(t => allTrades.push({ ...t, _accName: acc.name, _balance: parseFloat(acc.balance) || 10000 }));
-                    }
-                } catch(e) {}
-            }
-        }
-    }
-
-    // Filter to month
-    return allTrades.filter(t => {
+async function getPnlTradesForMonth(year, month) {
+    const all = await getAllPnlTrades();
+    return all.filter(t => {
         if (!t.data) return false;
         const d = new Date(t.data);
         return d.getFullYear() === year && d.getMonth() === month && ['Win','Loss','Break Even'].includes(t.wl);
@@ -3260,7 +3268,10 @@ async function renderPnlCalendar() {
     if (!grid) return;
 
     document.getElementById('pnlMonthLabel').textContent = `${MONTHS_RO[pnlMonth]} ${pnlYear}`;
-    grid.innerHTML = `<div style="text-align:center;padding:20px;color:#6e7e98;font-size:0.8em;">Se încarcă...</div>`;
+    grid.innerHTML = `<div style="text-align:center;padding:28px 20px;color:rgba(255,255,255,0.2);">
+        <div style="display:inline-block;width:28px;height:28px;border:2px solid rgba(255,255,255,0.08);border-top-color:rgba(0,229,160,0.6);border-radius:50%;animation:spin 0.7s linear infinite;margin-bottom:8px;"></div>
+        <div style="font-size:0.78em;">Se încarcă...</div>
+    </div>`;
 
     populatePnlAccountSelect();
 
@@ -3396,31 +3407,18 @@ async function openPnlDay(dateKey) {
     const d = new Date(dateKey + 'T12:00:00');
     const label = d.toLocaleDateString('ro-RO', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
+    // Show modal immediately with spinner
+    document.getElementById('pnlDayModalTitle').textContent = label;
+    document.getElementById('pnlDayModalSub').innerHTML = '<span style="color:rgba(255,255,255,0.3);">Se încarcă...</span>';
+    document.getElementById('pnlDayTrades').innerHTML = '<div style="padding:24px;text-align:center;"><div style="display:inline-block;width:24px;height:24px;border:2px solid rgba(255,255,255,0.08);border-top-color:rgba(0,229,160,0.6);border-radius:50%;animation:spin 0.7s linear infinite;"></div></div>';
+    document.getElementById('pnlMilestoneList').innerHTML = '';
+    document.getElementById('pnlDayModal').classList.add('open');
+
     const sel = document.getElementById('pnlAccountSelect');
     const accId = sel ? sel.value : 'all';
 
-    // Get trades for this day
-    const allTrades = [];
-    if (accId === 'all') {
-        await Promise.all((accounts || []).map(async acc => {
-            try {
-                const r = await fetch(`${GOOGLE_SCRIPT_URL}?action=get&sheet=${acc.sheet}`);
-                const j = await r.json();
-                if (j.result === 'success') {
-                    (j.data || []).forEach(t => allTrades.push({ ...t, _accName: acc.name }));
-                }
-            } catch(e) {}
-        }));
-    } else {
-        const acc = (accounts || []).find(a => a.id === accId);
-        if (acc && accId === currentAccId && trades) {
-            trades.forEach(t => allTrades.push({ ...t, _accName: acc.name }));
-        } else if (acc) {
-            const r = await fetch(`${GOOGLE_SCRIPT_URL}?action=get&sheet=${acc.sheet}`);
-            const j = await r.json();
-            if (j.result === 'success') (j.data || []).forEach(t => allTrades.push({ ...t, _accName: acc.name }));
-        }
-    }
+    // Use cache — no extra fetches needed
+    const allTrades = await getAllPnlTrades();
 
     const dayTrades = allTrades.filter(t => {
         if (!t.data) return false;
