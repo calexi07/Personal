@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Achievements — Trading Goals</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-deep:    #050810;
+    --bg-mid:     #090d1a;
+    --bg-surface: #0d1220;
+    --surface2:   #111827;
+    --border:     rgba(255,255,255,0.07);
+    --border-act: rgba(255,255,255,0.14);
+    --accent:     #00e5a0;
+    --accent-dim: rgba(0,229,160,0.12);
+    --accent-glow:rgba(0,229,160,0.3);
+    --blue:       #3d8bff;
+    --blue-dim:   rgba(61,139,255,0.12);
+    --orange:     #fb923c;
+    --orange-dim: rgba(251,146,60,0.12);
+    --gold:       #fcd34d;
+    --gold-dim:   rgba(252,211,77,0.1);
+    --red:        #ff4d6a;
+    --red-dim:    rgba(255,77,106,0.12);
+    --purple:     #a855f7;
+    --purple-dim: rgba(168,85,247,0.1);
+    --text:       #dde4f0;
+    --text-mid:   #8899b4;
+    --text-dim:   #4a5568;
+    --font-display:'Syne',sans-serif;
+    --font-body:  'DM Sans',sans-serif;
+    --font-mono:  'DM Mono',monospace;
+    --radius:     14px;
+    --radius-sm:  9px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+    font-family: var(--font-body);
+    background: var(--bg-deep);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.4;
+}
+
+/* ── NAVBAR ── */
+.navbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(5,8,16,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 24px; height: 64px;
+}
+.brand { display: flex; align-items: center; gap: 12px; margin-right: 8px; }
+.brand-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #00b87a);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 900; font-size: 0.85em;
+    color: #050810; box-shadow: 0 0 16px var(--accent-glow);
+}
+.brand-name { font-family: var(--font-display); font-weight: 800; font-size: 1em; }
+.brand-sub  { font-size: 0.65em; color: var(--text-dim); margin-top: -2px; }
+.nav-divider { width: 1px; height: 28px; background: var(--border); margin: 0 8px; }
+.nav-pill {
+    padding: 7px 14px; border-radius: 9px; border: 1px solid transparent;
+    background: transparent; color: var(--text-mid); font-family: var(--font-body);
+    font-size: 0.82em; font-weight: 500; cursor: pointer; transition: all 0.18s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+}
+.nav-pill:hover  { background: rgba(255,255,255,0.05); color: var(--text); }
+.nav-pill.active { background: var(--accent-dim); border-color: var(--accent-glow); color: var(--accent); }
+.nav-spacer { flex: 1; }
+
+/* ── MAIN CONTAINER ── */
+.container { max-width: 1400px; margin: 0 auto; padding: 32px 24px 80px; position: relative; z-index: 1; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+    margin-bottom: 36px;
+    display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+}
+.page-title { font-family: var(--font-display); font-size: 2em; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+.page-title span { color: var(--accent); }
+.page-sub { font-size: 0.88em; color: var(--text-mid); margin-top: 6px; }
+.header-stats { display: flex; gap: 20px; }
+.hstat { text-align: center; }
+.hstat-val { font-family: var(--font-display); font-size: 1.4em; font-weight: 800; }
+.hstat-lbl { font-size: 0.65em; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+
+/* ── LAYOUT SWITCHER ── */
+.layout-switcher {
+    display: flex; gap: 8px; margin-bottom: 32px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: 12px; padding: 5px;
+    width: fit-content;
+}
+.layout-btn {
+    padding: 8px 18px; border-radius: 9px; border: none;
+    background: transparent; color: var(--text-mid);
+    font-family: var(--font-body); font-size: 0.82em; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 7px;
+}
+.layout-btn.active {
+    background: var(--bg-surface); color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.layout-btn:hover:not(.active) { color: var(--text); }
+
+/* ── LAYOUT SECTIONS ── */
+.layout-view { display: none; animation: fadeIn 0.3s ease; }
+.layout-view.active { display: block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+/* ══════════════════════════════════════════════════════════
+   LAYOUT 1 — ROADMAP
+══════════════════════════════════════════════════════════ */
+.roadmap-wrap {
+    position: relative;
+    padding-left: 40px;
+}
+.roadmap-line {
+    position: absolute; left: 15px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent) 0%, rgba(0,229,160,0.3) 40%, rgba(255,255,255,0.05) 70%);
+}
+.roadmap-section { margin-bottom: 44px; }
+.roadmap-section-title {
+    font-family: var(--font-display); font-size: 0.72em; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim);
+    margin-bottom: 16px; padding-left: 4px;
+}
+.roadmap-item {
+    display: grid; grid-template-columns: auto 1fr auto;
+    gap: 16px; align-items: start;
+    margin-bottom: 12px;
+    position: relative;
+}
+.roadmap-node {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 0.85em;
+    position: relative; z-index: 2;
+    margin-left: -40px;
+    transition: all 0.25s;
+}
+.roadmap-node.done     { background: var(--accent); color: #050810; box-shadow: 0 0 16px var(--accent-glow); }
+.roadmap-node.progress { background: var(--orange-dim); border: 2px solid var(--orange); color: var(--orange); animation: nodePulse 2s ease-in-out infinite; }
+.roadmap-node.future   { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-dim); }
+@keyframes nodePulse { 0%,100%{box-shadow:0 0 0 0 rgba(251,146,60,0.3);} 50%{box-shadow:0 0 0 8px rgba(251,146,60,0);} }
+
+.roadmap-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px;
+    transition: all 0.2s; cursor: pointer;
+}
+.roadmap-card:hover { border-color: var(--border-act); transform: translateX(4px); }
+.roadmap-card.done     { border-color: rgba(0,229,160,0.15); background: linear-gradient(135deg, rgba(0,229,160,0.05) 0%, var(--bg-surface) 60%); }
+.roadmap-card.progress { border-color: rgba(251,146,60,0.2); background: linear-gradient(135deg, rgba(251,146,60,0.05) 0%, var(--bg-surface) 60%); }
+.roadmap-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.roadmap-card-title { font-family: var(--font-display); font-weight: 700; font-size: 0.95em; }
+.roadmap-card.done .roadmap-card-title { text-decoration: line-through; color: var(--text-mid); }
+.roadmap-card-desc { font-size: 0.78em; color: var(--text-mid); line-height: 1.5; }
+.roadmap-badge {
+    font-size: 0.62em; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; flex-shrink: 0; letter-spacing: 0.3px;
+}
+.roadmap-badge.done     { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,229,160,0.2); }
+.roadmap-badge.progress { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(251,146,60,0.2); }
+.roadmap-badge.future   { background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border); }
+.roadmap-progress-bar { margin-top: 10px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+.roadmap-progress-fill { height: 100%; border-radius: 99px; background: var(--orange); transition: width 0.6s ease; }
+.roadmap-card.done .roadmap-progress-fill { background: var(--accent); }
+.roadmap-meta { display: flex; gap: 12px; margin-top: 8px; }
+.roadmap-meta-item { font-size: 0.68em; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
+.roadmap-date { font-size: 0.68em; color: var(--text-dim); font-family: var(--font-mono); flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════════════════
+   LAYOUT 2 — KANBAN
+══════════════════════════════════════════════════════════ */
+.kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start; }
+@media(max-width:900px){ .kanban-board { grid-template-columns: 1fr; } }
+
+.kanban-col { border-radius: var(--radius); overflow: hidden; }
+.kanban-col-head {
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+}
+.kanban-col-head.future   { background: rgba(255,255,255,0.03); }
+.kanban-col-head.progress { background: rgba(251,146,60,0.07); border-bottom-color: rgba(251,146,60,0.12); }
+.kanban-col-head.done     { background: rgba(0,229,160,0.06); border-bottom-color: rgba(0,229,160,0.12); }
+.kanban-col-title { font-family: var(--font-display); font-weight: 800; font-size: 0.88em; display: flex; align-items: center; gap: 8px; }
+.kanban-count { font-size: 0.7em; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
+.kanban-count.future   { background: rgba(255,255,255,0.06); color: var(--text-dim); }
+.kanban-count.progress { background: var(--orange-dim); color: var(--orange); }
+.kanban-count.done     { background: var(--accent-dim); color: var(--accent); }
+.kanban-col-body {
+    background: rgba(255,255,255,0.015);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    padding: 12px;
+    min-height: 200px;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.kanban-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 15px;
+    cursor: pointer; transition: all 0.18s;
+    position: relative; overflow: hidden;
+}
+.kanban-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+}
+.kanban-card.future::before   { background: var(--text-dim); }
+.kanban-card.progress::before { background: var(--orange); }
+.kanban-card.done::before     { background: var(--accent); }
+.kanban-card:hover { border-color: var(--border-act); box-shadow: 0 4px 20px rgba(0,0,0,0.3); transform: translateY(-2px); }
+.kanban-card-title { font-weight: 700; font-size: 0.87em; margin-bottom: 5px; }
+.kanban-card.done .kanban-card-title { text-decoration: line-through; color: var(--text-mid); }
+.kanban-card-desc { font-size: 0.75em; color: var(--text-mid); line-height: 1.45; }
+.kanban-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.04); }
+.kanban-card-cat { font-size: 0.62em; font-weight: 700; padding: 2px 8px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+.kanban-card-date { font-size: 0.62em; color: var(--text-dim); font-family: var(--font-mono); }
+.kanban-progress { height: 3px; background: rgba(255,255,255,0.05); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+.kanban-progress-fill { height: 100%; border-radius: 99px; background: var(--orange); }
+.kanban-card.done .kanban-progress-fill { background: var(--accent); }
+
+/* ══════════════════════════════════════════════════════════
+   LAYOUT 3 — BADGES GRID
+══════════════════════════════════════════════════════════ */
+.badges-section { margin-bottom: 40px; }
+.badges-section-title {
+    font-family: var(--font-display); font-size: 0.72em; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+}
+.badges-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.badges-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.badge-card {
+    border-radius: var(--radius); padding: 22px 16px 18px;
+    text-align: center; cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.2,0,0,1);
+    position: relative; overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+}
+.badge-card::before {
+    content: ''; position: absolute; inset: 0;
+    opacity: 0; transition: opacity 0.25s;
+    border-radius: var(--radius);
+}
+.badge-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+.badge-card:hover::before { opacity: 1; }
+
+.badge-card.done {
+    background: linear-gradient(145deg, rgba(0,229,160,0.08) 0%, var(--bg-surface) 70%);
+    border-color: rgba(0,229,160,0.2);
+}
+.badge-card.done::before { background: radial-gradient(circle at 50% 0%, rgba(0,229,160,0.1), transparent 70%); }
+.badge-card.done:hover   { box-shadow: 0 12px 40px rgba(0,229,160,0.15); border-color: rgba(0,229,160,0.4); }
+
+.badge-card.progress {
+    background: linear-gradient(145deg, rgba(251,146,60,0.07) 0%, var(--bg-surface) 70%);
+    border-color: rgba(251,146,60,0.2);
+}
+.badge-card.progress::before { background: radial-gradient(circle at 50% 0%, rgba(251,146,60,0.08), transparent 70%); }
+.badge-card.progress:hover   { box-shadow: 0 12px 40px rgba(251,146,60,0.12); }
+
+.badge-card.future { opacity: 0.55; }
+.badge-card.future:hover { opacity: 0.9; }
+
+.badge-icon {
+    font-size: 2.4em; margin-bottom: 10px; display: block;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.15));
+    transition: transform 0.25s;
+}
+.badge-card.done .badge-icon { filter: drop-shadow(0 0 12px rgba(0,229,160,0.5)); }
+.badge-card:hover .badge-icon { transform: scale(1.15); }
+.badge-card.future .badge-icon { filter: grayscale(1) brightness(0.5); }
+
+.badge-title { font-family: var(--font-display); font-weight: 700; font-size: 0.82em; margin-bottom: 4px; }
+.badge-desc  { font-size: 0.68em; color: var(--text-mid); line-height: 1.4; }
+.badge-card.future .badge-desc { color: var(--text-dim); }
+
+.badge-status {
+    position: absolute; top: 10px; right: 10px;
+    font-size: 0.58em; font-weight: 700; padding: 3px 8px;
+    border-radius: 20px; letter-spacing: 0.3px;
+}
+.badge-status.done     { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,229,160,0.2); }
+.badge-status.progress { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(251,146,60,0.2); animation: badgePulse 2s ease-in-out infinite; }
+.badge-status.future   { background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border); }
+@keyframes badgePulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+
+.badge-date { font-size: 0.62em; color: var(--text-dim); font-family: var(--font-mono); margin-top: 6px; display: block; }
+.badge-progress { margin-top: 10px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+.badge-progress-fill { height: 100%; border-radius: 99px; background: var(--orange); transition: width 0.8s ease; }
+.badge-card.done .badge-progress-fill { background: var(--accent); }
+
+/* ── GLOWING DONE CHECKMARK ── */
+.done-check {
+    position: absolute; bottom: 8px; right: 10px;
+    font-size: 0.75em; color: var(--accent); opacity: 0.6;
+}
+
+/* ── ADD BUTTON ── */
+.add-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--accent-dim); border: 1px solid rgba(0,229,160,0.25);
+    color: var(--accent); font-family: var(--font-body); font-size: 0.82em;
+    font-weight: 700; cursor: pointer; transition: all 0.18s;
+}
+.add-btn:hover { background: rgba(0,229,160,0.2); border-color: rgba(0,229,160,0.4); }
+
+/* ── MODAL ── */
+.modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+    z-index: 9999; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+.modal-box {
+    background: linear-gradient(145deg, #141e33 0%, #0d1525 100%);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 20px; padding: 28px;
+    width: 100%; max-width: 480px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    animation: modalIn 0.28s cubic-bezier(0.2,0,0,1.1);
+}
+@keyframes modalIn { from{opacity:0;transform:scale(0.93) translateY(10px);} to{opacity:1;transform:none;} }
+.modal-title { font-family: var(--font-display); font-size: 1.1em; font-weight: 800; margin-bottom: 20px; }
+.form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.form-field label { font-size: 0.7em; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; }
+.form-field input, .form-field select, .form-field textarea {
+    padding: 10px 13px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 9px; color: var(--text); font-family: var(--font-body); font-size: 0.85em;
+    transition: border-color 0.2s;
+}
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: rgba(0,229,160,0.4); }
+.form-field textarea { resize: vertical; min-height: 72px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+.btn-save { flex:1; padding: 11px; background: var(--accent-dim); border: 1px solid rgba(0,229,160,0.3); border-radius: 10px; color: var(--accent); font-size: 0.87em; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+.btn-save:hover { background: rgba(0,229,160,0.2); }
+.btn-cancel { padding: 11px 18px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: var(--text-mid); font-size: 0.85em; cursor: pointer; }
+.btn-delete { padding: 11px 14px; background: var(--red-dim); border: 1px solid rgba(255,77,106,0.2); border-radius: 10px; color: var(--red); font-size: 0.85em; cursor: pointer; transition: all 0.15s; }
+.btn-delete:hover { background: rgba(255,77,106,0.2); }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: rgba(0,229,160,0.12); border: 1px solid rgba(0,229,160,0.25); color: var(--accent); padding: 12px 20px; border-radius: 10px; font-size: 0.84em; font-weight: 700; z-index: 99999; animation: fadeIn 0.25s ease; }
+
+/* ── EMPTY STATE ── */
+.empty { padding: 32px; text-align: center; color: var(--text-dim); font-size: 0.82em; }
+
+/* ── CATEGORY COLORS ── */
+.cat-funded   { background: rgba(61,139,255,0.1); color: var(--blue); border: 1px solid rgba(61,139,255,0.2); }
+.cat-profit   { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,229,160,0.2); }
+.cat-payout   { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(252,211,77,0.2); }
+.cat-skill    { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(168,85,247,0.2); }
+.cat-milestone{ background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(251,146,60,0.2); }
+
+/* ── PROGRESS RING (badges) ── */
+.progress-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.12; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="brand">
+        <div class="brand-icon">TJ</div>
+        <div>
+            <div class="brand-name">Trading Journal</div>
+            <div class="brand-sub">Multi-Account</div>
+        </div>
+    </div>
+    <div class="nav-divider"></div>
+    <a href="prop-firm-1.html" class="nav-pill">📒 Jurnal</a>
+    <a href="analiza.html" class="nav-pill">📈 Analize</a>
+    <a href="achievements.html" class="nav-pill active">🏆 Goals</a>
+    <div class="nav-spacer"></div>
+    <button class="add-btn" onclick="openAddModal()">＋ Adaugă Goal</button>
+</nav>
+
+<!-- MAIN -->
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div>
+            <div class="page-title">Trading <span>Goals</span></div>
+            <div class="page-sub">Urmărește-ți progresul pe termen lung</div>
+        </div>
+        <div class="header-stats">
+            <div class="hstat">
+                <div class="hstat-val" id="statDone" style="color:var(--accent);">0</div>
+                <div class="hstat-lbl">Completate</div>
+            </div>
+            <div class="hstat">
+                <div class="hstat-val" id="statProgress" style="color:var(--orange);">0</div>
+                <div class="hstat-lbl">În progres</div>
+            </div>
+            <div class="hstat">
+                <div class="hstat-val" id="statFuture" style="color:var(--text-dim);">0</div>
+                <div class="hstat-lbl">Viitoare</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYOUT SWITCHER -->
+    <div class="layout-switcher">
+        <button class="layout-btn active" onclick="switchLayout('roadmap', this)">🗺 Roadmap</button>
+        <button class="layout-btn" onclick="switchLayout('kanban', this)">📋 Kanban</button>
+        <button class="layout-btn" onclick="switchLayout('badges', this)">🏅 Badges</button>
+    </div>
+
+    <!-- LAYOUT 1: ROADMAP -->
+    <div class="layout-view active" id="view-roadmap">
+        <div class="roadmap-wrap">
+            <div class="roadmap-line"></div>
+            <div id="roadmap-done-section" class="roadmap-section">
+                <div class="roadmap-section-title">✅ Completate</div>
+                <div id="roadmap-done"></div>
+            </div>
+            <div id="roadmap-progress-section" class="roadmap-section">
+                <div class="roadmap-section-title">⚡ În progres</div>
+                <div id="roadmap-progress"></div>
+            </div>
+            <div id="roadmap-future-section" class="roadmap-section">
+                <div class="roadmap-section-title">🔮 Viitoare</div>
+                <div id="roadmap-future"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYOUT 2: KANBAN -->
+    <div class="layout-view" id="view-kanban">
+        <div class="kanban-board">
+            <div class="kanban-col">
+                <div class="kanban-col-head future">
+                    <div class="kanban-col-title">🔮 Viitoare <span class="kanban-count future" id="k-count-future">0</span></div>
+                </div>
+                <div class="kanban-col-body" id="kanban-future"></div>
+            </div>
+            <div class="kanban-col">
+                <div class="kanban-col-head progress">
+                    <div class="kanban-col-title" style="color:var(--orange);">⚡ În progres <span class="kanban-count progress" id="k-count-progress">0</span></div>
+                </div>
+                <div class="kanban-col-body" id="kanban-progress"></div>
+            </div>
+            <div class="kanban-col">
+                <div class="kanban-col-head done">
+                    <div class="kanban-col-title" style="color:var(--accent);">✅ Completate <span class="kanban-count done" id="k-count-done">0</span></div>
+                </div>
+                <div class="kanban-col-body" id="kanban-done"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYOUT 3: BADGES -->
+    <div class="layout-view" id="view-badges">
+        <div class="badges-section">
+            <div class="badges-section-title">⚡ În Progres</div>
+            <div class="badges-grid" id="badges-progress"></div>
+        </div>
+        <div class="badges-section">
+            <div class="badges-section-title">✅ Completate</div>
+            <div class="badges-grid" id="badges-done"></div>
+        </div>
+        <div class="badges-section">
+            <div class="badges-section-title">🔮 Viitoare</div>
+            <div class="badges-grid" id="badges-future"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="goalModal">
+    <div class="modal-box">
+        <div class="modal-title" id="modalTitle">➕ Goal Nou</div>
+        <div class="form-field">
+            <label>Titlu *</label>
+            <input type="text" id="f-title" placeholder="ex: Primul Payout FTMO">
+        </div>
+        <div class="form-field">
+            <label>Descriere</label>
+            <textarea id="f-desc" placeholder="Detalii despre acest goal..."></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-field">
+                <label>Categorie</label>
+                <select id="f-cat">
+                    <option value="funded">💰 Cont Funded</option>
+                    <option value="profit">📈 Profit Target</option>
+                    <option value="payout">💸 Payout</option>
+                    <option value="skill">🧠 Skill</option>
+                    <option value="milestone">⭐ Milestone</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label>Status</label>
+                <select id="f-status">
+                    <option value="future">🔮 Viitor</option>
+                    <option value="progress">⚡ În Progres</option>
+                    <option value="done">✅ Completat</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-field">
+                <label>Progres (0–100%)</label>
+                <input type="number" id="f-progress" min="0" max="100" placeholder="0">
+            </div>
+            <div class="form-field">
+                <label>Dată target / completat</label>
+                <input type="date" id="f-date">
+            </div>
+        </div>
+        <div class="form-field">
+            <label>Icon (emoji)</label>
+            <input type="text" id="f-icon" placeholder="🏆" maxlength="4">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal()">Anulează</button>
+            <button class="btn-delete" id="btnDelete" onclick="deleteGoal()" style="display:none;">🗑 Șterge</button>
+            <button class="btn-save" onclick="saveGoal()">✓ Salvează</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// CONFIG — înlocuiește cu URL-ul tău Google Apps Script
+// ════════════════════════════════════════════════════════════════
+const GS_URL = 'https://script.google.com/macros/s/AKfycbzbrBuxQ-fFd19EuR4msAwA4H7AyYVBw2I2_XDyvd1UjuV3GnK6E81kdRirBoTsqSWNRA/exec';
+const GOALS_SHEET = 'Goals';
+
+// ════════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════════
+let goals = [];
+let editingId = null;
+let currentLayout = 'roadmap';
+
+// ── ICONS per category ──
+const CAT_ICONS = { funded:'💰', profit:'📈', payout:'💸', skill:'🧠', milestone:'⭐' };
+const CAT_LABELS = { funded:'Funded', profit:'Profit', payout:'Payout', skill:'Skill', milestone:'Milestone' };
+
+// ════════════════════════════════════════════════════════════════
+// SAMPLE DATA (se înlocuiește cu date din Sheets)
+// ════════════════════════════════════════════════════════════════
+const SAMPLE_GOALS = [
+    { id:'1', title:'Primul Cont Funded FTMO', desc:'Trece evaluarea FTMO 10K și obține contul funded.', cat:'funded', status:'done', progress:100, date:'2026-01-15', icon:'🎯' },
+    { id:'2', title:'Primul Payout', desc:'Retrage primul profit de pe contul funded.', cat:'payout', status:'done', progress:100, date:'2026-02-01', icon:'💸' },
+    { id:'3', title:'3 Conturi Funded Simultan', desc:'Gestionează 3 conturi funded în paralel, total $30K.', cat:'funded', status:'progress', progress:33, date:'2026-06-01', icon:'🏦' },
+    { id:'4', title:'$1,000 Profit Lunar Consistent', desc:'Atinge $1,000 profit net lunar timp de 3 luni consecutive.', cat:'profit', status:'progress', progress:60, date:'2026-05-01', icon:'📊' },
+    { id:'5', title:'Win Rate > 60%', desc:'Menține win rate peste 60% timp de un trimestru întreg.', cat:'skill', status:'progress', progress:45, date:'2026-04-01', icon:'🎯' },
+    { id:'6', title:'Al Doilea Payout FTMO', desc:'A doua retragere de profit de pe contul funded.', cat:'payout', status:'future', progress:0, date:'2026-04-15', icon:'💰' },
+    { id:'7', title:'$10,000 Capital Gestionat', desc:'Ajunge la $10K capital total gestionat pe toate conturile.', cat:'funded', status:'future', progress:0, date:'2026-09-01', icon:'🚀' },
+    { id:'8', title:'Zero Revenge Trading 1 Lună', desc:'Niciun trade de revenge timp de o lună completă.', cat:'skill', status:'future', progress:0, date:'2026-04-30', icon:'🧘' },
+    { id:'9', title:'$5,000 Profit Cumulat', desc:'Profit net total de $5,000 din toate conturile.', cat:'profit', status:'future', progress:0, date:'2026-12-01', icon:'💎' },
+];
+
+// ════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════
+async function init() {
+    await loadGoals();
+    renderAll();
+}
+
+async function loadGoals() {
+    try {
+        const r = await fetch(`${GS_URL}?action=get&sheet=${GOALS_SHEET}`, { signal: AbortSignal.timeout(8000) });
+        const j = await r.json();
+        if (j.result === 'success' && j.data && j.data.length > 0) {
+            goals = j.data.map(row => ({
+                id:       row.id || String(Date.now()),
+                title:    row.title || '',
+                desc:     row.desc || '',
+                cat:      row.cat || 'milestone',
+                status:   row.status || 'future',
+                progress: parseInt(row.progress) || 0,
+                date:     row.date || '',
+                icon:     row.icon || CAT_ICONS[row.cat] || '⭐',
+            }));
+            return;
+        }
+    } catch(e) {}
+    // Fallback to sample data
+    goals = SAMPLE_GOALS;
+}
+
+async function saveGoalToSheet(goal, isNew) {
+    try {
+        const params = new URLSearchParams({
+            action: isNew ? 'add' : 'update',
+            sheet:  GOALS_SHEET,
+            ...goal
+        });
+        const r = await fetch(`${GS_URL}?${params}`);
+        const j = await r.json();
+        return j.result === 'success';
+    } catch(e) { return false; }
+}
+
+async function deleteGoalFromSheet(id) {
+    try {
+        await fetch(`${GS_URL}?action=delete&id=${id}&sheet=${GOALS_SHEET}`);
+    } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════════════
+function renderAll() {
+    updateHeaderStats();
+    if (currentLayout === 'roadmap') renderRoadmap();
+    else if (currentLayout === 'kanban') renderKanban();
+    else renderBadges();
+}
+
+function updateHeaderStats() {
+    document.getElementById('statDone').textContent     = goals.filter(g => g.status === 'done').length;
+    document.getElementById('statProgress').textContent = goals.filter(g => g.status === 'progress').length;
+    document.getElementById('statFuture').textContent   = goals.filter(g => g.status === 'future').length;
+}
+
+// ── ROADMAP ──
+function renderRoadmap() {
+    const sections = { done: [], progress: [], future: [] };
+    goals.forEach(g => sections[g.status]?.push(g));
+
+    ['done', 'progress', 'future'].forEach(status => {
+        const el = document.getElementById(`roadmap-${status}`);
+        const list = sections[status];
+        if (!list.length) { el.innerHTML = `<div class="empty">Niciun goal ${status === 'done' ? 'completat' : status === 'progress' ? 'în progres' : 'planificat'} încă.</div>`; return; }
+        el.innerHTML = list.map(g => `
+            <div class="roadmap-item" onclick="openEditModal('${g.id}')">
+                <div class="roadmap-node ${g.status}">${g.status === 'done' ? '✓' : g.status === 'progress' ? '▶' : '○'}</div>
+                <div class="roadmap-card ${g.status}">
+                    <div class="roadmap-card-top">
+                        <div class="roadmap-card-title">${g.icon} ${g.title}</div>
+                        <span class="roadmap-badge ${g.status}">${g.status === 'done' ? '✅ Done' : g.status === 'progress' ? '⚡ Active' : '🔮 Soon'}</span>
+                    </div>
+                    <div class="roadmap-card-desc">${g.desc}</div>
+                    ${g.status !== 'done' ? `
+                    <div class="roadmap-progress-bar"><div class="roadmap-progress-fill" style="width:${g.progress}%"></div></div>` : ''}
+                    <div class="roadmap-meta">
+                        <div class="roadmap-meta-item"><span class="kanban-card-cat cat-${g.cat}" style="font-size:0.65em;padding:2px 7px;border-radius:5px;">${CAT_LABELS[g.cat]}</span></div>
+                        ${g.date ? `<div class="roadmap-meta-item">📅 ${formatDate(g.date)}</div>` : ''}
+                        ${g.status === 'progress' ? `<div class="roadmap-meta-item" style="color:var(--orange);">${g.progress}% complet</div>` : ''}
+                    </div>
+                </div>
+                ${g.date ? `<div class="roadmap-date">${formatDate(g.date)}</div>` : ''}
+            </div>`).join('');
+    });
+}
+
+// ── KANBAN ──
+function renderKanban() {
+    const cols = { done: [], progress: [], future: [] };
+    goals.forEach(g => cols[g.status]?.push(g));
+
+    ['done', 'progress', 'future'].forEach(status => {
+        const el    = document.getElementById(`kanban-${status}`);
+        const count = document.getElementById(`k-count-${status}`);
+        const list  = cols[status];
+        count.textContent = list.length;
+        if (!list.length) { el.innerHTML = `<div class="empty">—</div>`; return; }
+        el.innerHTML = list.map(g => `
+            <div class="kanban-card ${g.status}" onclick="openEditModal('${g.id}')">
+                <div class="kanban-card-title">${g.icon} ${g.title}</div>
+                <div class="kanban-card-desc">${g.desc}</div>
+                ${g.progress > 0 ? `<div class="kanban-progress"><div class="kanban-progress-fill" style="width:${g.progress}%"></div></div>` : ''}
+                <div class="kanban-card-footer">
+                    <span class="kanban-card-cat cat-${g.cat}">${CAT_LABELS[g.cat]}</span>
+                    <span class="kanban-card-date">${g.date ? formatDate(g.date) : ''}</span>
+                </div>
+            </div>`).join('');
+    });
+}
+
+// ── BADGES ──
+function renderBadges() {
+    const sections = { done: [], progress: [], future: [] };
+    goals.forEach(g => sections[g.status]?.push(g));
+
+    ['progress', 'done', 'future'].forEach(status => {
+        const el = document.getElementById(`badges-${status}`);
+        const list = sections[status];
+        if (!list.length) { el.innerHTML = `<div class="empty" style="grid-column:1/-1;">Niciun goal ${status === 'done' ? 'completat' : status === 'progress' ? 'în progres' : 'planificat'} încă.</div>`; return; }
+        el.innerHTML = list.map(g => `
+            <div class="badge-card ${g.status}" onclick="openEditModal('${g.id}')">
+                <span class="badge-status ${g.status}">${g.status === 'done' ? '✅ Done' : g.status === 'progress' ? '⚡ Live' : '🔮 Soon'}</span>
+                <span class="badge-icon">${g.icon}</span>
+                <div class="badge-title">${g.title}</div>
+                <div class="badge-desc">${g.desc}</div>
+                ${g.date ? `<span class="badge-date">📅 ${formatDate(g.date)}</span>` : ''}
+                <div class="badge-progress"><div class="badge-progress-fill" style="width:${g.progress}%"></div></div>
+                ${g.status === 'done' ? '<div class="done-check">✓</div>' : ''}
+            </div>`).join('');
+    });
+}
+
+// ════════════════════════════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════════════════════════════
+function openAddModal() {
+    editingId = null;
+    document.getElementById('modalTitle').textContent = '➕ Goal Nou';
+    document.getElementById('btnDelete').style.display = 'none';
+    document.getElementById('f-title').value    = '';
+    document.getElementById('f-desc').value     = '';
+    document.getElementById('f-cat').value      = 'milestone';
+    document.getElementById('f-status').value   = 'future';
+    document.getElementById('f-progress').value = '0';
+    document.getElementById('f-date').value     = '';
+    document.getElementById('f-icon').value     = '⭐';
+    document.getElementById('goalModal').classList.add('open');
+}
+
+function openEditModal(id) {
+    const g = goals.find(g => g.id === id);
+    if (!g) return;
+    editingId = id;
+    document.getElementById('modalTitle').textContent = '✏️ Editează Goal';
+    document.getElementById('btnDelete').style.display = 'block';
+    document.getElementById('f-title').value    = g.title;
+    document.getElementById('f-desc').value     = g.desc;
+    document.getElementById('f-cat').value      = g.cat;
+    document.getElementById('f-status').value   = g.status;
+    document.getElementById('f-progress').value = g.progress;
+    document.getElementById('f-date').value     = g.date;
+    document.getElementById('f-icon').value     = g.icon;
+    document.getElementById('goalModal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('goalModal').classList.remove('open');
+    editingId = null;
+}
+
+async function saveGoal() {
+    const title    = document.getElementById('f-title').value.trim();
+    if (!title) { document.getElementById('f-title').focus(); return; }
+
+    const status   = document.getElementById('f-status').value;
+    const progress = status === 'done' ? 100 : parseInt(document.getElementById('f-progress').value) || 0;
+
+    const goal = {
+        id:       editingId || String(Date.now()),
+        title,
+        desc:     document.getElementById('f-desc').value.trim(),
+        cat:      document.getElementById('f-cat').value,
+        status,
+        progress,
+        date:     document.getElementById('f-date').value,
+        icon:     document.getElementById('f-icon').value.trim() || CAT_ICONS[document.getElementById('f-cat').value] || '⭐',
+    };
+
+    const isNew = !editingId;
+    if (isNew) goals.push(goal);
+    else { const idx = goals.findIndex(g => g.id === editingId); if (idx >= 0) goals[idx] = goal; }
+
+    closeModal();
+    renderAll();
+    showToast(isNew ? '✓ Goal adăugat' : '✓ Goal actualizat');
+    await saveGoalToSheet(goal, isNew);
+}
+
+async function deleteGoal() {
+    if (!editingId || !confirm('Șterge acest goal?')) return;
+    const id = editingId;
+    goals = goals.filter(g => g.id !== id);
+    closeModal();
+    renderAll();
+    showToast('🗑 Goal șters');
+    await deleteGoalFromSheet(id);
+}
+
+// ════════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════════
+function switchLayout(name, btn) {
+    currentLayout = name;
+    document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.layout-view').forEach(v => v.classList.remove('active'));
+    document.getElementById(`view-${name}`).classList.add('active');
+    renderAll();
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+        return new Date(dateStr + 'T12:00:00').toLocaleDateString('ro-RO', { day:'numeric', month:'short', year:'numeric' });
+    } catch { return dateStr; }
+}
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+}
+
+// Close modal on backdrop
+document.getElementById('goalModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+// ── START ──
+init();
+</script>
+</body>
+</html>
