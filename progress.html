@@ -195,6 +195,36 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 }
 .proof-file-chip:hover{ background:rgba(0,229,160,0.16); }
 
+
+/* DONE CARD — read-only */
+.badge-card.done-readonly{ cursor:default; }
+.badge-card.done-readonly:hover{ transform:none; }
+
+.done-proof-img-wrap{
+    width:100%; margin:0 auto 12px;
+    border-radius:10px; overflow:hidden;
+    border:1px solid rgba(0,229,160,0.2);
+    max-height:110px;
+}
+.done-proof-img{
+    width:100%; height:110px; object-fit:cover;
+    display:block; cursor:zoom-in;
+    transition:transform 0.3s;
+}
+.done-proof-img:hover{ transform:scale(1.04); }
+
+.done-dates{
+    display:flex; flex-direction:column; gap:4px;
+    margin:8px 0 6px; width:100%;
+}
+.done-date-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:4px 8px; background:rgba(255,255,255,0.03);
+    border-radius:6px; border:1px solid rgba(255,255,255,0.05);
+}
+.done-date-lbl{ font-size:0.6em; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+.done-date-val{ font-size:0.65em; color:var(--text-mid); font-family:var(--font-mono); }
+
 </style>
 </head>
 <body>
@@ -417,30 +447,39 @@ function renderSection(status) {
         const icon  = CAT_ICONS[g.cat]  || '⭐';
         const label = CAT_LABELS[g.cat] || g.cat;
         const pill  = status==='done' ? '✅ Done' : status==='progress' ? '⚡ Live' : '🔮 Soon';
-        html += `<div class="badge-card ${status}"
-                      data-id="${g.id}"
-                      draggable="true"
-                      style="animation-delay:${i*0.05}s">
-            <span class="badge-status-pill ${status}">${pill}</span>
-            <div class="badge-icon-wrap">${icon}</div>
-            <div class="badge-title">${esc(g.title)}</div>
-            <div class="badge-desc">${esc(g.desc)}</div>
-            <span class="badge-cat-pill cat-${g.cat}">${label}</span>
-            ${g.date ? `<span class="badge-date">📅 ${fmtDate(g.date)}</span>` : ''}
-            ${status === 'done' && g.proofUrl
-                ? `<a class="proof-thumb-link" href="${g.proofUrl}" target="_blank" onclick="event.stopPropagation()">
-                     ${g.proofName && /\.(png|jpg|jpeg|gif|webp)$/i.test(g.proofName)
-                       ? `<img class="proof-thumb" src="${g.proofUrl}" alt="dovadă">`
-                       : `<div class="proof-file-chip">📎 ${esc(g.proofName||'Dovadă')}</div>`
-                     }
-                   </a>`
-                : ''
-            }
-            ${status === 'done'
-                ? '<div class="done-glow">✓</div>'
-                : `<button class="finish-btn" onclick="event.stopPropagation();openFinishModal('${g.id}')">✓ Finish</button>`
-            }
-        </div>`;
+        if (status === 'done') {
+            // Cardul Done — read-only, fără click edit
+            const isImg = g.proofName && /\.(png|jpg|jpeg|gif|webp)$/i.test(g.proofName);
+            html += `<div class="badge-card done done-readonly" data-id="${g.id}" draggable="false" style="animation-delay:${i*0.05}s">
+                <span class="badge-status-pill done">✅ Done</span>
+                ${g.proofUrl && isImg
+                    ? `<div class="done-proof-img-wrap"><img class="done-proof-img" src="${g.proofUrl}" alt="dovadă" onclick="window.open('${g.proofUrl}','_blank')"></div>`
+                    : `<div class="badge-icon-wrap">${icon}</div>`
+                }
+                <div class="badge-title">${esc(g.title)}</div>
+                <div class="badge-desc">${esc(g.desc)}</div>
+                <span class="badge-cat-pill cat-${g.cat}">${label}</span>
+                <div class="done-dates">
+                    ${g.createdAt ? `<span class="done-date-row"><span class="done-date-lbl">Start</span><span class="done-date-val">${fmtDate(g.createdAt)}</span></span>` : ''}
+                    ${g.date      ? `<span class="done-date-row"><span class="done-date-lbl">Finish</span><span class="done-date-val" style="color:var(--accent)">${fmtDate(g.date)}</span></span>` : ''}
+                </div>
+                ${g.proofUrl && !isImg ? `<a class="proof-file-chip" href="${g.proofUrl}" target="_blank" onclick="event.stopPropagation()">📎 ${esc(g.proofName||'Dovadă')}</a>` : ''}
+                <div class="done-glow">✓</div>
+            </div>`;
+        } else {
+            html += `<div class="badge-card ${status}"
+                          data-id="${g.id}"
+                          draggable="true"
+                          style="animation-delay:${i*0.05}s">
+                <span class="badge-status-pill ${status}">${pill}</span>
+                <div class="badge-icon-wrap">${icon}</div>
+                <div class="badge-title">${esc(g.title)}</div>
+                <div class="badge-desc">${esc(g.desc)}</div>
+                <span class="badge-cat-pill cat-${g.cat}">${label}</span>
+                ${g.date ? `<span class="badge-date">📅 ${fmtDate(g.date)}</span>` : ''}
+                <button class="finish-btn" onclick="event.stopPropagation();openFinishModal('${g.id}')">✓ Finish</button>
+            </div>`;
+        }
     });
 
     html += `<div class="badge-add-card" onclick="openAddModal('${status}')">
@@ -449,8 +488,8 @@ function renderSection(status) {
 
     grid.innerHTML = html;
 
-    // Click = edit (doar dacă nu e în mijlocul unui drag)
-    grid.querySelectorAll('.badge-card').forEach(card => {
+    // Click = edit doar pentru non-done cards
+    grid.querySelectorAll('.badge-card:not(.done-readonly)').forEach(card => {
         card.addEventListener('click', () => {
             if (!card.classList.contains('dragging')) openEditModal(card.dataset.id);
         });
