@@ -293,7 +293,7 @@ async function loadGoals() {
                 desc:     g.desc      || '',
                 cat:      g.cat       || 'milestone',
                 status:   g.status    || 'future',
-                date:     g.date      || '',
+                date:     normalizeDate(g.date),
                 createdAt:g.createdAt || ''
             }));
             return;
@@ -496,8 +496,39 @@ async function deleteGoal() {
 }
 
 // ── UTILS ──
+function normalizeDate(s) {
+    if (!s) return '';
+    const str = String(s).trim();
+    // Deja în format YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+    // Format MM/DD/YYYY (cum trimite Sheets uneori)
+    const slash = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (slash) return `${slash[3]}-${slash[1].padStart(2,'0')}-${slash[2].padStart(2,'0')}`;
+    // Încearcă parsare generică
+    try {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+            return d.toISOString().split('T')[0];
+        }
+    } catch(e) {}
+    return '';
+}
+
 function fmtDate(s) {
-    try { return new Date(s+'T12:00:00').toLocaleDateString('ro-RO',{day:'numeric',month:'short',year:'numeric'}); } catch{ return s; }
+    if (!s) return '';
+    try {
+        // Sheets poate trimite date ca "Date(2026,2,15)" sau "2026-03-15" sau "3/15/2026"
+        let d;
+        if (typeof s === 'string' && s.includes('/')) {
+            // format MM/DD/YYYY sau D/M/YYYY
+            const parts = s.split('/');
+            d = new Date(parts[2], parts[0]-1, parts[1]);
+        } else {
+            d = new Date(String(s).replace(/\//g, '-') + (String(s).length === 10 ? 'T12:00:00' : ''));
+        }
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('ro-RO',{day:'numeric',month:'short',year:'numeric'});
+    } catch { return ''; }
 }
 function esc(s) {
     return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
