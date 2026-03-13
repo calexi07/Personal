@@ -177,6 +177,24 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-finish-confirm:hover{background:rgba(0,229,160,0.2);}
 .btn-finish-cancel{padding:11px 16px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--text-mid);font-size:0.85em;cursor:pointer;}
 
+
+/* PROOF THUMBNAIL on done card */
+.proof-thumb-link{ display:block; margin:8px 0 4px; }
+.proof-thumb{
+    width:100%; max-height:80px; object-fit:cover;
+    border-radius:8px; border:1px solid rgba(0,229,160,0.2);
+    opacity:0.85; transition:opacity 0.2s;
+}
+.proof-thumb:hover{ opacity:1; }
+.proof-file-chip{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:5px 12px; border-radius:8px;
+    background:rgba(0,229,160,0.08); border:1px solid rgba(0,229,160,0.2);
+    color:var(--accent); font-size:0.68em; font-weight:600;
+    transition:background 0.2s;
+}
+.proof-file-chip:hover{ background:rgba(0,229,160,0.16); }
+
 </style>
 </head>
 <body>
@@ -362,13 +380,15 @@ async function loadGoals() {
         const j = await r.json();
         if (j.result === 'success' && Array.isArray(j.data) && j.data.length > 0) {
             goals = j.data.map(g => ({
-                id:       g.id        || String(Date.now()+Math.random()),
-                title:    g.title     || '',
-                desc:     g.desc      || '',
-                cat:      g.cat       || 'milestone',
-                status:   g.status    || 'future',
-                date:     normalizeDate(g.date),
-                createdAt:g.createdAt || ''
+                id:        g.id        || String(Date.now()+Math.random()),
+                title:     g.title     || '',
+                desc:      g.desc      || '',
+                cat:       g.cat       || 'milestone',
+                status:    g.status    || 'future',
+                date:      normalizeDate(g.date),
+                createdAt: g.createdAt || '',
+                proofUrl:  g.proofUrl  || '',
+                proofName: g.proofName || ''
             }));
             return;
         }
@@ -407,7 +427,15 @@ function renderSection(status) {
             <div class="badge-desc">${esc(g.desc)}</div>
             <span class="badge-cat-pill cat-${g.cat}">${label}</span>
             ${g.date ? `<span class="badge-date">📅 ${fmtDate(g.date)}</span>` : ''}
-            ${g.proofUrl ? `<span class="badge-proof-link"><a href="${g.proofUrl}" target="_blank" onclick="event.stopPropagation()">📎 Dovadă</a></span>` : ''}
+            ${status === 'done' && g.proofUrl
+                ? `<a class="proof-thumb-link" href="${g.proofUrl}" target="_blank" onclick="event.stopPropagation()">
+                     ${g.proofName && /\.(png|jpg|jpeg|gif|webp)$/i.test(g.proofName)
+                       ? `<img class="proof-thumb" src="${g.proofUrl}" alt="dovadă">`
+                       : `<div class="proof-file-chip">📎 ${esc(g.proofName||'Dovadă')}</div>`
+                     }
+                   </a>`
+                : ''
+            }
             ${status === 'done'
                 ? '<div class="done-glow">✓</div>'
                 : `<button class="finish-btn" onclick="event.stopPropagation();openFinishModal('${g.id}')">✓ Finish</button>`
