@@ -137,6 +137,46 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .toast.info{background:var(--orange-dim);border:1px solid rgba(251,146,60,0.25);color:var(--orange);}
 @keyframes spin{to{transform:rotate(360deg);}}
 .spin{width:18px;height:18px;border:2px solid rgba(255,255,255,0.08);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;}
+
+/* FINISH BUTTON */
+.finish-btn{
+    display:inline-flex;align-items:center;gap:5px;
+    margin-top:10px;padding:7px 16px;
+    background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.25);
+    border-radius:8px;color:var(--accent);font-size:0.72em;font-weight:700;
+    cursor:pointer;transition:all 0.18s;font-family:var(--font-body);
+    width:100%;justify-content:center;
+}
+.finish-btn:hover{background:rgba(0,229,160,0.2);border-color:rgba(0,229,160,0.45);transform:none;}
+
+/* PROOF LINK */
+.badge-proof-link{display:block;margin-top:4px;margin-bottom:4px;}
+.badge-proof-link a{font-size:0.65em;color:var(--accent);text-decoration:none;opacity:0.7;}
+.badge-proof-link a:hover{opacity:1;text-decoration:underline;}
+
+/* FINISH MODAL */
+.finish-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);backdrop-filter:blur(12px);z-index:10000;align-items:center;justify-content:center;padding:20px;}
+.finish-modal-overlay.open{display:flex;animation:fadeIn 0.2s ease;}
+.finish-modal-box{background:linear-gradient(145deg,#141e33,#0d1525);border:1px solid rgba(0,229,160,0.25);border-radius:20px;padding:28px;width:100%;max-width:420px;box-shadow:0 24px 80px rgba(0,0,0,0.7);animation:modalIn 0.28s cubic-bezier(0.2,0,0,1.1);}
+.finish-modal-title{font-family:var(--font-display);font-size:1.1em;font-weight:800;margin-bottom:6px;}
+.finish-modal-sub{font-size:0.78em;color:var(--text-mid);margin-bottom:22px;}
+
+/* Upload zone */
+.upload-zone{border:2px dashed rgba(255,255,255,0.1);border-radius:12px;padding:24px 16px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:14px;}
+.upload-zone:hover,.upload-zone.drag{border-color:rgba(0,229,160,0.4);background:rgba(0,229,160,0.04);}
+.upload-icon{font-size:1.8em;margin-bottom:8px;opacity:0.5;}
+.upload-label{font-size:0.78em;color:var(--text-mid);}
+.upload-label span{color:var(--accent);}
+.upload-preview{display:none;margin-top:10px;font-size:0.75em;color:var(--accent);align-items:center;gap:8px;}
+.upload-preview.show{display:flex;}
+.upload-preview-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;}
+.upload-clear{cursor:pointer;color:var(--red);opacity:0.7;flex-shrink:0;}
+.upload-clear:hover{opacity:1;}
+.finish-modal-actions{display:flex;gap:8px;margin-top:20px;}
+.btn-finish-confirm{flex:1;padding:11px;background:var(--accent-dim);border:1px solid rgba(0,229,160,0.3);border-radius:10px;color:var(--accent);font-size:0.87em;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.btn-finish-confirm:hover{background:rgba(0,229,160,0.2);}
+.btn-finish-cancel{padding:11px 16px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--text-mid);font-size:0.85em;cursor:pointer;}
+
 </style>
 </head>
 <body>
@@ -255,6 +295,40 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
 </div>
 
+
+<!-- FINISH MODAL -->
+<div class="finish-modal-overlay" id="finishModal">
+    <div class="finish-modal-box">
+        <div class="finish-modal-title">🏆 Goal Completat!</div>
+        <div class="finish-modal-sub" id="finishModalSub">Marchează data și adaugă o dovadă opțională.</div>
+
+        <div class="form-field">
+            <label>Data completării *</label>
+            <input type="date" id="fin-date">
+        </div>
+
+        <div class="upload-zone" id="uploadZone"
+             onclick="document.getElementById('fin-file').click()"
+             ondragover="event.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="handleFileDrop(event)">
+            <div class="upload-icon">📎</div>
+            <div class="upload-label">Click sau trage fișierul aici<br><span>screenshot, PDF, orice dovadă</span></div>
+            <input type="file" id="fin-file" accept="image/*,.pdf" style="display:none" onchange="handleFileSelect(this.files[0])">
+        </div>
+        <div class="upload-preview" id="uploadPreview">
+            <span>📄</span>
+            <span class="upload-preview-name" id="uploadPreviewName"></span>
+            <span class="upload-clear" onclick="clearFile()">✕</span>
+        </div>
+
+        <div class="finish-modal-actions">
+            <button class="btn-finish-cancel" onclick="closeFinishModal()">Anulează</button>
+            <button class="btn-finish-confirm" id="btnFinishConfirm" onclick="confirmFinish()">✓ Marchează ca Done</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const GS_URL      = 'https://script.google.com/macros/s/AKfycby545E0z1U_T4y7Obgp7jbkhjEM-nTQ14zccKu3_WhAWI93028iGy3JHPHk9XJvU1_5/exec';
 const GOALS_SHEET = 'Goals';
@@ -333,7 +407,11 @@ function renderSection(status) {
             <div class="badge-desc">${esc(g.desc)}</div>
             <span class="badge-cat-pill cat-${g.cat}">${label}</span>
             ${g.date ? `<span class="badge-date">📅 ${fmtDate(g.date)}</span>` : ''}
-            ${status==='done' ? '<div class="done-glow">✓</div>' : ''}
+            ${g.proofUrl ? `<span class="badge-proof-link"><a href="${g.proofUrl}" target="_blank" onclick="event.stopPropagation()">📎 Dovadă</a></span>` : ''}
+            ${status === 'done'
+                ? '<div class="done-glow">✓</div>'
+                : `<button class="finish-btn" onclick="event.stopPropagation();openFinishModal('${g.id}')">✓ Finish</button>`
+            }
         </div>`;
     });
 
@@ -393,6 +471,12 @@ function initDropZones() {
             const id   = e.dataTransfer.getData('text/plain') || dragId;
             const goal = goals.find(g => g.id === id);
             if (!goal || goal.status === status) return;
+
+            // Dacă e mutat în Done → deschide modal Finish
+            if (status === 'done') {
+                openFinishModal(id);
+                return;
+            }
 
             goal.status = status;
             renderAll();
@@ -543,6 +627,142 @@ function showToast(msg, type='success') {
 
 document.getElementById('goalModal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
 document.getElementById('f-title').addEventListener('keydown', e => { if(e.key==='Enter') saveGoal(); });
+
+
+// ════════════════════════════════════════════════════════════════
+// FINISH MODAL
+// ════════════════════════════════════════════════════════════════
+let finishGoalId  = null;
+let finishFile    = null;
+
+function openFinishModal(id) {
+    const g = goals.find(g => g.id === id);
+    if (!g) return;
+    finishGoalId = id;
+    finishFile   = null;
+
+    document.getElementById('finishModalSub').textContent = '"' + g.title + '"';
+    document.getElementById('fin-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('uploadPreview').classList.remove('show');
+    document.getElementById('uploadPreviewName').textContent = '';
+    document.getElementById('fin-file').value = '';
+    document.getElementById('uploadZone').classList.remove('drag');
+    document.getElementById('finishModal').classList.add('open');
+}
+
+function closeFinishModal() {
+    document.getElementById('finishModal').classList.remove('open');
+    finishGoalId = null;
+    finishFile   = null;
+}
+
+function handleFileSelect(file) {
+    if (!file) return;
+    finishFile = file;
+    document.getElementById('uploadPreviewName').textContent = file.name;
+    document.getElementById('uploadPreview').classList.add('show');
+    document.getElementById('uploadZone').classList.remove('drag');
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileSelect(file);
+}
+
+function clearFile() {
+    finishFile = null;
+    document.getElementById('fin-file').value = '';
+    document.getElementById('uploadPreviewName').textContent = '';
+    document.getElementById('uploadPreview').classList.remove('show');
+}
+
+async function confirmFinish() {
+    const date = document.getElementById('fin-date').value;
+    if (!date) { showToast('Selectează data completării!', 'error'); return; }
+
+    const goal = goals.find(g => g.id === finishGoalId);
+    if (!goal) return;
+
+    const btn = document.getElementById('btnFinishConfirm');
+    btn.textContent = 'Se salvează...';
+    btn.disabled = true;
+
+    // Convertește fișierul în base64 dacă există
+    let proofUrl  = goal.proofUrl || '';
+    let proofName = goal.proofName || '';
+
+    if (finishFile) {
+        try {
+            const b64 = await fileToBase64(finishFile);
+            // Salvează în Google Drive via Apps Script
+            const r = await fetch(GS_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action:    'uploadProof',
+                    sheet:     GOALS_SHEET,
+                    goalId:    goal.id,
+                    goalTitle: goal.title,
+                    fileName:  finishFile.name,
+                    fileType:  finishFile.type,
+                    fileData:  b64
+                })
+            });
+            const j = await r.json();
+            if (j.result === 'success' && j.url) {
+                proofUrl  = j.url;
+                proofName = finishFile.name;
+            } else {
+                // Fallback — salvăm doar numele fișierului
+                proofName = finishFile.name;
+            }
+        } catch(e) {
+            console.warn('Upload failed:', e);
+            proofName = finishFile.name;
+        }
+    }
+
+    goal.status    = 'done';
+    goal.date      = date;
+    goal.proofUrl  = proofUrl;
+    goal.proofName = proofName;
+
+    closeFinishModal();
+    renderAll();
+    showToast('🏆 Goal completat!', 'success');
+
+    // Salvează în Sheets
+    try {
+        const r = await fetch(GS_URL, {
+            method: 'POST',
+            body: JSON.stringify({action:'updateGoal', sheet:GOALS_SHEET, ...goal})
+        });
+        const j = await r.json();
+        if (j.result !== 'success') showToast('Eroare Sheets: '+(j.message||''), 'error');
+    } catch(e) {
+        showToast('Salvat local — fără conexiune', 'error');
+    }
+
+    btn.textContent = '✓ Marchează ca Done';
+    btn.disabled = false;
+}
+
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload  = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// Backdrop click
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('finishModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeFinishModal();
+    });
+});
 
 init();
 </script>
