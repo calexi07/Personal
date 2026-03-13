@@ -197,8 +197,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 
 /* DONE CARD — read-only */
-.badge-card.done-readonly{ cursor:default; }
-.badge-card.done-readonly:hover{ transform:none; }
+.badge-card.done-readonly{ cursor:pointer; }
+.badge-card.done-readonly:hover{ transform:translateY(-3px); box-shadow:0 16px 48px rgba(0,229,160,0.1); }
 
 .done-proof-img-wrap{
     width:100%; margin:0 auto 12px;
@@ -224,6 +224,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 }
 .done-date-lbl{ font-size:0.6em; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
 .done-date-val{ font-size:0.65em; color:var(--text-mid); font-family:var(--font-mono); }
+
+
+.proof-no-img{
+    height:80px; display:flex; align-items:center; justify-content:center;
+    font-size:0.8em; color:var(--text-dim); background:rgba(255,255,255,0.03);
+    border-radius:8px;
+}
 
 </style>
 </head>
@@ -377,6 +384,48 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
 </div>
 
+
+<!-- VIEW MODAL (done goals — read only) -->
+<div class="modal-overlay" id="viewModal">
+    <div class="modal-box" style="max-width:520px;">
+        <div class="modal-header">
+            <div class="modal-title" id="viewModalTitle">🏆 Goal Completat</div>
+            <button class="modal-close" onclick="closeViewModal()">×</button>
+        </div>
+
+        <!-- Imagine dovadă -->
+        <div id="viewProofWrap" style="display:none;margin-bottom:16px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,229,160,0.2);">
+            <img id="viewProofImg" src="" alt="dovadă" style="width:100%;max-height:220px;object-fit:cover;display:block;">
+        </div>
+
+        <div style="display:grid;gap:10px;">
+            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+                <div style="font-size:0.62em;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.6px;font-weight:600;margin-bottom:4px;">Titlu</div>
+                <div id="viewTitle" style="font-family:var(--font-display);font-weight:700;font-size:0.95em;"></div>
+            </div>
+            <div id="viewDescWrap" style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+                <div style="font-size:0.62em;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.6px;font-weight:600;margin-bottom:4px;">Descriere</div>
+                <div id="viewDesc" style="font-size:0.84em;color:var(--text-mid);line-height:1.5;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+                    <div style="font-size:0.62em;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.6px;font-weight:600;margin-bottom:4px;">Start</div>
+                    <div id="viewStart" style="font-size:0.82em;font-family:var(--font-mono);color:var(--text-mid);"></div>
+                </div>
+                <div style="background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.15);border-radius:10px;padding:12px 14px;">
+                    <div style="font-size:0.62em;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.6px;font-weight:600;margin-bottom:4px;">Finish</div>
+                    <div id="viewFinish" style="font-size:0.82em;font-family:var(--font-mono);color:var(--accent);"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top:20px;">
+            <button class="btn-cancel" onclick="closeViewModal()">Închide</button>
+            <button class="btn-delete" onclick="deleteFromView()">🗑 Șterge</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const GS_URL      = 'https://script.google.com/macros/s/AKfycby545E0z1U_T4y7Obgp7jbkhjEM-nTQ14zccKu3_WhAWI93028iGy3JHPHk9XJvU1_5/exec';
 const GOALS_SHEET = 'Goals';
@@ -448,12 +497,16 @@ function renderSection(status) {
         const label = CAT_LABELS[g.cat] || g.cat;
         const pill  = status==='done' ? '✅ Done' : status==='progress' ? '⚡ Live' : '🔮 Soon';
         if (status === 'done') {
-            // Cardul Done — read-only, fără click edit
             const isImg = g.proofName && /\.(png|jpg|jpeg|gif|webp)$/i.test(g.proofName);
-            html += `<div class="badge-card done done-readonly" data-id="${g.id}" draggable="false" style="animation-delay:${i*0.05}s">
+            html += `<div class="badge-card done done-readonly" data-id="${g.id}" draggable="false" style="animation-delay:${i*0.05}s" onclick="openViewModal('${g.id}')">
                 <span class="badge-status-pill done">✅ Done</span>
                 ${g.proofUrl && isImg
-                    ? `<div class="done-proof-img-wrap"><img class="done-proof-img" src="${g.proofUrl}" alt="dovadă" onclick="window.open('${g.proofUrl}','_blank')"></div>`
+                    ? `<div class="done-proof-img-wrap">
+                         <img class="done-proof-img" src="${g.proofUrl}"
+                              alt="dovadă"
+                              onerror="this.parentElement.innerHTML='<div class=proof-no-img>🖼 ${esc(g.proofName||"imagine")}</div>'"
+                         >
+                       </div>`
                     : `<div class="badge-icon-wrap">${icon}</div>`
                 }
                 <div class="badge-title">${esc(g.title)}</div>
@@ -843,6 +896,59 @@ function fileToBase64(file) {
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('finishModal')?.addEventListener('click', function(e) {
         if (e.target === this) closeFinishModal();
+    });
+});
+
+
+// ── VIEW MODAL (done goals) ──
+let viewingId = null;
+
+function openViewModal(id) {
+    const g = goals.find(g => g.id === id);
+    if (!g) return;
+    viewingId = id;
+
+    document.getElementById('viewModalTitle').textContent = CAT_ICONS[g.cat] + ' ' + g.title;
+    document.getElementById('viewTitle').textContent = g.title;
+    document.getElementById('viewDesc').textContent  = g.desc || '—';
+
+    const descWrap = document.getElementById('viewDescWrap');
+    descWrap.style.display = g.desc ? 'block' : 'none';
+
+    document.getElementById('viewStart').textContent  = g.createdAt ? fmtDate(g.createdAt) : '—';
+    document.getElementById('viewFinish').textContent = g.date      ? fmtDate(g.date)      : '—';
+
+    const isImg = g.proofName && /\.(png|jpg|jpeg|gif|webp)$/i.test(g.proofName);
+    const proofWrap = document.getElementById('viewProofWrap');
+    const proofImg  = document.getElementById('viewProofImg');
+    if (g.proofUrl && isImg) {
+        proofImg.src = g.proofUrl;
+        proofWrap.style.display = 'block';
+    } else {
+        proofWrap.style.display = 'none';
+    }
+
+    document.getElementById('viewModal').classList.add('open');
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').classList.remove('open');
+    viewingId = null;
+}
+
+async function deleteFromView() {
+    if (!viewingId || !confirm('Șterge acest goal?')) return;
+    const id = viewingId;
+    goals = goals.filter(g => g.id !== id);
+    closeViewModal();
+    renderAll();
+    showToast('🗑 Goal șters');
+    try { await fetch(GS_URL, {method:'POST', body:JSON.stringify({action:'deleteGoal', sheet:GOALS_SHEET, id})}); } catch(e){}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('viewModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeViewModal();
     });
 });
 
