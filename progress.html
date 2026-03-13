@@ -744,7 +744,7 @@ async function confirmFinish() {
             formData.append('image', b64);
             formData.append('name', goal.id + '_' + finishFile.name);
 
-            const r = await fetch('https://api.imgbb.com/1/upload?key=2e46571ca2f8d574011981983d714b3e', {
+            const r = await fetch('https://api.imgbb.com/1/upload?key=346a44ec2b4d3b5bcfe693cdce3ab1bd', {
                 method: 'POST',
                 body: formData
             });
