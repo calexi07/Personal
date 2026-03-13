@@ -589,10 +589,17 @@ async function saveGoal() {
         const action = isNew ? 'addGoal' : 'updateGoal';
         const r = await fetch(GS_URL, {method:'POST', body:JSON.stringify({action, sheet:GOALS_SHEET, ...goal})});
         const j = await r.json();
-        showToast(j.result === 'success'
-            ? (isNew ? '✓ Goal adăugat' : '✓ Goal actualizat')
-            : ('Salvat local — '+(j.message||'')),
-            j.result === 'success' ? 'success' : 'error');
+        if (j.result === 'success') {
+            // Sincronizează id-ul local cu UUID-ul real din Sheets
+            if (isNew && j.id) {
+                const idx = goals.findIndex(g => g.id === goal.id);
+                if (idx >= 0) goals[idx].id = j.id;
+            }
+            showToast(isNew ? '✓ Goal adăugat' : '✓ Goal actualizat');
+            renderAll(); // re-render cu id-urile corecte
+        } else {
+            showToast('Salvat local — ' + (j.message||''), 'error');
+        }
     } catch(e) { showToast('Salvat local — fără conexiune', 'error'); }
     saving = false;
 }
@@ -664,9 +671,10 @@ let finishGoalId  = null;
 let finishFile    = null;
 
 function openFinishModal(id) {
+    // Caută goal-ul — id-ul poate fi local sau UUID din Sheets
     const g = goals.find(g => g.id === id);
-    if (!g) return;
-    finishGoalId = id;
+    if (!g) { showToast('Goal negăsit', 'error'); return; }
+    finishGoalId = g.id; // stochează id-ul curent (poate fi deja UUID)
     finishFile   = null;
 
     document.getElementById('finishModalSub').textContent = '"' + g.title + '"';
@@ -710,8 +718,13 @@ async function confirmFinish() {
     const date = document.getElementById('fin-date').value;
     if (!date) { showToast('Selectează data completării!', 'error'); return; }
 
-    const goal = goals.find(g => g.id === finishGoalId);
-    if (!goal) return;
+    // Caută după id exact, sau după finishGoalId salvat în openFinishModal
+    let goal = goals.find(g => g.id === finishGoalId);
+    if (!goal) {
+        showToast('Goal negăsit — încearcă din nou', 'error');
+        btn && (btn.disabled = false);
+        return;
+    }
 
     const btn = document.getElementById('btnFinishConfirm');
     btn.textContent = 'Se salvează...';
